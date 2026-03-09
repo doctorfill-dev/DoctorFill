@@ -1,0 +1,172 @@
+{
+  "fields": [
+    {
+      "id": "1.1",
+      "name": "accidentNumber",
+      "question": "Numéro de sinistre",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseID"
+    },
+    {
+      "id": "1.2",
+      "name": "lastName",
+      "question": "Nom du patient",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/lastName"
+    },
+    {
+      "id": "1.3",
+      "name": "firstName",
+      "question": "Prénom du patient",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/firstName"
+    },
+    {
+      "id": "1.4",
+      "name": "street",
+      "question": "Rue du patient",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/street"
+    },
+    {
+      "id": "1.5",
+      "name": "zip",
+      "question": "NPA du patient",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/zip"
+    },
+    {
+      "id": "1.6",
+      "name": "city",
+      "question": "Localité du patient",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/city"
+    },
+    {
+      "id": "1.7",
+      "name": "phone",
+      "question": "Téléphone du patient",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/phone"
+    },
+    {
+      "id": "1.8",
+      "name": "birthDate",
+      "question": "Date de naissance du patient (jj.mm.aaaa)",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/birthDate"
+    },
+    {
+      "id": "1.9",
+      "name": "email",
+      "question": "E-mail du patient",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/email"
+    },
+    {
+      "id": "1.10",
+      "name": "workingHours",
+      "question": "Temps de travail (h/j)",
+      "required": false,
+      "xml_path": "topmostSubform/page1/workingHours"
+    },
+    {
+      "id": "1.11",
+      "name": "treatmentDate",
+      "question": "Date du premier traitement (jj.mm.aaaa)",
+      "required": false,
+      "xml_path": "topmostSubform/page1/treatmentDate"
+    },
+    {
+      "id": "2.1",
+      "name": "diagnosis",
+      "question": "Diagnostic(s) (max ~1200 caractères)",
+      "required": false,
+      "xml_path": "topmostSubform/page1/diag4Unemployability"
+    },
+    {
+      "id": "3.1",
+      "name": "unempStartDate",
+      "question": "Début de l’incapacité (jj.mm.aaaa)",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unemployabilityStartDate"
+    },
+    {
+      "id": "3.2",
+      "name": "unempDegree",
+      "question": "Degré d’incapacité (%)",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unemployabilityDegree"
+    },
+    {
+      "id": "4.1",
+      "name": "plannedReturnNote",
+      "question": "Remarque / reprise de travail prévue",
+      "required": false,
+      "xml_path": "topmostSubform/page1/remarks4EmployabilityStart"
+    },
+    {
+      "id": "4.1",
+      "name": "unempEndDate",
+      "question": "Fin de l’incapacité (jj.mm.aaaa), si connue",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unemployabilityEndDate"
+    },
+    {
+      "id": "4.1",
+      "name": "longComment",
+      "question": "Commentaires (suite si besoin)",
+      "required": false,
+      "xml_path": "topmostSubform/page2/comment"
+    },
+    {
+      "id": "5.1",
+      "name": "providerBlockAddress",
+      "question": "Coordonnées du médecin (bloc adresse)",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/blockAddress"
+    },
+    {
+      "id": "5.2",
+      "name": "phone",
+      "question": "Téléphone du médecin",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/phone"
+    },
+    {
+      "id": "5.3",
+      "name": "providerFax",
+      "question": "Fax du médecin",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/fax"
+    },
+    {
+      "id": "5.4",
+      "name": "providerGLN",
+      "question": "GLN du médecin",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/ean"
+    },
+    {
+      "id": "5.5",
+      "name": "providerRCC",
+      "question": "RCC (ZSR) du médecin",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/zsr"
+    },
+    {
+      "id": "5.6",
+      "name": "email",
+      "question": "E-mail du médecin",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/email"
+    },
+    {
+      "id": "5.7",
+      "name": "formDate",
+      "question": "Date du jour",
+      "required": false,
+      "xml_path": "topmostSubform/page2/formS1Struct/modificationDate"
+    }
+  ]
+}

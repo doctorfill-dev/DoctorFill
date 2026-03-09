@@ -1,0 +1,61 @@
+{
+  "fields": [
+    {"id": "1.1",  "name": "lastName",                "question": "Nom du patient",                                 "required": true,  "xml_path": "topmostSubform/page1/patientS1Address/lastName"},
+    {"id": "1.2",  "name": "firstName",               "question": "Prénom du patient",                              "required": true,  "xml_path": "topmostSubform/page1/patientS1Address/firstName"},
+    {"id": "1.3",  "name": "street",                  "question": "Rue du patient",                                 "required": true,  "xml_path": "topmostSubform/page1/patientS1Address/street"},
+    {"id": "1.4",  "name": "zip",                     "question": "NPA du patient",                                 "required": true,  "xml_path": "topmostSubform/page1/patientS1Address/zip"},
+    {"id": "1.5",  "name": "city",                    "question": "Lieu du patient",                                "required": true,  "xml_path": "topmostSubform/page1/patientS1Address/city"},
+    {"id": "1.6",  "name": "birthDate",               "question": "Date de naissance du patient",                   "required": true,  "xml_path": "topmostSubform/page1/patientS1Address/birthDate"},
+    {"id": "1.7",  "name": "ssn",                     "question": "Numéro AVS du patient",                          "required": true,  "xml_path": "topmostSubform/page1/patientS1Address/ssn"},
+    {"id": "1.8",  "name": "phone",                   "question": "Téléphone du patient",                           "required": false, "xml_path": "topmostSubform/page1/patientS1Address/phone"},
+    {"id": "1.9",  "name": "email",                   "question": "E-mail du patient",                              "required": false, "xml_path": "topmostSubform/page1/patientS1Address/email"},
+    {"id": "1.10", "name": "sex",                     "question": "Sexe du patient",                                "required": false, "xml_path": "topmostSubform/page1/patientS1Address/sex"},
+
+    {"id": "2.1",  "name": "recipientGLN",            "question": "GLN du destinataire",                            "required": false, "xml_path": "topmostSubform/page1/providerS1Address/ean"},
+    {"id": "2.2",  "name": "recipientRCC",            "question": "RCC du destinataire",                            "required": false, "xml_path": "topmostSubform/page1/providerS1Address/zsr"},
+    {"id": "2.3",  "name": "recipientEmail",          "question": "E-mail du destinataire",                         "required": false, "xml_path": "topmostSubform/page1/providerS1Address/email"},
+    {"id": "2.4",  "name": "recipientNote",           "question": "Adresse du destinataire",                        "required": false, "xml_path": "topmostSubform/page1/providerS1Address/blockAddress"},
+
+    {"id": "3.1",  "name": "insuranceAddress",        "question": "Adresse de l'assurance",                         "required": false, "xml_path": "topmostSubform/page1/insuranceS1Address/blockAddress"},
+    {"id": "3.2",  "name": "insuranceGLN",            "question": "GLN de l'assurance",                             "required": false, "xml_path": "topmostSubform/page1/insuranceS1Address/ean"},
+
+    {"id": "4.1",  "name": "treatmentReason",         "question": "Motif du traitement",                            "required": true,  "xml_path": "topmostSubform/page1/treatmentReason"},
+    {"id": "4.2",  "name": "law",                     "question": "Loi applicable",                                 "required": true,  "xml_path": "topmostSubform/page1/lawS1Struct/type"},
+    {"id": "4.3",  "name": "insuranceNumber",         "question": "Numéro d'assuré",                                "required": false, "xml_path": "topmostSubform/page1/lawS1Struct/insuredID"},
+    {"id": "4.4",  "name": "accidentNumber",          "question": "Numéro d'accident",                              "required": false, "xml_path": "topmostSubform/page1/lawS1Struct/caseID"},
+    {"id": "4.5",  "name": "accidentDate",            "question": "Date de l'accident",                             "required": false, "xml_path": "topmostSubform/page1/lawS1Struct/caseDate"},
+
+    {"id": "5.1",  "name": "urgentExam",              "question": "Examen urgent (ON/OFF)",                         "required": false, "xml_path": "topmostSubform/page1/appointmentUrgency"},
+    {"id": "5.2",  "name": "appointmentType",         "question": "Type de rendez-vous (0,1,2)",                   "required": false, "xml_path": "topmostSubform/page1/appointmentType"},
+    {"id": "5.3",  "name": "appointmentAfterDate",    "question": "Date à partir du",                               "required": false, "xml_path": "topmostSubform/page1/appointmentAfterDate"},
+    {"id": "5.4",  "name": "appointmentFixedDate",    "question": "Date de rendez-vous fixé",                       "required": false, "xml_path": "topmostSubform/page1/appointmentFixedDate"},
+
+    {"id": "6.1",  "name": "ecg",                     "question": "ECG demandé (ON/OFF)",                           "required": false, "xml_path": "topmostSubform/page1/ecgExam"},
+    {"id": "6.2",  "name": "ecg72h",                  "question": "ECG 72 h demandé (ON/OFF)",                      "required": false, "xml_path": "topmostSubform/page1/ecg72hExam"},
+    {"id": "6.3",  "name": "bp24h",                   "question": "Tension 24 h demandée (ON/OFF)",                 "required": false, "xml_path": "topmostSubform/page1/bp24hExam"},
+    {"id": "6.4",  "name": "stressErgometryExam",     "question": "Ergométrie de stress (ON/OFF)",                  "required": false, "xml_path": "topmostSubform/page1/stressErgometryExam"},
+    {"id": "6.5",  "name": "stressEchocardiographyExam","question": "Écho-cardio de stress (ON/OFF)",               "required": false, "xml_path": "topmostSubform/page1/stressEchocardiographyExam"},
+    {"id": "6.6",  "name": "ecg24h",                  "question": "ECG 24 h demandé (ON/OFF)",                      "required": false, "xml_path": "topmostSubform/page1/ecg24hExam"},
+    {"id": "6.7",  "name": "ecgHolter",               "question": "Holter ECG demandé (ON/OFF)",                    "required": false, "xml_path": "topmostSubform/page1/ecgHolterExam"},
+    {"id": "6.8",  "name": "echocardiographyExam",    "question": "Échocardiographie demandée (ON/OFF)",            "required": false, "xml_path": "topmostSubform/page1/echocardiographyExam"},
+    {"id": "6.9",  "name": "pacemakerControl",        "question": "Contrôle pacemaker (ON/OFF)",                    "required": false, "xml_path": "topmostSubform/page1/pacemakerControl"},
+    {"id": "6.10", "name": "otherConsultation",       "question": "Autre examen (ON/OFF)",                          "required": false, "xml_path": "topmostSubform/page1/otherConsultation"},
+    {"id": "6.11", "name": "consultationDescription", "question": "Autre examen (précisez lesquels)",               "required": false, "xml_path": "topmostSubform/page1/consultationDescription"},
+
+    {"id": "7.1",  "name": "anamnesis",               "question": "Indication médicale (700 mots)",                 "required": false, "xml_path": "topmostSubform/page1/anamnesis"},
+
+    {"id": "8.1",  "name": "consultationDescription2","question": "Texte libre spécialiste (50 mots)",              "required": false, "xml_path": "topmostSubform/page1/consultationDescription"},
+    {"id": "8.2",  "name": "providerEmail",           "question": "E-mail du spécialiste",                          "required": false, "xml_path": "topmostSubform/page1/providerS1Address/email"},
+    {"id": "8.3",  "name": "providerGLN",             "question": "GLN du spécialiste",                             "required": false, "xml_path": "topmostSubform/page1/providerS1Address/ean"},
+    {"id": "8.4",  "name": "providerPhone",           "question": "Téléphone du spécialiste",                       "required": false, "xml_path": "topmostSubform/page1/providerS1Address/phone"},
+    {"id": "8.5",  "name": "providerRCC",             "question": "RCC du spécialiste",                             "required": false, "xml_path": "topmostSubform/page1/providerS1Address/zsr"},
+
+    {"id": "9.1",  "name": "gpNote",                  "question": "Texte libre médecin famille (50 mots)",          "required": false, "xml_path": "topmostSubform/page1/gpS1Address/input"},
+    {"id": "9.2",  "name": "gpEmail",                 "question": "E-mail médecin de famille",                      "required": false, "xml_path": "topmostSubform/page1/gpS1Address/email"},
+    {"id": "9.3",  "name": "gpGLN",                   "question": "GLN médecin de famille",                         "required": false, "xml_path": "topmostSubform/page1/gpS1Address/ean"},
+    {"id": "9.4",  "name": "gpPhone",                 "question": "Téléphone médecin de famille",                   "required": false, "xml_path": "topmostSubform/page1/gpS1Address/phone"},
+    {"id": "9.5",  "name": "gpRCC",                   "question": "RCC médecin de famille",                         "required": false, "xml_path": "topmostSubform/page1/gpS1Address/zsr"},
+
+    {"id": "10.1", "name": "remark",                  "question": "Remarques générales",                            "required": false, "xml_path": "topmostSubform/page2/remark"}
+  ]
+}

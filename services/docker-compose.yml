@@ -1,0 +1,73 @@
+# services/docker-compose.yml
+services:
+  vllm:
+    container_name: df-services-vllm
+    image: nvcr.io/nvidia/vllm:26.02-py3
+    # Le command remplace ce qu'on passait à la fin du docker run
+    command: >
+      vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ 
+      --max-model-len 8192 
+      --gpu-memory-utilization 0.15
+    ipc: host
+    ports:
+      - "8000:8000"
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  marker_ocr:
+    container_name: df-services-marker_ocr
+    build:
+      context: ./marker_ocr
+    image: df-image-marker
+    ports:
+      - "8082:8082"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  tei:
+    container_name: df-services-tei
+    build:
+      context: ./tei
+    image: doctorfill/tei-service:latest
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  orchestrator:
+    container_name: df-services-orchestrator
+    build:
+      context: ./orchestrator
+    image: doctorfill/orchestrator:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    # L'orchestrateur attend que les autres démarrent
+    depends_on:
+      - vllm
+      - marker_ocr
+      - tei
+    restart: unless-stopped
