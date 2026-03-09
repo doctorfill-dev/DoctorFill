@@ -1,6 +1,12 @@
 # Architecture globale DoctorFill
 
 ## endpoints
+- :80882/extract : marker_ocr
+- :8082/health : marker_ocr
+- :8080/forms : orchestrator
+- :8080/process-form : orchestrator
+- :8081/embed : tei
+- :8081/rerank : tei
 
 ## ✅ Composants actifs
 
