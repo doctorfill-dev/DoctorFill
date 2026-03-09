@@ -1,12 +1,12 @@
 # Architecture globale DoctorFill
 
-## endpoints
-- :80882/extract : marker_ocr
-- :8082/health : marker_ocr
-- :8080/forms : orchestrator
-- :8080/process-form : orchestrator
-- :8081/embed : tei
-- :8081/rerank : tei
+## 🎯 Endpoints
+- `:8082/extract` : marker_ocr
+- `:8082/health` : marker_ocr
+- `:8080/forms` : orchestrator
+- `:8080/process-form` : orchestrator
+- `:8081/embed` : tei
+- `:8081/rerank` : tei
 
 ## ✅ Composants actifs
 
@@ -21,6 +21,33 @@
 - **8080** : Orchestrateur
 - **8081** : TEI (Text Embeddings Inference)
 - **8082** : Marker OCR
+
+## 🐳 Commandes Utiles (Docker Compose)
+
+L'ensemble de la stack est géré via Docker Compose pour simplifier le cycle de vie, la mise en réseau, et libérer rapidement la VRAM du DGX. Place-toi dans le dossier `services/` pour exécuter ces commandes :
+
+- **Démarrer tous les services (en tâche de fond) :**
+  ```bash
+  docker compose up -d
+  ```
+- **Reconstruire l'Orchestrateur (après modification du code) et démarrer :**
+  ```bash
+  docker compose up -d --build
+  ```
+- **Couper tous les services et libérer la VRAM (Arrêt d'urgence / Fin de session) :**
+  ```bash
+  docker compose down
+  ```
+- **Voir les logs en direct de toute la stack (Ctrl+C pour quitter) :**
+  ```bash
+  docker compose logs -f
+  ```
+- **Vérifier l'état de santé des conteneurs :**
+  ```bash
+  docker compose ps
+  ```
+
+*Note Réseau : En mode Compose, les conteneurs communiquent via le DNS interne de Docker. Le fichier `.env` de l'Orchestrateur doit pointer vers les noms des services (ex: `http://vllm:8000/v1`) et non `localhost`.*
 
 ## 💾 Gestion de la VRAM & Sanity Check (NVIDIA DGX Spark)
 
