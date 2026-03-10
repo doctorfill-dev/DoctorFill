@@ -1,10 +1,11 @@
 import os
 import logging
 import shutil
+import tempfile
+from pathlib import Path
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 
-# --- NOUVELLE API MARKER (v1.0+) ---
 from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
 from marker.output import text_from_rendered
@@ -14,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Marker PDF Service (VRAM Optimized)")
 
-# --- Chargement du modèle (Exécuté UNE SEULE FOIS au démarrage)
+# --- Chargement du modèle (une seule fois au démarrage)
 logger.info("Chargement des modèles de vision dans la VRAM en cours...")
 converter = PdfConverter(
-    artifact_dict=create_model_dict()  # Auto-détection du GPU (CUDA)
+    artifact_dict=create_model_dict()
 )
 logger.info("Modèles chargés avec succès !")
 
@@ -27,30 +28,33 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post("/extract")
 async def extract_pdf(file: UploadFile = File(...)):
-    if not file.filename.endswith(".pdf"):
+    # [SEC-02] Assainir le nom de fichier pour empêcher le path traversal
+    original_name = file.filename or "upload.pdf"
+    safe_name = Path(original_name).name.replace("\x00", "")
+
+    if not safe_name.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Le fichier doit être un PDF.")
 
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
-
-    # --- 1) Sauvegarde du PDF reçu
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
+    # [SEC-14] Utiliser un fichier temporaire unique (évite les race conditions)
+    fd, file_path = tempfile.mkstemp(suffix=".pdf", dir=UPLOAD_DIR)
     try:
-        # --- 2) Extraction via la mémoire VRAM avec la nouvelle API
+        with os.fdopen(fd, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
         rendered = converter(file_path)
         full_text, _, _ = text_from_rendered(rendered)
 
         return JSONResponse(content={"status": "success", "markdown": full_text})
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur d'exécution Marker : {str(e)}")
+        # [SEC-10] Log détaillé côté serveur, message générique côté client
+        logger.error(f"Erreur extraction PDF: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Erreur lors de l'extraction du PDF.")
     finally:
-        # --- 3) Nettoyage de sécurité
         if os.path.exists(file_path):
             os.remove(file_path)
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "Marker API is running & Models are loaded in VRAM"}
+    return {"status": "ok", "service": "marker_ocr"}
