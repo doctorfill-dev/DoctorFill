@@ -24,7 +24,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 240s  # vLLM met du temps à charger le modèle
+      start_period: 600s  # vLLM met du temps à charger le modèle
     restart: unless-stopped
 
   marker_ocr:
@@ -46,7 +46,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 180s  # Chargement des modèles vision en VRAM
+      start_period: 600s  # Chargement des modèles vision en VRAM
     restart: unless-stopped
 
   tei:
@@ -70,7 +70,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 120s  # Chargement embedding + reranker
+      start_period: 500s  # Chargement embedding + reranker
     restart: unless-stopped
 
   orchestrator:
