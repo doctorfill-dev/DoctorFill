@@ -2,7 +2,7 @@ import { useState, useEffect, DragEvent } from "react";
 import JSZip from "jszip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FolderArchive, FileCheck, FileText, Trash2, Activity, ChevronRight, Server } from "lucide-react";
+import { Loader2, FolderArchive, FileCheck, FileText, Trash2, ChevronRight, Server } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
