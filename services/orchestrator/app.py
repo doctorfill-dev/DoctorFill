@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Any
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import chromadb
 
@@ -21,6 +22,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="DoctorFill - Orchestrator Hub")
+
+# --- MIDDLEWARE pour le dév
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # ⚠️ accepte toutes les origines
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 MARKER_URL = os.getenv("MARKER_URL", "http://localhost:8082")
 TEI_URL = os.getenv("TEI_URL", "http://localhost:8081")
