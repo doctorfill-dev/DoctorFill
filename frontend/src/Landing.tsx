@@ -1,7 +1,34 @@
-import { Terminal, Database, FileOutput, Lock, ChevronRight, Mail } from "lucide-react";
+import { useState } from "react";
+import { Terminal, Database, FileOutput, Lock, ChevronRight, Mail, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Landing() {
+  const [showContact, setShowContact] = useState(false);
+  const [contactSent, setContactSent] = useState(false);
+  const [contactLoading, setContactLoading] = useState(false);
+
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setContactLoading(true);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    try {
+      const res = await fetch("https://formspree.io/f/mwpodjlq", {
+        method: "POST",
+        body: data,
+        headers: { Accept: "application/json" },
+      });
+      if (res.ok) {
+        setContactSent(true);
+        form.reset();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-zinc-900 font-sans selection:bg-emerald-100 selection:text-emerald-900">
 
@@ -52,15 +79,13 @@ export default function Landing() {
               Tester l'application <ChevronRight className="ml-1 w-4 h-4" />
             </Link>
 
-            <form action="https://formspree.io/f/TON_ID_FORMSPREE" method="POST" target="_blank">
-              <button
-                type="submit"
-                className="w-full inline-flex items-center justify-center bg-transparent border border-zinc-300 text-zinc-600 px-5 py-2.5 rounded-sm text-sm font-medium hover:border-zinc-400 hover:text-zinc-900 transition-colors"
-              >
-                <Mail className="mr-2 w-4 h-4" />
-                Me contacter
-              </button>
-            </form>
+            <button
+              onClick={() => { setShowContact(true); setContactSent(false); }}
+              className="inline-flex items-center justify-center bg-transparent border border-zinc-300 text-zinc-600 px-5 py-2.5 rounded-sm text-sm font-medium hover:border-zinc-400 hover:text-zinc-900 transition-colors"
+            >
+              <Mail className="mr-2 w-4 h-4" />
+              Me contacter
+            </button>
           </div>
         </section>
 
@@ -132,6 +157,56 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* MODAL CONTACT */}
+      {showContact && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowContact(false)}>
+          <div className="bg-white border border-zinc-200 rounded-sm shadow-lg w-full max-w-md mx-4 p-6 relative" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowContact(false)} className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-700 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+
+            <h2 className="text-lg font-semibold mb-1">Contact</h2>
+            <p className="text-sm text-zinc-500 mb-6">Une question ou un retour ? Envoyez-moi un message.</p>
+
+            {contactSent ? (
+              <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 p-4 rounded-sm">
+                Message envoyé avec succès. Merci !
+              </div>
+            ) : (
+              <form onSubmit={handleContactSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-zinc-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className="w-full h-10 px-3 border border-zinc-300 rounded-sm text-sm outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+                    placeholder="votre@email.ch"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-zinc-700 mb-1">Message</label>
+                  <textarea
+                    name="message"
+                    required
+                    rows={4}
+                    className="w-full px-3 py-2 border border-zinc-300 rounded-sm text-sm outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none"
+                    placeholder="Votre message..."
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={contactLoading}
+                  className="w-full h-10 bg-zinc-900 text-white text-sm font-medium rounded-sm hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                >
+                  {contactLoading ? "Envoi..." : "Envoyer"}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

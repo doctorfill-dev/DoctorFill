@@ -48,8 +48,26 @@ app.add_middleware(
     # [SEC-09] credentials=True uniquement si origines explicites (pas wildcard)
     allow_credentials=("*" not in ALLOWED_ORIGINS),
     allow_methods=["GET", "POST"],
-    allow_headers=["*"]
+    allow_headers=["*", "X-API-Key"]
 )
+
+# --- [SEC-22] Clé API pour protéger les endpoints contre les appels non autorisés
+API_KEY = os.getenv("API_KEY", "")
+
+from fastapi import Request
+
+@app.middleware("http")
+async def verify_api_key(request: Request, call_next):
+    # Bypass : health check, CORS preflight, docs
+    if request.url.path in ("/health", "/docs", "/redoc", "/openapi.json") or request.method == "OPTIONS":
+        return await call_next(request)
+    # Si API_KEY est définie, on vérifie le header
+    if API_KEY:
+        client_key = request.headers.get("X-API-Key", "")
+        if not secrets.compare_digest(client_key, API_KEY):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(status_code=403, content={"detail": "API key invalide."})
+    return await call_next(request)
 
 # [SEC-13] Defaults = noms de services Docker (réseau interne)
 MARKER_URL = os.getenv("MARKER_URL", "http://marker_ocr:8082")
