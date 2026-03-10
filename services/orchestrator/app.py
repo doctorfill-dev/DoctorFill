@@ -30,6 +30,7 @@ import asyncio
 import httpx
 import json
 import logging
+import time
 from pathlib import Path
 from typing import List, Dict, Any
 # [FIX 10.03 - B] Ajout de BackgroundTasks
@@ -51,10 +52,15 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="DoctorFill - Orchestrator Hub")
 
-# --- MIDDLEWARE pour le dév
+# --- MIDDLEWARE CORS (configurable via variable d'environnement)
+# Dév  : ALLOWED_ORIGINS=* (ou ne pas la définir → défaut = "*")
+# Prod : ALLOWED_ORIGINS=https://doctorfill.ch,https://www.doctorfill.ch
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+ALLOWED_ORIGINS = ["*"] if _raw_origins.strip() == "*" else [o.strip() for o in _raw_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠️ accepte toutes les origines
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -71,6 +77,36 @@ chroma_client = chromadb.EphemeralClient()
 # Dictionnaire global pour stocker la progression de chaque job.
 # En production lourde, ceci serait remplacé par Redis ou une BDD.
 JOBS: Dict[str, Dict[str, Any]] = {}
+
+# --- CLEANUP AUTOMATIQUE DES FICHIERS TEMPORAIRES ---
+# Durée de rétention des jobs terminés (en secondes) avant suppression automatique.
+JOB_RETENTION_SECONDS = int(os.getenv("JOB_RETENTION_SECONDS", "3600"))  # 1h par défaut
+
+
+async def _cleanup_expired_jobs():
+    """Tâche de fond qui purge les jobs terminés et leurs fichiers temporaires."""
+    while True:
+        await asyncio.sleep(300)  # Vérification toutes les 5 minutes
+        now = time.time()
+        expired = [
+            jid for jid, data in JOBS.items()
+            if data.get("status") in ("completed", "failed")
+            and now - data.get("completed_at", now) > JOB_RETENTION_SECONDS
+        ]
+        for jid in expired:
+            tmp_dir = Path(f"/tmp/{jid}")
+            if tmp_dir.exists():
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                logger.info(f"Cleanup: fichiers temporaires supprimés pour job {jid}")
+            JOBS.pop(jid, None)
+        if expired:
+            logger.info(f"Cleanup: {len(expired)} job(s) expiré(s) purgé(s)")
+
+
+@app.on_event("startup")
+async def startup_cleanup_task():
+    """Lance la tâche de nettoyage périodique au démarrage."""
+    asyncio.create_task(_cleanup_expired_jobs())
 
 
 # ---------------------------------------------------
@@ -211,12 +247,13 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 "status": "completed",
                 "message": "✅ Formulaire généré avec succès !",
                 "progress": 100,
-                "file_path": str(output_pdf)  # On stocke le chemin pour le téléchargement futur
+                "file_path": str(output_pdf),  # On stocke le chemin pour le téléchargement futur
+                "completed_at": time.time()
             }
 
     except Exception as e:
         logger.error(f"Erreur Job {job_id}: {e}")
-        JOBS[job_id] = {"status": "failed", "message": f"❌ Erreur: {str(e)}", "progress": 0}
+        JOBS[job_id] = {"status": "failed", "message": f"❌ Erreur: {str(e)}", "progress": 0, "completed_at": time.time()}
     finally:
         try:
             chroma_client.delete_collection(name=collection_name)
@@ -226,6 +263,11 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
 
 # ---------------------------------------------------------------
 # --- ROUTES ---
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "orchestrator"}
+
 
 @app.get("/forms")
 async def list_forms():
