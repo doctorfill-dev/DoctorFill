@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Loader2, FolderArchive, FileCheck, FileText, Trash2, ChevronRight, Server } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const API_KEY = import.meta.env.VITE_API_KEY || "";
+
+const apiFetch = (url: string, options: RequestInit = {}) => {
+  const headers = new Headers(options.headers || {});
+  if (API_KEY) headers.set("X-API-Key", API_KEY);
+  return fetch(url, { ...options, headers });
+};
 
 export default function App() {
   const [reports, setReports] = useState<File[]>([]);
@@ -23,7 +30,7 @@ export default function App() {
   useEffect(() => {
     const fetchForms = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/forms`);
+        const res = await apiFetch(`${BASE_URL}/forms`);
         if (res.ok) {
           const data = await res.json();
           setAvailableForms(data.forms);
@@ -114,7 +121,7 @@ export default function App() {
   // --- SYSTÈME DE POLLING ---
   const pollStatus = async (jobId: string, token: string) => {
     try {
-      const res = await fetch(`${BASE_URL}/status/${jobId}`);
+      const res = await apiFetch(`${BASE_URL}/status/${jobId}`);
       if (!res.ok) throw new Error("Impossible de lire le statut de la tâche.");
 
       const data = await res.json();
@@ -123,7 +130,7 @@ export default function App() {
       setProgress(data.progress);
 
       if (data.status === "completed") {
-        const pdfRes = await fetch(`${BASE_URL}/download/${jobId}?token=${encodeURIComponent(token)}`);
+        const pdfRes = await apiFetch(`${BASE_URL}/download/${jobId}?token=${encodeURIComponent(token)}`);
         if (!pdfRes.ok) throw new Error("Erreur lors de la récupération du PDF.");
 
         const blob = await pdfRes.blob();
@@ -161,7 +168,7 @@ export default function App() {
     reports.forEach((file) => formData.append("report_files", file));
 
     try {
-      const response = await fetch(`${BASE_URL}/process-form`, {
+      const response = await apiFetch(`${BASE_URL}/process-form`, {
         method: "POST",
         body: formData,
       });
