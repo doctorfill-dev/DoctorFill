@@ -1,0 +1,12 @@
+# [SEC-17] Dépendances pinnées - Orchestrator
+# Mettre à jour périodiquement avec : pip install --upgrade -r requirements.txt
+# Note : bornes inférieures relaxées pour compatibilité aarch64 (DGX Spark)
+fastapi>=0.115.0,<1.0
+uvicorn>=0.30.0,<1.0
+httpx>=0.27.0,<1.0
+chromadb>=1.0.0,<2.0
+python-multipart>=0.0.18,<1.0
+pypdf>=5.0.0,<7.0
+pikepdf>=9.0.0,<11.0
+lxml>=4.9.0
+defusedxml>=0.7.1,<1.0

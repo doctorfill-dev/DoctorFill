@@ -3,14 +3,14 @@ services:
   vllm:
     container_name: df-services-vllm
     image: nvcr.io/nvidia/vllm:26.02-py3
-    # Le command remplace ce qu'on passait à la fin du docker run
     command: >
-      vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ 
-      --max-model-len 8192 
+      vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ
+      --max-model-len 8192
       --gpu-memory-utilization 0.15
     ipc: host
-    ports:
-      - "8000:8000"
+    # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
+    expose:
+      - "8000"
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
     deploy:
@@ -20,6 +20,12 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 600s  # vLLM met du temps à charger le modèle
     restart: unless-stopped
 
   marker_ocr:
@@ -27,8 +33,9 @@ services:
     build:
       context: ./marker_ocr
     image: df-image-marker
-    ports:
-      - "8082:8082"
+    # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
+    expose:
+      - "8082"
     deploy:
       resources:
         reservations:
@@ -36,6 +43,12 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8082/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 600s  # Chargement des modèles vision en VRAM
     restart: unless-stopped
 
   tei:
@@ -43,8 +56,9 @@ services:
     build:
       context: ./tei
     image: doctorfill/tei-service:latest
-    ports:
-      - "8081:8081"
+    # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
+    expose:
+      - "8081"
     env_file:
       - .env
     deploy:
@@ -54,6 +68,12 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 500s  # Chargement embedding + reranker
     restart: unless-stopped
 
   orchestrator:
@@ -65,9 +85,17 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    # L'orchestrateur attend que les autres démarrent
     depends_on:
-      - vllm
-      - marker_ocr
-      - tei
+      vllm:
+        condition: service_healthy
+      marker_ocr:
+        condition: service_healthy
+      tei:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped

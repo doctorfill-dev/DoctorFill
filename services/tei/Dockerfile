@@ -3,8 +3,9 @@ FROM nvcr.io/nvidia/pytorch:26.02-py3
 
 WORKDIR /app
 
-# Installation des dépendances légères (PyTorch est déjà dans l'image de base)
-RUN pip install --no-cache-dir fastapi uvicorn sentence-transformers
+# [SEC-17] Dépendances pinnées via requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copie du code
 COPY app.py .

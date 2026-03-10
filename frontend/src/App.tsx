@@ -2,7 +2,7 @@ import { useState, useEffect, DragEvent } from "react";
 import JSZip from "jszip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FolderArchive, FileCheck, FileText, Trash2, UploadCloud, ChevronRight } from "lucide-react";
+import { Loader2, FolderArchive, FileCheck, FileText, Trash2, ChevronRight, Server } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
@@ -15,7 +15,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // NOUVEAU : États pour le tracking asynchrone
+  // États pour le tracking asynchrone
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
 
@@ -111,21 +111,19 @@ export default function App() {
     });
   };
 
-  // --- NOUVEAU : SYSTÈME DE POLLING (Vérification toutes les 2s) ---
-  const pollStatus = async (jobId: string) => {
+  // --- SYSTÈME DE POLLING ---
+  const pollStatus = async (jobId: string, token: string) => {
     try {
       const res = await fetch(`${BASE_URL}/status/${jobId}`);
       if (!res.ok) throw new Error("Impossible de lire le statut de la tâche.");
 
       const data = await res.json();
 
-      // Mise à jour de l'UI avec les vraies données du backend
       setStatusMessage(data.message);
       setProgress(data.progress);
 
       if (data.status === "completed") {
-        // Tâche finie ! On lance la requête pour télécharger le PDF final
-        const pdfRes = await fetch(`${BASE_URL}/download/${jobId}`);
+        const pdfRes = await fetch(`${BASE_URL}/download/${jobId}?token=${encodeURIComponent(token)}`);
         if (!pdfRes.ok) throw new Error("Erreur lors de la récupération du PDF.");
 
         const blob = await pdfRes.blob();
@@ -137,8 +135,7 @@ export default function App() {
         setError(data.message);
         setIsLoading(false);
       } else {
-        // Toujours en cours, on re-vérifie dans 2 secondes
-        setTimeout(() => pollStatus(jobId), 2000);
+        setTimeout(() => pollStatus(jobId, token), 2000);
       }
     } catch (err: any) {
       setError(err.message || "Perte de connexion avec le serveur.");
@@ -157,14 +154,13 @@ export default function App() {
     setError(null);
     setPdfUrl(null);
     setProgress(0);
-    setStatusMessage("Envoi des fichiers au DGX...");
+    setStatusMessage("Initialisation de la connexion...");
 
     const formData = new FormData();
     formData.append("form_id", formId);
     reports.forEach((file) => formData.append("report_files", file));
 
     try {
-      // Étape 1 : On poste les fichiers et on reçoit un job_id instantanément
       const response = await fetch(`${BASE_URL}/process-form`, {
         method: "POST",
         body: formData,
@@ -175,8 +171,7 @@ export default function App() {
       const data = await response.json();
 
       if (data.job_id) {
-        // Étape 2 : On démarre le polling avec le job_id
-        pollStatus(data.job_id);
+        pollStatus(data.job_id, data.token || "");
       } else {
         throw new Error("Job ID manquant dans la réponse.");
       }
@@ -187,24 +182,34 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6 md:p-10 text-slate-900">
+    <div className="min-h-screen bg-[#FDFDFD] p-6 md:p-10 text-zinc-900 selection:bg-emerald-100 selection:text-emerald-900 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        <header className="flex items-center justify-between bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        {/* HEADER STRUCTURÉ */}
+        <header className="flex flex-col md:flex-row md:items-center justify-between bg-white p-5 rounded-sm border border-zinc-200 gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <UploadCloud className="w-7 h-7 text-blue-600" />
-              DoctorFill
+            <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-3">
+              <img
+                src="/logo.png"
+                alt="DoctorFill"
+                className="w-10 h-10 rounded-md shadow-sm border border-zinc-200"
+              />
+              doctorfill-dev.
             </h1>
-            <p className="text-sm text-slate-500 mt-1">Génération XFA via NVIDIA DGX Spark</p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Server className="w-3.5 h-3.5 text-zinc-400" />
+              <p className="text-xs font-mono text-zinc-500 uppercase tracking-wider">
+                Nvidia DGX Spark // Gen-XFA
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
-            <label className="text-sm font-medium text-slate-600 pl-2">Template :</label>
+          <div className="flex items-center gap-3 bg-zinc-50/50 p-1.5 rounded-sm border border-zinc-200">
+            <label className="text-xs font-mono text-zinc-500 uppercase tracking-wider pl-3">Cible :</label>
             <select
               value={formId}
               onChange={(e) => setFormId(e.target.value)}
-              className="h-9 w-48 rounded-md border-slate-300 bg-white px-3 py-1 text-sm font-medium shadow-sm outline-none focus:ring-2 focus:ring-blue-500 border"
+              className="h-9 w-48 rounded-sm border-zinc-300 bg-white px-3 py-1 text-sm font-medium shadow-none outline-none focus:ring-1 focus:ring-emerald-500 border transition-all"
             >
               {availableForms.length === 0 && <option disabled>Connexion API...</option>}
               {availableForms.map((f) => (
@@ -215,10 +220,12 @@ export default function App() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* COLONNE GAUCHE (INPUTS) */}
           <div className="lg:col-span-5 flex flex-col gap-6">
-            <Card className="flex-1 shadow-sm border-slate-200 flex flex-col">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Contexte Patient</CardTitle>
+            <Card className="flex-1 shadow-none rounded-sm border-zinc-200 flex flex-col bg-white">
+              <CardHeader className="pb-3 border-b border-zinc-100 mb-4">
+                <CardTitle className="text-base font-semibold">Sources de données</CardTitle>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-4">
 
@@ -226,29 +233,29 @@ export default function App() {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-xl transition-all duration-200 p-8 text-center min-h-[200px]
-                    ${isDragging ? "border-blue-500 bg-blue-50/50 scale-[1.02]" : "border-slate-300 bg-slate-50 hover:bg-slate-100"}
+                  className={`flex-1 flex flex-col items-center justify-center border border-dashed rounded-sm transition-all duration-200 p-8 text-center min-h-[200px]
+                    ${isDragging ? "border-emerald-500 bg-emerald-50/50 scale-[1.02]" : "border-zinc-300 bg-zinc-50/50 hover:bg-zinc-100/50"}
                   `}
                 >
-                  <FolderArchive className={`w-12 h-12 mb-4 transition-colors ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
-                  <h3 className="font-semibold text-slate-700 text-lg">Glissez vos dossiers ici</h3>
-                  <p className="text-sm text-slate-500 mt-2 max-w-[250px]">
-                    Dossiers entiers, archives .ZIP ou fichiers .PDF simples. L'application extrait le tout.
+                  <FolderArchive className={`w-10 h-10 mb-4 transition-colors ${isDragging ? "text-emerald-600" : "text-zinc-400"}`} strokeWidth={1.5} />
+                  <h3 className="font-semibold text-zinc-800 text-sm mb-1">Dépôt sécurisé</h3>
+                  <p className="text-xs text-zinc-500 max-w-[250px] leading-relaxed">
+                    Glissez vos dossiers, archives ZIP ou PDF. Traitement local strict.
                   </p>
                 </div>
 
                 {reports.length > 0 && (
-                  <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm flex flex-col max-h-[200px]">
-                    <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-                      <span className="text-sm font-semibold text-slate-700">{reports.length} Document(s) extrait(s)</span>
-                      <button onClick={() => setReports([])} className="text-xs text-red-500 hover:text-red-700 flex items-center font-medium bg-red-50 px-2 py-1 rounded">
-                        <Trash2 className="w-3 h-3 mr-1" /> Vider
+                  <div className="bg-white border border-zinc-200 rounded-sm p-3 flex flex-col max-h-[220px]">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-zinc-100">
+                      <span className="text-xs font-semibold text-zinc-700">{reports.length} document(s) en file d'attente</span>
+                      <button onClick={() => setReports([])} className="text-[10px] text-red-600 hover:text-red-700 flex items-center font-medium uppercase tracking-wider bg-red-50 px-2 py-1 rounded-sm transition-colors">
+                        <Trash2 className="w-3 h-3 mr-1" /> Purger
                       </button>
                     </div>
-                    <div className="overflow-y-auto space-y-1.5 pr-2">
+                    <div className="overflow-y-auto space-y-1 pr-1 custom-scrollbar">
                       {reports.map((f, i) => (
-                        <div key={i} className="text-xs text-slate-600 truncate flex items-center p-2 bg-slate-50 rounded hover:bg-slate-100 transition-colors">
-                          <FileText className="w-3.5 h-3.5 mr-2 text-blue-500 shrink-0" />
+                        <div key={i} className="text-xs text-zinc-600 truncate flex items-center p-2 bg-zinc-50 border border-zinc-100 rounded-sm">
+                          <FileText className="w-3.5 h-3.5 mr-2 text-zinc-400 shrink-0" />
                           {f.name}
                         </div>
                       ))}
@@ -256,39 +263,44 @@ export default function App() {
                   </div>
                 )}
 
-                {error && <div className="text-sm text-red-600 font-medium bg-red-50 border border-red-100 p-3 rounded-lg">{error}</div>}
+                {error && (
+                  <div className="text-sm text-red-700 font-medium bg-red-50 border border-red-200 p-3 rounded-sm flex items-start">
+                    <span className="mr-2">⚠️</span> {error}
+                  </div>
+                )}
 
-                <div className="space-y-2 mt-2">
+                <div className="space-y-3 mt-2 pt-4 border-t border-zinc-100">
                   <Button
                     onClick={handleProcess}
                     disabled={isLoading || reports.length === 0}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md h-12 text-base transition-all relative overflow-hidden"
+                    className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium rounded-sm h-11 text-sm transition-all relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {/* La VRAIE barre de progression connectée au Backend */}
+                    {/* Barre de progression Émeraude */}
                     {isLoading && (
                       <div
-                        className="absolute top-0 left-0 h-full bg-blue-800 transition-all duration-500 ease-out"
+                        className="absolute top-0 left-0 h-full bg-emerald-600 transition-all duration-500 ease-out"
                         style={{ width: `${progress}%` }}
                       />
                     )}
 
                     {isLoading ? (
                       <span className="relative z-10 flex items-center">
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Traitement en cours... {progress}%
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Traitement asynchrone... {progress}%
                       </span>
                     ) : (
                       <span className="relative z-10 flex items-center">
-                        Lancer l'automatisation <ChevronRight className="ml-2 h-5 w-5" />
+                        Exécuter la pipeline <ChevronRight className="ml-2 h-4 w-4" />
                       </span>
                     )}
                   </Button>
 
-                  {/* Message exact provenant du backend (OCR, Vectorisation, etc.) */}
+                  {/* Message de statut façon Terminal */}
                   {isLoading && statusMessage && (
-                    <p className="text-xs text-center text-slate-500 font-medium animate-pulse">
+                    <div className="flex items-center justify-center gap-2 text-xs font-mono text-zinc-500 bg-zinc-50 border border-zinc-200 py-2 rounded-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       {statusMessage}
-                    </p>
+                    </div>
                   )}
                 </div>
 
@@ -296,32 +308,34 @@ export default function App() {
             </Card>
           </div>
 
+          {/* COLONNE DROITE (PREVIEW) */}
           <div className="lg:col-span-7">
-            <Card className="h-[750px] flex flex-col shadow-sm border-slate-200 overflow-hidden">
-              <CardHeader className="bg-slate-50 border-b border-slate-200 py-4 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-lg">Prévisualisation du Formulaire</CardTitle>
+            <Card className="h-[750px] flex flex-col shadow-none border-zinc-200 rounded-sm overflow-hidden bg-white">
+              <CardHeader className="bg-zinc-50/50 border-b border-zinc-200 py-3 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-sm font-semibold text-zinc-800">Visualiseur XFA</CardTitle>
                 {pdfUrl && (
                   <a href={pdfUrl} download={`Final_${formId}.pdf`}>
-                    <Button variant="outline" size="sm" className="h-8 border-slate-300 bg-white">
-                      Télécharger le PDF
+                    <Button variant="outline" size="sm" className="h-8 rounded-sm border-zinc-300 bg-white text-xs font-medium hover:bg-zinc-50 hover:text-zinc-900">
+                      Télécharger
                     </Button>
                   </a>
                 )}
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col items-center justify-center p-0 bg-slate-200/50 relative">
+              <CardContent className="flex-1 flex flex-col items-center justify-center p-0 bg-zinc-100 relative">
                 {pdfUrl ? (
-                  <iframe src={pdfUrl} className="w-full h-full border-0 shadow-inner" title="PDF Result" />
+                  <iframe src={pdfUrl} className="w-full h-full border-0" title="PDF Result" />
                 ) : (
-                  <div className="text-slate-400 flex flex-col items-center space-y-4">
-                    <div className="w-20 h-20 rounded-full bg-slate-200/50 flex items-center justify-center">
-                      <FileCheck className="w-10 h-10 text-slate-300" />
+                  <div className="text-zinc-400 flex flex-col items-center space-y-4">
+                    <div className="w-16 h-16 rounded-sm border border-zinc-200 bg-white shadow-sm flex items-center justify-center">
+                      <FileCheck className="w-8 h-8 text-zinc-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-sm font-medium">Le document finalisé s'affichera ici.</p>
+                    <p className="text-xs font-medium tracking-wide uppercase text-zinc-400">En attente de génération</p>
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
+
         </div>
       </div>
     </div>

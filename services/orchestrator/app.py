@@ -2,45 +2,25 @@
 =============================================================================
 DOCTORFILL - ORCHESTRATOR HUB
 =============================================================================
-
-MODIFICATIONS RÉCENTES (10.03.2026) :
-
-[FIX 10.03 - A] : Suppression de l'upload du formulaire vierge par l'utilisateur.
-- Problème : Le frontend devait envoyer le PDF vide (form_file) à chaque requête.
-- Solution : L'orchestrateur va désormais chercher automatiquement le PDF vierge
-  dans le dossier local `forms/` du conteneur en se basant sur le `form_id`.
-  (Utilisation de shutil.copy au lieu de form_file.read()).
-
-[FIX 10.03 - B] : Passage en architecture Asynchrone (Background Tasks & Polling).
-- Problème : Le traitement synchrone (~40s) risquait de provoquer un timeout 
-  HTTP (ex: erreur 524 sur Cloudflare) si le traitement dépassait 100s.
-- Solution : La route POST /process-form ne bloque plus. Elle enregistre les
-  fichiers temporairement, lance la tâche via `BackgroundTasks` et retourne 
-  immédiatement un `job_id`.
-  Ajout de deux nouvelles routes :
-  - GET /status/{job_id} : Pour suivre la progression en temps réel.
-  - GET /download/{job_id} : Pour récupérer le PDF final.
-=============================================================================
 """
 
 import os
 import re
+import secrets
 import uuid
 import asyncio
 import httpx
 import json
 import logging
+import time
 from pathlib import Path
-from typing import List, Dict, Any
-# [FIX 10.03 - B] Ajout de BackgroundTasks
+from typing import List, Dict, Any, Set
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import chromadb
-# [FIX 10.03 - A] Ajout de shutil pour la copie locale
 import shutil
 
-# Imports core
 from core.extract import extract_xfa_datasets
 from core.fill import update_datasets
 from core.inject import inject_datasets
@@ -49,28 +29,81 @@ from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="DoctorFill - Orchestrator Hub")
+# --- [SEC-21] Désactivation Swagger/ReDoc en production
+_disable_docs = os.getenv("DISABLE_DOCS", "false").lower() == "true"
+app = FastAPI(
+    title="DoctorFill - Orchestrator Hub",
+    docs_url=None if _disable_docs else "/docs",
+    redoc_url=None if _disable_docs else "/redoc",
+    openapi_url=None if _disable_docs else "/openapi.json",
+)
 
-# --- MIDDLEWARE pour le dév
+# --- [SEC-09] MIDDLEWARE CORS sécurisé
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "*")
+ALLOWED_ORIGINS = ["*"] if _raw_origins.strip() == "*" else [o.strip() for o in _raw_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ⚠️ accepte toutes les origines
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    # [SEC-09] credentials=True uniquement si origines explicites (pas wildcard)
+    allow_credentials=("*" not in ALLOWED_ORIGINS),
+    allow_methods=["GET", "POST"],
     allow_headers=["*"]
 )
 
-MARKER_URL = os.getenv("MARKER_URL", "http://localhost:8082")
-TEI_URL = os.getenv("TEI_URL", "http://localhost:8081")
-VLLM_URL = os.getenv("VLLM_URL", "http://localhost:8000/v1")
+# [SEC-13] Defaults = noms de services Docker (réseau interne)
+MARKER_URL = os.getenv("MARKER_URL", "http://marker_ocr:8082")
+TEI_URL = os.getenv("TEI_URL", "http://tei:8081")
+VLLM_URL = os.getenv("VLLM_URL", "http://vllm:8000/v1")
 VLLM_MODEL = os.getenv("VLLM_MODEL_NAME", "Qwen/Qwen2.5-14B-Instruct-AWQ")
 
 chroma_client = chromadb.EphemeralClient()
 
-# --- [FIX 10.03 - B] ETAT EN MEMOIRE DES TÂCHES ---
-# Dictionnaire global pour stocker la progression de chaque job.
-# En production lourde, ceci serait remplacé par Redis ou une BDD.
 JOBS: Dict[str, Dict[str, Any]] = {}
+JOB_RETENTION_SECONDS = int(os.getenv("JOB_RETENTION_SECONDS", "3600"))
+
+# --- [SEC-06] Limite de jobs concurrents
+MAX_CONCURRENT_JOBS = int(os.getenv("MAX_CONCURRENT_JOBS", "20"))
+
+# --- [SEC-05] Limites d'upload
+MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(50 * 1024 * 1024)))  # 50 MB
+MAX_FILES = int(os.getenv("MAX_FILES", "10"))
+
+# --- [SEC-03] Whitelist des form_id valides (construite au démarrage)
+VALID_FORM_IDS: Set[str] = set()
+
+
+@app.on_event("startup")
+async def startup_tasks():
+    """Initialisation au démarrage : whitelist form_id + cleanup périodique."""
+    # [SEC-03] Scanner les templates disponibles
+    template_dir = Path("template")
+    if template_dir.exists():
+        for f in template_dir.glob("Form_*.json"):
+            VALID_FORM_IDS.add(f.stem.replace("Form_", ""))
+        logger.info(f"Form IDs valides: {VALID_FORM_IDS}")
+
+    asyncio.create_task(_cleanup_expired_jobs())
+
+
+async def _cleanup_expired_jobs():
+    """Tâche de fond qui purge les jobs terminés et leurs fichiers temporaires."""
+    while True:
+        await asyncio.sleep(300)
+        now = time.time()
+        expired = [
+            jid for jid, data in JOBS.items()
+            if data.get("status") in ("completed", "failed")
+            and now - data.get("completed_at", now) > JOB_RETENTION_SECONDS
+        ]
+        for jid in expired:
+            tmp_dir = Path(f"/tmp/{jid}")
+            if tmp_dir.exists():
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                logger.info(f"Cleanup: fichiers temporaires supprimés pour job {jid}")
+            JOBS.pop(jid, None)
+        if expired:
+            logger.info(f"Cleanup: {len(expired)} job(s) expiré(s) purgé(s)")
 
 
 # ---------------------------------------------------
@@ -81,7 +114,8 @@ def markdown_semantic_chunking(md_text: str, max_words: int = 400) -> List[str]:
     final_chunks = []
     for chunk in raw_chunks:
         chunk = chunk.strip()
-        if not chunk: continue
+        if not chunk:
+            continue
         words = chunk.split()
         if len(words) > max_words:
             for i in range(0, len(words), max_words - 50):
@@ -89,6 +123,23 @@ def markdown_semantic_chunking(md_text: str, max_words: int = 400) -> List[str]:
         else:
             final_chunks.append(chunk)
     return final_chunks
+
+
+def _sanitize_filename(filename: str, index: int) -> str:
+    """
+    [SEC-01] Assainit un nom de fichier uploadé.
+    Empêche le path traversal en ne gardant que le basename.
+    """
+    if not filename:
+        return f"upload_{index}.pdf"
+    # Supprimer les null bytes
+    safe = filename.replace("\x00", "")
+    # Ne garder que le nom de fichier (pas le chemin)
+    safe = Path(safe).name
+    # Fallback si vide après nettoyage
+    if not safe:
+        return f"upload_{index}.pdf"
+    return safe
 
 
 async def fetch_embeddings(client: httpx.AsyncClient, texts: List[str]):
@@ -121,21 +172,18 @@ async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dic
         return {"id": field["id"], "result": json.loads(content)}
     except Exception as e:
         logger.error(f"Erreur vLLM sur {field['id']}: {e}")
-        return {"id": field["id"], "error": str(e)}
+        # [SEC-10] Ne pas exposer les détails de l'erreur au client
+        return {"id": field["id"], "error": "extraction_failed"}
 
 
-# --- [FIX 10.03 - B] FONCTION DE TRAVAIL ASYNCHRONE ---
 async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
-    """
-    Exécute le pipeline complet en arrière-plan et met à jour le dictionnaire JOBS.
-    Anciennement le cœur de la route POST /process-form.
-    """
+    """Exécute le pipeline complet en arrière-plan."""
     collection_name = f"col_{job_id}"
     try:
         async with httpx.AsyncClient() as client:
             # 1. OCR Multi-fichiers
-            JOBS[job_id] = {"status": "processing", "message": "📄 Numérisation et OCR des documents patients...",
-                            "progress": 10}
+            JOBS[job_id].update({"status": "processing", "message": "📄 Numérisation et OCR des documents patients...",
+                            "progress": 10})
             full_context_md = ""
             logger.info(f"Step 1: OCR de {len(report_paths)} fichiers ...")
             for report_path in report_paths:
@@ -148,7 +196,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 full_context_md += f"\n\n--- SOURCE: {report_path.name} ---\n\n" + ocr_resp.json().get("markdown", "")
 
             # 2. RAG & ChromaDB
-            JOBS[job_id] = {"status": "processing", "message": "🧠 Vectorisation du contexte médical...", "progress": 40}
+            JOBS[job_id].update({"status": "processing", "message": "🧠 Vectorisation du contexte médical...", "progress": 40})
             chunks = markdown_semantic_chunking(full_context_md)
             embeds = await fetch_embeddings(client, chunks)
             col = chroma_client.get_or_create_collection(name=collection_name)
@@ -156,14 +204,15 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             await asyncio.sleep(0.1)
 
             # 3. RAG Loop
-            JOBS[job_id] = {"status": "processing", "message": "🤖 Analyse LLM et extraction des entités...",
-                            "progress": 60}
+            JOBS[job_id].update({"status": "processing", "message": "🤖 Analyse LLM et extraction des entités...",
+                            "progress": 60})
             with open(f"template/Form_{form_id}.json", "r") as f:
                 template = json.load(f)
 
             tasks = []
             for field in template["fields"]:
-                if "question" not in field: continue
+                if "question" not in field:
+                    continue
                 q_emb = await fetch_embeddings(client, [field["question"]])
                 hits = col.query(query_embeddings=q_emb, n_results=5)["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits)
@@ -173,20 +222,14 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             results = await asyncio.gather(*tasks)
 
             # 4. Mapping & Injection XFA
-            JOBS[job_id] = {"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
-                            "progress": 90}
+            JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
+                            "progress": 90})
             empty_form_path = tmp_dir / "empty.pdf"
 
-            # --- [FIX 10.03 - A] : Recherche automatique du template
             source_template_path = Path(f"forms/Form_{form_id}.pdf")
             if not source_template_path.exists():
-                raise HTTPException(status_code=404,
-                                    detail=f"Template {source_template_path} introuvable sur le serveur.")
+                raise FileNotFoundError(f"Template introuvable pour form_id={form_id}")
             shutil.copy(source_template_path, empty_form_path)
-            # Ancienne version supprimée :
-            # with open(empty_form_path, "wb") as f:
-            #    f.write(await form_file.read())
-            # --- Fin [FIX 10.03 - A]
 
             base_xml = tmp_dir / "base.xml"
             extract_xfa_datasets(empty_form_path, base_xml)
@@ -206,17 +249,23 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             output_pdf = tmp_dir / "output.pdf"
             inject_datasets(empty_form_path, filled_xml, output_pdf)
 
-            # FINITION
-            JOBS[job_id] = {
+            JOBS[job_id].update({
                 "status": "completed",
                 "message": "✅ Formulaire généré avec succès !",
                 "progress": 100,
-                "file_path": str(output_pdf)  # On stocke le chemin pour le téléchargement futur
-            }
+                "file_path": str(output_pdf),
+                "completed_at": time.time()
+            })
 
     except Exception as e:
-        logger.error(f"Erreur Job {job_id}: {e}")
-        JOBS[job_id] = {"status": "failed", "message": f"❌ Erreur: {str(e)}", "progress": 0}
+        # [SEC-10] Log complet côté serveur, message générique côté client
+        logger.error(f"Erreur Job {job_id}: {e}", exc_info=True)
+        JOBS[job_id].update({
+            "status": "failed",
+            "message": "Une erreur est survenue lors du traitement. Veuillez réessayer.",
+            "progress": 0,
+            "completed_at": time.time()
+        })
     finally:
         try:
             chroma_client.delete_collection(name=collection_name)
@@ -227,69 +276,107 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
 # ---------------------------------------------------------------
 # --- ROUTES ---
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "service": "orchestrator"}
+
+
 @app.get("/forms")
 async def list_forms():
     template_path = Path("template")
     return {"forms": [f.stem.replace("Form_", "") for f in template_path.glob("Form_*.json")]}
 
 
-# --- [FIX 10.03 - B] Nouvelle version de process-form (Non-bloquante) ---
 @app.post("/process-form")
 async def process_form(
-        background_tasks: BackgroundTasks,  # NOUVEAU
+        background_tasks: BackgroundTasks,
         report_files: List[UploadFile] = File(...),
-        # [FIX 10.03 - A]
-        # form_file: UploadFile = File(...), # Supprimé : Le fichier est récupéré en local (forms/)
         form_id: str = Form(...)
 ):
-    """
-    Initie le traitement. Sauvegarde les fichiers et lance la tâche en arrière-plan.
-    Retourne immédiatement le job_id au frontend.
-    """
-    job_id = uuid.uuid4().hex[:8]
+    """Initie le traitement. Retourne immédiatement un job_id + token."""
+
+    # --- [SEC-03] Validation du form_id (whitelist)
+    if form_id not in VALID_FORM_IDS:
+        raise HTTPException(status_code=400, detail="Formulaire inconnu.")
+
+    # --- [SEC-06] Limite de jobs concurrents
+    active_jobs = sum(1 for j in JOBS.values() if j.get("status") in ("pending", "processing"))
+    if active_jobs >= MAX_CONCURRENT_JOBS:
+        raise HTTPException(status_code=429, detail="Serveur saturé, réessayez dans quelques minutes.")
+
+    # --- [SEC-05] Validation du nombre de fichiers
+    if len(report_files) > MAX_FILES:
+        raise HTTPException(status_code=400, detail=f"Maximum {MAX_FILES} fichiers autorisés.")
+
+    # --- [SEC-07] Job ID complet (128 bits) + token secret
+    job_id = uuid.uuid4().hex
+    download_token = secrets.token_urlsafe(32)
     tmp_dir = Path(f"/tmp/{job_id}")
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
-    # Sauvegarde des fichiers reçus sur le disque (obligatoire car UploadFile 
-    # se ferme à la fin de cette fonction synchrone).
     saved_report_paths = []
-    for report in report_files:
-        file_path = tmp_dir / report.filename
+    for i, report in enumerate(report_files):
+        # --- [SEC-05] Validation taille + magic bytes PDF
+        content = await report.read()
+        if len(content) > MAX_FILE_SIZE:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            raise HTTPException(status_code=413, detail=f"Fichier trop volumineux (max {MAX_FILE_SIZE // (1024*1024)} MB).")
+        if not content.startswith(b"%PDF"):
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            raise HTTPException(status_code=400, detail="Seuls les fichiers PDF sont acceptés.")
+
+        # --- [SEC-01] Assainissement du nom de fichier
+        safe_name = _sanitize_filename(report.filename, i)
+        file_path = tmp_dir / safe_name
+
+        # Vérification supplémentaire : le path résolu reste dans tmp_dir
+        if not file_path.resolve().is_relative_to(tmp_dir.resolve()):
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            raise HTTPException(status_code=400, detail="Nom de fichier invalide.")
+
         with open(file_path, "wb") as f:
-            f.write(await report.read())
+            f.write(content)
         saved_report_paths.append(file_path)
 
-    # Initialisation de l'état
-    JOBS[job_id] = {"status": "pending", "message": "Initialisation du pipeline...", "progress": 0}
+    JOBS[job_id] = {
+        "status": "pending",
+        "message": "Initialisation du pipeline...",
+        "progress": 0,
+        "token": download_token,
+    }
 
-    # On délègue le gros du travail à la fonction de background
     background_tasks.add_task(run_pipeline_task, job_id, form_id, tmp_dir, saved_report_paths)
 
-    # On libère le client web immédiatement
-    return {"job_id": job_id}
+    return {"job_id": job_id, "token": download_token}
 
 
-# --- [FIX 10.03 - B] Nouvelles routes de Polling ---
 @app.get("/status/{job_id}")
 async def get_status(job_id: str):
-    """
-    Route appelée par le frontend toutes les 2 secondes pour connaître l'avancement.
-    """
+    """Retourne la progression du job (sans le token ni le file_path)."""
     if job_id not in JOBS:
         raise HTTPException(status_code=404, detail="Job introuvable ou expiré.")
-    return JOBS[job_id]
+    job = JOBS[job_id]
+    # Ne pas exposer le token ni le file_path dans le status
+    return {
+        "status": job.get("status"),
+        "message": job.get("message"),
+        "progress": job.get("progress"),
+    }
 
 
 @app.get("/download/{job_id}")
-async def download_result(job_id: str):
-    """
-    Route appelée par le frontend lorsque le statut passe à 'completed'.
-    """
+async def download_result(job_id: str, token: str = ""):
+    """Télécharge le PDF final. Requiert le token retourné à la création."""
     if job_id not in JOBS or JOBS[job_id]["status"] != "completed":
         raise HTTPException(status_code=400, detail="Fichier non disponible ou traitement en cours.")
 
+    # --- [SEC-07] Vérification du token de téléchargement
+    expected_token = JOBS[job_id].get("token", "")
+    if not token or not secrets.compare_digest(token, expected_token):
+        raise HTTPException(status_code=403, detail="Token invalide.")
+
     file_path = JOBS[job_id].get("file_path")
     if not file_path or not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Fichier introuvable sur le disque.")
+        raise HTTPException(status_code=404, detail="Fichier introuvable.")
 
-    return FileResponse(file_path, media_type="application/pdf", filename=f"DoctorFill_{job_id}.pdf")
+    return FileResponse(file_path, media_type="application/pdf", filename=f"DoctorFill_{job_id[:8]}.pdf")

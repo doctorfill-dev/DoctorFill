@@ -1,7 +1,6 @@
-# [SEC-17] Dépendances pinnées - Marker OCR
+# [SEC-17] Dépendances pinnées - TEI (Embeddings + Reranking)
 # Mettre à jour périodiquement avec : pip install --upgrade -r requirements.txt
 # Note : bornes inférieures relaxées pour compatibilité aarch64 (DGX Spark)
-marker-pdf>=1.6.0,<2.0
 fastapi>=0.115.0,<1.0
-uvicorn[standard]>=0.30.0,<1.0
-python-multipart>=0.0.18,<1.0
+uvicorn>=0.30.0,<1.0
+sentence-transformers>=3.0.0,<6.0

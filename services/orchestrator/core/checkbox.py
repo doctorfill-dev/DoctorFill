@@ -55,7 +55,9 @@ def discover_checkbox_paths(datasets_xml: str | Path) -> List[str]:
     Returns:
         List of XFA paths for checkbox fields
     """
-    tree = etree.parse(str(datasets_xml))
+    # [SEC-04] Parser sécurisé : désactivation de la résolution d'entités externes (XXE)
+    parser = etree.XMLParser(resolve_entities=False, no_network=True)
+    tree = etree.parse(str(datasets_xml), parser)
     root = tree.getroot()
 
     candidates: List[str] = []

@@ -1,3 +1,27 @@
+# ── Environnement ──
 .env
+.env.*
+!.env.example
+
+# ── IDE ──
 .idea
+.vscode
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Node ──
 node_modules
+frontend/dist
+
+# ── Python ──
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+
+# ── Docker volumes / data ──
+services/orchestrator/uploads/
+services/orchestrator/results/

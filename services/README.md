@@ -69,7 +69,7 @@ L'ensemble de la stack est géré via Docker Compose pour simplifier le cycle de
   docker compose up -d
   ```
 
-- **Reconstruire l'Orchestrateur (après modification du code) et démarrer :**
+- **Reconstruire les conteneurs (après modification du code) et démarrer :**
   ```bash
   docker compose up -d --build
   ```

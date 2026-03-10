@@ -1,9 +1,13 @@
 import os
+import logging
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 import torch
 from sentence_transformers import SentenceTransformer, CrossEncoder
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="DoctorFill - Embeddings & Reranking API")
 
@@ -19,18 +23,24 @@ reranker = None
 @app.on_event("startup")
 def load_models():
     global embedder, reranker
-    print("⏳ Chargement des modèles en VRAM (Grace ARM64)...")
+    logger.info("Chargement des modèles en VRAM (Grace ARM64)...")
 
     # Force l'utilisation du GPU
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # 1. Modèle d'Embedding
     embedder = SentenceTransformer(EMBED_MODEL_NAME, device=device)
-    print(f"✅ Embedding ({EMBED_MODEL_NAME}) chargé.")
+    logger.info(f"Embedding ({EMBED_MODEL_NAME}) chargé sur {device}.")
 
     # 2. Modèle de Reranking
     reranker = CrossEncoder(RERANK_MODEL_NAME, device=device)
-    print(f"✅ Reranker ({RERANK_MODEL_NAME}) chargé.")
+    logger.info(f"Reranker ({RERANK_MODEL_NAME}) chargé sur {device}.")
+
+
+# --- HEALTH CHECK
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "service": "tei", "models_loaded": embedder is not None and reranker is not None}
 
 
 # --- SCHEMAS
