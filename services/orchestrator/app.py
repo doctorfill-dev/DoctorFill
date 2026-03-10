@@ -11,6 +11,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import chromadb
+import shutil # fix du 10.03
 
 # Imports core
 from core.extract import extract_xfa_datasets
@@ -101,7 +102,9 @@ async def list_forms():
 @app.post("/process-form")
 async def process_form(
         report_files: List[UploadFile] = File(...),
-        form_file: UploadFile = File(...),
+        # fix du 10.03 : recherche automatique des templates
+        # todo : delete commented lines when tested
+        # form_file: UploadFile = File(...),
         form_id: str = Form(...)
 ):
     job_id = uuid.uuid4().hex[:8]
@@ -148,8 +151,22 @@ async def process_form(
 
             # 5. Mapping & Injection XFA
             empty_form_path = tmp_dir / "empty.pdf"
-            with open(empty_form_path, "wb") as f:
-                f.write(await form_file.read())
+
+            # --- begin fix du 10.03 : recherche automatique des templates
+            source_template_path = Path(f"template/Form_{form_id}.pdf")
+
+            if not source_template_path.exists():
+                raise HTTPException(status_code=404,
+                                    detail=f"Template {source_template_path} introuvable sur le serveur.")
+
+            shutil.copy(source_template_path, empty_form_path)
+
+            # fix du 10.03 : recherche automatique des templates
+            # todo : delete commented lines when tested
+            # with open(empty_form_path, "wb") as f:
+            #    f.write(await form_file.read())
+
+            # -- end fix du 10.03
 
             base_xml = tmp_dir / "base.xml"
             extract_xfa_datasets(empty_form_path, base_xml)
