@@ -1,4 +1,5 @@
 import os
+import logging
 import shutil
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
@@ -8,14 +9,17 @@ from marker.converters.pdf import PdfConverter
 from marker.models import create_model_dict
 from marker.output import text_from_rendered
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="Marker PDF Service (VRAM Optimized)")
 
 # --- Chargement du modèle (Exécuté UNE SEULE FOIS au démarrage)
-print("Chargement des modèles de vision dans la VRAM en cours...")
+logger.info("Chargement des modèles de vision dans la VRAM en cours...")
 converter = PdfConverter(
     artifact_dict=create_model_dict()  # Auto-détection du GPU (CUDA)
 )
-print("Modèles chargés avec succès !")
+logger.info("Modèles chargés avec succès !")
 
 UPLOAD_DIR = "/tmp/pdf_uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
