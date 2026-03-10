@@ -3,10 +3,9 @@ services:
   vllm:
     container_name: df-services-vllm
     image: nvcr.io/nvidia/vllm:26.02-py3
-    # Le command remplace ce qu'on passait à la fin du docker run
     command: >
-      vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ 
-      --max-model-len 8192 
+      vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ
+      --max-model-len 8192
       --gpu-memory-utilization 0.15
     ipc: host
     ports:
@@ -20,6 +19,12 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 240s  # vLLM met du temps à charger le modèle
     restart: unless-stopped
 
   marker_ocr:
@@ -36,6 +41,12 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8082/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s  # Chargement des modèles vision en VRAM
     restart: unless-stopped
 
   tei:
@@ -54,6 +65,12 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s  # Chargement embedding + reranker
     restart: unless-stopped
 
   orchestrator:
@@ -65,9 +82,17 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    # L'orchestrateur attend que les autres démarrent
     depends_on:
-      - vllm
-      - marker_ocr
-      - tei
+      vllm:
+        condition: service_healthy
+      marker_ocr:
+        condition: service_healthy
+      tei:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped
