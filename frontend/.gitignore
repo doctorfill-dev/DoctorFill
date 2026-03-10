@@ -1,7 +1,7 @@
 # .env
 .env
-.env.dev
-.env.prod
+.env.development
+.env.production
 
 # Logs
 logs
