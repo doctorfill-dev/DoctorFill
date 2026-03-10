@@ -1,6 +1,6 @@
 {
-  "name": "doctorfill",
-  "short_name": "doctorfill",
+  "name": "MyWebSite",
+  "short_name": "MySite",
   "icons": [
     {
       "src": "/public/./web-app-manifest-192x192.png",
