@@ -111,8 +111,9 @@ export default function App() {
     });
   };
 
-  // --- NOUVEAU : SYSTÈME DE POLLING (Vérification toutes les 2s) ---
-  const pollStatus = async (jobId: string) => {
+  // --- SYSTÈME DE POLLING (Vérification toutes les 2s) ---
+  // Le token est passé en paramètre (et non via state) pour éviter les closures stale
+  const pollStatus = async (jobId: string, token: string) => {
     try {
       const res = await fetch(`${BASE_URL}/status/${jobId}`);
       if (!res.ok) throw new Error("Impossible de lire le statut de la tâche.");
@@ -124,8 +125,8 @@ export default function App() {
       setProgress(data.progress);
 
       if (data.status === "completed") {
-        // Tâche finie ! On lance la requête pour télécharger le PDF final
-        const pdfRes = await fetch(`${BASE_URL}/download/${jobId}`);
+        // Tâche finie ! On télécharge le PDF avec le token d'autorisation (SEC-07)
+        const pdfRes = await fetch(`${BASE_URL}/download/${jobId}?token=${encodeURIComponent(token)}`);
         if (!pdfRes.ok) throw new Error("Erreur lors de la récupération du PDF.");
 
         const blob = await pdfRes.blob();
@@ -138,7 +139,7 @@ export default function App() {
         setIsLoading(false);
       } else {
         // Toujours en cours, on re-vérifie dans 2 secondes
-        setTimeout(() => pollStatus(jobId), 2000);
+        setTimeout(() => pollStatus(jobId, token), 2000);
       }
     } catch (err: any) {
       setError(err.message || "Perte de connexion avec le serveur.");
@@ -175,8 +176,8 @@ export default function App() {
       const data = await response.json();
 
       if (data.job_id) {
-        // Étape 2 : On démarre le polling avec le job_id
-        pollStatus(data.job_id);
+        // Étape 2 : On démarre le polling avec le job_id et le token de téléchargement
+        pollStatus(data.job_id, data.token || "");
       } else {
         throw new Error("Job ID manquant dans la réponse.");
       }
