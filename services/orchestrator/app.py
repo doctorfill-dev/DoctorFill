@@ -153,7 +153,7 @@ async def process_form(
             empty_form_path = tmp_dir / "empty.pdf"
 
             # --- begin fix du 10.03 : recherche automatique des templates
-            source_template_path = Path(f"template/Form_{form_id}.pdf")
+            source_template_path = Path(f"forms/Form_{form_id}.pdf")
 
             if not source_template_path.exists():
                 raise HTTPException(status_code=404,
