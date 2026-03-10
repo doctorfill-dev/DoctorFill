@@ -182,8 +182,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
     try:
         async with httpx.AsyncClient() as client:
             # 1. OCR Multi-fichiers
-            JOBS[job_id] = {"status": "processing", "message": "📄 Numérisation et OCR des documents patients...",
-                            "progress": 10}
+            JOBS[job_id].update({"status": "processing", "message": "📄 Numérisation et OCR des documents patients...",
+                            "progress": 10})
             full_context_md = ""
             logger.info(f"Step 1: OCR de {len(report_paths)} fichiers ...")
             for report_path in report_paths:
@@ -196,7 +196,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 full_context_md += f"\n\n--- SOURCE: {report_path.name} ---\n\n" + ocr_resp.json().get("markdown", "")
 
             # 2. RAG & ChromaDB
-            JOBS[job_id] = {"status": "processing", "message": "🧠 Vectorisation du contexte médical...", "progress": 40}
+            JOBS[job_id].update({"status": "processing", "message": "🧠 Vectorisation du contexte médical...", "progress": 40})
             chunks = markdown_semantic_chunking(full_context_md)
             embeds = await fetch_embeddings(client, chunks)
             col = chroma_client.get_or_create_collection(name=collection_name)
@@ -204,8 +204,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             await asyncio.sleep(0.1)
 
             # 3. RAG Loop
-            JOBS[job_id] = {"status": "processing", "message": "🤖 Analyse LLM et extraction des entités...",
-                            "progress": 60}
+            JOBS[job_id].update({"status": "processing", "message": "🤖 Analyse LLM et extraction des entités...",
+                            "progress": 60})
             with open(f"template/Form_{form_id}.json", "r") as f:
                 template = json.load(f)
 
@@ -222,8 +222,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             results = await asyncio.gather(*tasks)
 
             # 4. Mapping & Injection XFA
-            JOBS[job_id] = {"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
-                            "progress": 90}
+            JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
+                            "progress": 90})
             empty_form_path = tmp_dir / "empty.pdf"
 
             source_template_path = Path(f"forms/Form_{form_id}.pdf")
@@ -249,23 +249,23 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             output_pdf = tmp_dir / "output.pdf"
             inject_datasets(empty_form_path, filled_xml, output_pdf)
 
-            JOBS[job_id] = {
+            JOBS[job_id].update({
                 "status": "completed",
                 "message": "✅ Formulaire généré avec succès !",
                 "progress": 100,
                 "file_path": str(output_pdf),
                 "completed_at": time.time()
-            }
+            })
 
     except Exception as e:
         # [SEC-10] Log complet côté serveur, message générique côté client
         logger.error(f"Erreur Job {job_id}: {e}", exc_info=True)
-        JOBS[job_id] = {
+        JOBS[job_id].update({
             "status": "failed",
             "message": "Une erreur est survenue lors du traitement. Veuillez réessayer.",
             "progress": 0,
             "completed_at": time.time()
-        }
+        })
     finally:
         try:
             chroma_client.delete_collection(name=collection_name)
