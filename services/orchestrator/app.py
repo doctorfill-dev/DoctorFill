@@ -51,9 +51,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-MARKER_URL = os.getenv("MARKER_URL", "http://localhost:8082")
-TEI_URL = os.getenv("TEI_URL", "http://localhost:8081")
-VLLM_URL = os.getenv("VLLM_URL", "http://localhost:8000/v1")
+# [SEC-13] Defaults = noms de services Docker (réseau interne)
+MARKER_URL = os.getenv("MARKER_URL", "http://marker_ocr:8082")
+TEI_URL = os.getenv("TEI_URL", "http://tei:8081")
+VLLM_URL = os.getenv("VLLM_URL", "http://vllm:8000/v1")
 VLLM_MODEL = os.getenv("VLLM_MODEL_NAME", "Qwen/Qwen2.5-14B-Instruct-AWQ")
 
 chroma_client = chromadb.EphemeralClient()

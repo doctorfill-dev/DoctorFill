@@ -8,8 +8,9 @@ services:
       --max-model-len 8192
       --gpu-memory-utilization 0.15
     ipc: host
-    ports:
-      - "8000:8000"
+    # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
+    expose:
+      - "8000"
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
     deploy:
@@ -32,8 +33,9 @@ services:
     build:
       context: ./marker_ocr
     image: df-image-marker
-    ports:
-      - "8082:8082"
+    # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
+    expose:
+      - "8082"
     deploy:
       resources:
         reservations:
@@ -54,8 +56,9 @@ services:
     build:
       context: ./tei
     image: doctorfill/tei-service:latest
-    ports:
-      - "8081:8081"
+    # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
+    expose:
+      - "8081"
     env_file:
       - .env
     deploy:
