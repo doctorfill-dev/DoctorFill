@@ -17,7 +17,7 @@ export default function Landing() {
       message: formData.get("message"),
     });
     try {
-      const res = await fetch("https://formspree.io/f/mwpodjlq", {
+      const res = await fetch("https://formspree.io/f/mnjgprvq", {
         method: "POST",
         body,
         headers: {
