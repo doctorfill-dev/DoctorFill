@@ -11,12 +11,19 @@ export default function Landing() {
     e.preventDefault();
     setContactLoading(true);
     const form = e.currentTarget;
-    const data = new FormData(form);
+    const formData = new FormData(form);
+    const body = JSON.stringify({
+      email: formData.get("email"),
+      message: formData.get("message"),
+    });
     try {
       const res = await fetch("https://formspree.io/f/mwpodjlq", {
         method: "POST",
-        body: data,
-        headers: { Accept: "application/json" },
+        body,
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       });
       if (res.ok) {
         setContactSent(true);
