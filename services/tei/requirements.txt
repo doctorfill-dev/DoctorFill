@@ -1,0 +1,5 @@
+# [SEC-17] Dépendances pinnées - TEI (Embeddings + Reranking)
+# Mettre à jour périodiquement avec : pip install --upgrade -r requirements.txt
+fastapi>=0.128.0,<1.0
+uvicorn>=0.40.0,<1.0
+sentence-transformers>=5.2.2,<6.0
