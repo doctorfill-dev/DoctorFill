@@ -36,9 +36,13 @@ services:
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
       - "8082"
-    environment:
-      # Réduire la fragmentation mémoire CUDA sur mémoire unifiée (GB10)
-      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:256
+    volumes:
+      # Persister le cache des modèles Marker (~3 GB) entre les rebuilds
+      - ~/.cache/datalab:/root/.cache/datalab
+    # NOTE: Sur DGX Spark (GB10, mémoire unifiée), NE PAS utiliser
+    # PYTORCH_CUDA_ALLOC_CONF ni torch.cuda.set_per_process_memory_fraction()
+    # — ils provoquent des corruptions mémoire glibc (malloc/free invalid pointer).
+    ipc: host
     deploy:
       resources:
         reservations:

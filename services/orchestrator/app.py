@@ -292,7 +292,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             t_ocr_start = time.perf_counter()
             ocr_done = 0
             ocr_sem = asyncio.Semaphore(3)
-            MAX_OCR_RETRIES = 3
+            MAX_OCR_RETRIES = 5
             col = chroma_client.get_or_create_collection(name=collection_name)
             chunk_index = 0  # Index global pour ChromaDB
             all_chunks: List[str] = []  # Pour debug + RAG
@@ -328,9 +328,11 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                             return path.name, md_text
                         except (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError) as e:
                             last_err = e
-                            logger.warning(f"[{job_id[:8]}] OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: {e}")
+                            # Backoff plus long pour ConnectError (service pas encore prêt)
+                            delay = 10 * attempt if isinstance(e, httpx.ConnectError) else 2 * attempt
+                            logger.warning(f"[{job_id[:8]}] OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: {type(e).__name__} (retry in {delay}s)")
                             if attempt < MAX_OCR_RETRIES:
-                                await asyncio.sleep(2 * attempt)
+                                await asyncio.sleep(delay)
                     raise last_err
 
             async def _embed_consumer():
