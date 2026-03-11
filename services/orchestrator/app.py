@@ -161,13 +161,23 @@ def _sanitize_filename(filename: str, index: int) -> str:
 
 
 async def fetch_embeddings(client: httpx.AsyncClient, texts: List[str]):
-    resp = await client.post(f"{TEI_URL}/embed", json={"texts": texts}, timeout=60.0)
+    resp = await client.post(f"{TEI_URL}/embed", json={"texts": texts}, timeout=120.0)
     resp.raise_for_status()
     return resp.json()["embeddings"]
 
 
+async def fetch_embeddings_batched(client: httpx.AsyncClient, texts: List[str], batch_size: int = 64) -> List:
+    """Embed par batches pour éviter les timeouts sur de gros volumes."""
+    all_embeddings: List = []
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        embs = await fetch_embeddings(client, batch)
+        all_embeddings.extend(embs)
+    return all_embeddings
+
+
 async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str]):
-    resp = await client.post(f"{TEI_URL}/rerank", json={"query": query, "documents": docs}, timeout=60.0)
+    resp = await client.post(f"{TEI_URL}/rerank", json={"query": query, "documents": docs}, timeout=120.0)
     resp.raise_for_status()
     return resp.json()["results"]
 
@@ -199,45 +209,69 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
     collection_name = f"col_{job_id}"
     try:
         async with httpx.AsyncClient() as client:
-            # 1. OCR Multi-fichiers
-            JOBS[job_id].update({"status": "processing", "message": "📄 Numérisation et OCR des documents patients...",
-                            "progress": 10})
-            full_context_md = ""
-            logger.info(f"Step 1: OCR de {len(report_paths)} fichiers ...")
-            for report_path in report_paths:
-                with open(report_path, "rb") as f:
-                    file_content = f.read()
-                ocr_resp = await client.post(f"{MARKER_URL}/extract",
-                                             files={'file': (report_path.name, file_content, 'application/pdf')},
-                                             timeout=300.0)
-                ocr_resp.raise_for_status()
-                full_context_md += f"\n\n--- SOURCE: {report_path.name} ---\n\n" + ocr_resp.json().get("markdown", "")
+            total_files = len(report_paths)
 
-            # 2. RAG & ChromaDB
-            JOBS[job_id].update({"status": "processing", "message": "🧠 Vectorisation du contexte médical...", "progress": 40})
+            # 1. OCR parallèle (semaphore pour ne pas surcharger le GPU)
+            JOBS[job_id].update({"status": "processing",
+                                 "message": f"📄 OCR 0/{total_files} documents...", "progress": 5})
+            logger.info(f"Step 1: OCR de {total_files} fichiers (parallèle, max 5 concurrents)...")
+
+            ocr_done = 0
+            ocr_sem = asyncio.Semaphore(5)
+
+            async def _ocr_one(path: Path) -> tuple:
+                nonlocal ocr_done
+                async with ocr_sem:
+                    with open(path, "rb") as f:
+                        content = f.read()
+                    resp = await client.post(
+                        f"{MARKER_URL}/extract",
+                        files={'file': (path.name, content, 'application/pdf')},
+                        timeout=300.0)
+                    resp.raise_for_status()
+                    ocr_done += 1
+                    JOBS[job_id].update({
+                        "message": f"📄 OCR {ocr_done}/{total_files} documents...",
+                        "progress": 5 + int(30 * ocr_done / total_files)
+                    })
+                    return path.name, resp.json().get("markdown", "")
+
+            ocr_results = await asyncio.gather(*[_ocr_one(p) for p in report_paths])
+            full_context_md = ""
+            for name, md in ocr_results:
+                full_context_md += f"\n\n--- SOURCE: {name} ---\n\n" + md
+
+            # 2. Chunking + Embedding par batches
+            JOBS[job_id].update({"status": "processing",
+                                 "message": "🧠 Vectorisation du contexte médical...", "progress": 40})
             chunks = markdown_semantic_chunking(full_context_md)
-            embeds = await fetch_embeddings(client, chunks)
+            logger.info(f"Step 2: {len(chunks)} chunks à vectoriser par batches de 64...")
+            embeds = await fetch_embeddings_batched(client, chunks)
             col = chroma_client.get_or_create_collection(name=collection_name)
             col.add(documents=chunks, embeddings=embeds, ids=[f"{job_id}_{i}" for i in range(len(chunks))])
-            await asyncio.sleep(0.1)
 
-            # 3. RAG Loop
-            JOBS[job_id].update({"status": "processing", "message": "🤖 Analyse LLM et extraction des entités...",
-                            "progress": 60})
+            # 3. RAG optimisé : batch embed questions → parallel rerank + LLM
+            JOBS[job_id].update({"status": "processing",
+                                 "message": "🤖 Analyse LLM et extraction des entités...", "progress": 55})
             with open(f"template/Form_{form_id}.json", "r") as f:
                 template = json.load(f)
 
-            tasks = []
-            for field in template["fields"]:
-                if "question" not in field:
-                    continue
-                q_emb = await fetch_embeddings(client, [field["question"]])
-                hits = col.query(query_embeddings=q_emb, n_results=min(20, len(chunks)))["documents"][0]
+            fields_with_q = [f for f in template["fields"] if "question" in f]
+            logger.info(f"Step 3: {len(fields_with_q)} champs à extraire (batch embed + parallel rerank/LLM)...")
+
+            # Un seul appel batché pour toutes les questions (au lieu de N appels séquentiels)
+            all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
+
+            async def _retrieve_and_extract(field: Dict, q_emb) -> Dict:
+                """ChromaDB query (instant) → rerank → LLM, le tout en parallèle par champ."""
+                hits = col.query(query_embeddings=[q_emb], n_results=min(20, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits)
                 context = "\n---\n".join([r["document"] for r in reranked[:7]])
-                tasks.append(extract_field_vllm(client, context, field))
+                return await extract_field_vllm(client, context, field)
 
-            results = await asyncio.gather(*tasks)
+            results = await asyncio.gather(*[
+                _retrieve_and_extract(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
+            ])
 
             # 4. Mapping & Injection XFA
             JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
