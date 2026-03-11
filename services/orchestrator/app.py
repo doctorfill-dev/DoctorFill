@@ -181,10 +181,31 @@ async def fetch_embeddings_batched(client: httpx.AsyncClient, texts: List[str], 
     return all_embeddings
 
 
-async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str]):
-    resp = await client.post(f"{TEI_URL}/rerank", json={"query": query, "documents": docs}, timeout=120.0)
-    resp.raise_for_status()
-    return resp.json()["results"]
+async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str],
+                       rerank_sem: asyncio.Semaphore = None):
+    """Rerank avec semaphore + retry sur PoolTimeout/ReadError."""
+    MAX_RETRIES = 3
+
+    async def _call():
+        resp = await client.post(f"{TEI_URL}/rerank", json={"query": query, "documents": docs}, timeout=300.0)
+        resp.raise_for_status()
+        return resp.json()["results"]
+
+    async def _call_with_retry():
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                return await _call()
+            except (httpx.PoolTimeout, httpx.ReadError, httpx.ConnectError) as e:
+                if attempt == MAX_RETRIES:
+                    raise
+                logger.warning(f"Rerank retry {attempt}/{MAX_RETRIES}: {type(e).__name__}: {e}")
+                await asyncio.sleep(2 * attempt)
+
+    if rerank_sem:
+        async with rerank_sem:
+            return await _call_with_retry()
+    else:
+        return await _call_with_retry()
 
 
 SYSTEM_PROMPT_EXTRACT = (
@@ -248,7 +269,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
     (debug_dir / "markdown").mkdir(exist_ok=True)
 
     try:
-        limits = httpx.Limits(max_connections=20, max_keepalive_connections=5, keepalive_expiry=30)
+        limits = httpx.Limits(max_connections=50, max_keepalive_connections=10, keepalive_expiry=30)
         async with httpx.AsyncClient(limits=limits) as client:
             total_files = len(report_paths)
 
@@ -316,19 +337,21 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 template = json.load(f)
 
             fields_with_q = [f for f in template["fields"] if "question" in f]
-            logger.info(f"[{job_id[:8]}] Step 3: {len(fields_with_q)} champs à extraire (semaphore LLM=10)...")
+            logger.info(f"[{job_id[:8]}] Step 3: {len(fields_with_q)} champs à extraire (rerank_sem=5, llm_sem=10)...")
 
             all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
 
             # Semaphore LLM : max 10 requêtes concurrentes pour ne pas saturer la KV cache vLLM
             llm_sem = asyncio.Semaphore(10)
+            # Semaphore Rerank : max 5 requêtes concurrentes au TEI pour éviter PoolTimeout
+            rerank_sem = asyncio.Semaphore(5)
             llm_done = 0
 
             async def _retrieve_and_extract(field: Dict, q_emb) -> Dict:
-                """ChromaDB query (instant) → rerank → LLM, avec semaphore."""
+                """ChromaDB query (instant) → rerank (sem=5) → LLM (sem=10), avec semaphores."""
                 nonlocal llm_done
                 hits = col.query(query_embeddings=[q_emb], n_results=min(20, len(chunks)))["documents"][0]
-                reranked = await fetch_rerank(client, field["question"], hits)
+                reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
                 context = "\n---\n".join([r["document"] for r in reranked[:7]])
                 result = await extract_field_vllm(client, context, field, llm_sem=llm_sem)
                 llm_done += 1
