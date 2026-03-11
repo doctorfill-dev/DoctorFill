@@ -6,7 +6,7 @@ services:
     command: >
       vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ
       --max-model-len 8192
-      --gpu-memory-utilization 0.25
+      --gpu-memory-utilization 0.20
     ipc: host
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
@@ -39,10 +39,6 @@ services:
     volumes:
       # Persister le cache des modèles Marker (~3 GB) entre les rebuilds
       - ~/.cache/datalab:/root/.cache/datalab
-    # NOTE: Sur DGX Spark (GB10, mémoire unifiée), NE PAS utiliser
-    # PYTORCH_CUDA_ALLOC_CONF ni torch.cuda.set_per_process_memory_fraction()
-    # — ils provoquent des corruptions mémoire glibc (malloc/free invalid pointer).
-    ipc: host
     deploy:
       resources:
         reservations:
