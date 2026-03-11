@@ -288,6 +288,10 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 _retrieve_and_extract(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
             ])
 
+            # Stocker les résultats bruts pour le debug/eval
+            JOBS[job_id]["_debug_results"] = results
+            JOBS[job_id]["_debug_chunks_count"] = len(chunks)
+
             # 4. Mapping & Injection XFA
             JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
                             "progress": 90})
@@ -447,3 +451,30 @@ async def download_result(job_id: str, token: str = ""):
         raise HTTPException(status_code=404, detail="Fichier introuvable.")
 
     return FileResponse(file_path, media_type="application/pdf", filename=f"DoctorFill_{job_id[:8]}.pdf")
+
+
+@app.get("/debug/{job_id}")
+async def debug_results(job_id: str, token: str = ""):
+    """Retourne les résultats bruts d'extraction LLM pour évaluation/debug."""
+    if job_id not in JOBS:
+        raise HTTPException(status_code=404, detail="Job introuvable.")
+
+    expected_token = JOBS[job_id].get("token", "")
+    if not token or not secrets.compare_digest(token, expected_token):
+        raise HTTPException(status_code=403, detail="Token invalide.")
+
+    debug_results = JOBS[job_id].get("_debug_results", [])
+    return {
+        "job_id": job_id,
+        "status": JOBS[job_id].get("status"),
+        "chunks_count": JOBS[job_id].get("_debug_chunks_count", 0),
+        "extractions": [
+            {
+                "field_id": r.get("id"),
+                "value": r.get("result", {}).get("value") if "result" in r else None,
+                "source_quote": r.get("result", {}).get("source_quote") if "result" in r else None,
+                "error": r.get("error"),
+            }
+            for r in debug_results
+        ],
+    }
