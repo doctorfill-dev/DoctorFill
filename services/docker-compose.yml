@@ -6,7 +6,7 @@ services:
     command: >
       vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ
       --max-model-len 8192
-      --gpu-memory-utilization 0.15
+      --gpu-memory-utilization 0.25
     ipc: host
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
@@ -36,6 +36,11 @@ services:
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
       - "8082"
+    environment:
+      # Limiter l'allocation mémoire GPU de PyTorch (fraction de la mémoire unifiée)
+      - MARKER_GPU_MEMORY_FRACTION=0.55
+      # Réduire la fragmentation mémoire CUDA
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:256
     deploy:
       resources:
         reservations:

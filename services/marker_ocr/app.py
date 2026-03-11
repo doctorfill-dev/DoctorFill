@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import time
 import json
+import torch
 from pathlib import Path
 from functools import partial
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -19,6 +20,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Marker PDF Service (VRAM Optimized)")
+
+# --- Limiter la fraction de mémoire GPU utilisée par PyTorch ---
+# Sur DGX Spark (GB10, 128 GB mémoire unifiée), Marker peut consommer 94+ GB
+# sans limitation, ne laissant presque rien pour vLLM et TEI.
+GPU_MEM_FRACTION = float(os.getenv("MARKER_GPU_MEMORY_FRACTION", "0.55"))
+if torch.cuda.is_available():
+    torch.cuda.set_per_process_memory_fraction(GPU_MEM_FRACTION)
+    logger.info(f"GPU memory fraction limitée à {GPU_MEM_FRACTION:.0%}")
 
 # --- Chargement du modèle (une seule fois au démarrage)
 logger.info("Chargement des modèles de vision dans la VRAM en cours...")
