@@ -72,10 +72,13 @@ export default function App() {
       }
     } else if (entry.isDirectory) {
       const dirReader = entry.createReader();
-      const entries = await new Promise<any[]>((resolve) => {
-        dirReader.readEntries(resolve);
-      });
-      for (const child of entries) {
+      let allEntries: any[] = [];
+      let batch: any[];
+      do {
+        batch = await new Promise<any[]>((resolve) => dirReader.readEntries(resolve));
+        allEntries = [...allEntries, ...batch];
+      } while (batch.length > 0);
+      for (const child of allEntries) {
         const childFiles = await processEntry(child);
         foundFiles = [...foundFiles, ...childFiles];
       }
@@ -99,17 +102,20 @@ export default function App() {
     setIsDragging(false);
     if (!e.dataTransfer.items) return;
 
-    let newFiles: File[] = [];
-    const items = Array.from(e.dataTransfer.items);
-
-    for (const item of items) {
+    // Collecter les entries de manière synchrone AVANT tout await,
+    // car le navigateur invalide les DataTransferItem après le premier yield asynchrone.
+    const entries: FileSystemEntry[] = [];
+    for (const item of Array.from(e.dataTransfer.items)) {
       if (item.kind === "file") {
         const entry = item.webkitGetAsEntry();
-        if (entry) {
-          const extracted = await processEntry(entry);
-          newFiles = [...newFiles, ...extracted];
-        }
+        if (entry) entries.push(entry);
       }
+    }
+
+    let newFiles: File[] = [];
+    for (const entry of entries) {
+      const extracted = await processEntry(entry);
+      newFiles = [...newFiles, ...extracted];
     }
 
     setReports((prev) => {
