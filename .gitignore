@@ -28,4 +28,4 @@ services/orchestrator/results/
 
 # ── eval & logs
 eval
-services/logs/
+services/logs/*.md
