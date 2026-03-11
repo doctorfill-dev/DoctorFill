@@ -85,7 +85,7 @@ MAX_CONCURRENT_JOBS = int(os.getenv("MAX_CONCURRENT_JOBS", "20"))
 
 # --- [SEC-05] Limites d'upload
 MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(50 * 1024 * 1024)))  # 50 MB
-MAX_FILES = int(os.getenv("MAX_FILES", "10"))
+MAX_FILES = int(os.getenv("MAX_FILES", "100"))
 
 # --- [SEC-03] Whitelist des form_id valides (construite au démarrage)
 VALID_FORM_IDS: Set[str] = set()
@@ -232,9 +232,9 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 if "question" not in field:
                     continue
                 q_emb = await fetch_embeddings(client, [field["question"]])
-                hits = col.query(query_embeddings=q_emb, n_results=5)["documents"][0]
+                hits = col.query(query_embeddings=q_emb, n_results=min(20, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits)
-                context = "\n---\n".join([r["document"] for r in reranked[:3]])
+                context = "\n---\n".join([r["document"] for r in reranked[:7]])
                 tasks.append(extract_field_vllm(client, context, field))
 
             results = await asyncio.gather(*tasks)
