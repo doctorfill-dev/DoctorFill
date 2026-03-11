@@ -179,7 +179,10 @@ export default function App() {
         body: formData,
       });
 
-      if (!response.ok) throw new Error(`Erreur serveur : ${response.status}`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.detail || `Erreur serveur : ${response.status}`);
+      }
 
       const data = await response.json();
 
