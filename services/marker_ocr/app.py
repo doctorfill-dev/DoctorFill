@@ -1,13 +1,10 @@
 import os
 import hashlib
-import asyncio
 import logging
 import shutil
 import tempfile
 import time
-import json
 from pathlib import Path
-from functools import partial
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 
@@ -20,10 +17,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Marker PDF Service (VRAM Optimized)")
 
-# NOTE: torch.cuda.set_per_process_memory_fraction() ne fonctionne PAS
-# sur mémoire unifiée (DGX Spark GB10) — provoque "free(): invalid pointer".
-# La gestion mémoire se fait via PYTORCH_CUDA_ALLOC_CONF dans docker-compose.
-
 # --- Chargement du modèle (une seule fois au démarrage)
 logger.info("Chargement des modèles de vision dans la VRAM en cours...")
 converter = PdfConverter(
@@ -35,17 +28,9 @@ UPLOAD_DIR = "/tmp/pdf_uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # --- Cache OCR par hash SHA-256 du contenu PDF ---
-# Clé = sha256(contenu PDF), Valeur = markdown résultat
 # Évite de ré-OCR les mêmes documents lors de re-uploads
 OCR_CACHE: dict[str, str] = {}
 MAX_CACHE_SIZE = int(os.getenv("OCR_CACHE_SIZE", "500"))
-
-
-def _convert_sync(file_path: str) -> str:
-    """Exécution synchrone de Marker (GPU-bound). Appelé via run_in_executor."""
-    rendered = converter(file_path)
-    full_text, _, _ = text_from_rendered(rendered)
-    return full_text
 
 
 @app.post("/extract")
@@ -74,11 +59,10 @@ async def extract_pdf(file: UploadFile = File(...)):
                 "cached": True
             })
 
-        # --- Exécution dans un thread pool pour ne pas bloquer l'event loop ---
-        # Permet le vrai parallélisme : plusieurs PDFs traités simultanément
+        # --- OCR synchrone (appel direct, pas de threading sur mémoire unifiée GB10) ---
         t0 = time.perf_counter()
-        loop = asyncio.get_event_loop()
-        full_text = await loop.run_in_executor(None, _convert_sync, file_path)
+        rendered = converter(file_path)
+        full_text, _, _ = text_from_rendered(rendered)
         elapsed = time.perf_counter() - t0
         logger.info(f"OCR terminé pour {safe_name}: {len(full_text)} chars en {elapsed:.1f}s")
 
