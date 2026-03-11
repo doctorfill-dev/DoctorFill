@@ -13,6 +13,7 @@ import httpx
 import json
 import logging
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Set
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
@@ -76,6 +77,10 @@ VLLM_URL = os.getenv("VLLM_URL", "http://vllm:8000/v1")
 VLLM_MODEL = os.getenv("VLLM_MODEL_NAME", "Qwen/Qwen2.5-14B-Instruct-AWQ")
 
 chroma_client = chromadb.EphemeralClient()
+
+# --- Dossier de logs de debug (markdown OCR, chunks, résultats LLM)
+DEBUG_LOG_DIR = Path(os.getenv("DEBUG_LOG_DIR", "/tmp/doctorfill_debug"))
+DEBUG_LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 JOBS: Dict[str, Dict[str, Any]] = {}
 JOB_RETENTION_SECONDS = int(os.getenv("JOB_RETENTION_SECONDS", "3600"))
@@ -197,7 +202,8 @@ SYSTEM_PROMPT_EXTRACT = (
 )
 
 
-async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dict):
+async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dict,
+                             llm_sem: asyncio.Semaphore = None):
     prompt = f"EXTRAITS DE DOCUMENTS :\n{context}\n\nQUESTION : {field['question']}"
     payload = {
         "model": VLLM_MODEL,
@@ -208,13 +214,27 @@ async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dic
         "temperature": 0.05,
         "response_format": {"type": "json_object"}
     }
-    try:
-        resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=120.0)
+
+    async def _call():
+        resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=180.0)
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
         return {"id": field["id"], "result": json.loads(content)}
+
+    try:
+        if llm_sem:
+            async with llm_sem:
+                return await _call()
+        else:
+            return await _call()
+    except json.JSONDecodeError as e:
+        logger.error(f"Erreur vLLM JSON parse sur {field['id']}: {e}")
+        return {"id": field["id"], "error": "json_parse_failed"}
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Erreur vLLM HTTP {e.response.status_code} sur {field['id']}: {e.response.text[:200]}")
+        return {"id": field["id"], "error": f"http_{e.response.status_code}"}
     except Exception as e:
-        logger.error(f"Erreur vLLM sur {field['id']}: {e}")
+        logger.error(f"Erreur vLLM sur {field['id']}: {type(e).__name__}: {e}")
         # [SEC-10] Ne pas exposer les détails de l'erreur au client
         return {"id": field["id"], "error": "extraction_failed"}
 
@@ -222,6 +242,11 @@ async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dic
 async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
     """Exécute le pipeline complet en arrière-plan."""
     collection_name = f"col_{job_id}"
+    # Dossier de debug pour cette requête
+    debug_dir = DEBUG_LOG_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{job_id[:8]}"
+    debug_dir.mkdir(parents=True, exist_ok=True)
+    (debug_dir / "markdown").mkdir(exist_ok=True)
+
     try:
         limits = httpx.Limits(max_connections=20, max_keepalive_connections=5, keepalive_expiry=30)
         async with httpx.AsyncClient(limits=limits) as client:
@@ -230,7 +255,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             # 1. OCR parallèle (semaphore pour ne pas surcharger le GPU)
             JOBS[job_id].update({"status": "processing",
                                  "message": f"📄 OCR 0/{total_files} documents...", "progress": 5})
-            logger.info(f"Step 1: OCR de {total_files} fichiers (parallèle, max 5 concurrents)...")
+            logger.info(f"[{job_id[:8]}] Step 1: OCR de {total_files} fichiers (parallèle, max 3 concurrents)...")
 
             ocr_done = 0
             ocr_sem = asyncio.Semaphore(3)
@@ -249,15 +274,19 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                                 files={'file': (path.name, content, 'application/pdf')},
                                 timeout=600.0)
                             resp.raise_for_status()
+                            md_text = resp.json().get("markdown", "")
                             ocr_done += 1
                             JOBS[job_id].update({
                                 "message": f"📄 OCR {ocr_done}/{total_files} documents...",
                                 "progress": 5 + int(30 * ocr_done / total_files)
                             })
-                            return path.name, resp.json().get("markdown", "")
+                            # Sauvegarder le markdown OCR pour debug
+                            md_filename = path.stem + ".md"
+                            (debug_dir / "markdown" / md_filename).write_text(md_text, encoding="utf-8")
+                            return path.name, md_text
                         except (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError) as e:
                             last_err = e
-                            logger.warning(f"OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: {e}")
+                            logger.warning(f"[{job_id[:8]}] OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: {e}")
                             if attempt < MAX_OCR_RETRIES:
                                 await asyncio.sleep(2 * attempt)
                     raise last_err
@@ -271,33 +300,78 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             JOBS[job_id].update({"status": "processing",
                                  "message": "🧠 Vectorisation du contexte médical...", "progress": 40})
             chunks = markdown_semantic_chunking(full_context_md)
-            logger.info(f"Step 2: {len(chunks)} chunks à vectoriser par batches de 64...")
+            logger.info(f"[{job_id[:8]}] Step 2: {len(chunks)} chunks à vectoriser par batches de 64...")
             embeds = await fetch_embeddings_batched(client, chunks)
             col = chroma_client.get_or_create_collection(name=collection_name)
             col.add(documents=chunks, embeddings=embeds, ids=[f"{job_id}_{i}" for i in range(len(chunks))])
 
-            # 3. RAG optimisé : batch embed questions → parallel rerank + LLM
+            # Sauvegarder les chunks pour debug
+            chunks_debug = [{"index": i, "words": len(c.split()), "preview": c[:200]} for i, c in enumerate(chunks)]
+            (debug_dir / "chunks.json").write_text(json.dumps(chunks_debug, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            # 3. RAG : batch embed questions → rerank + LLM avec semaphore
             JOBS[job_id].update({"status": "processing",
                                  "message": "🤖 Analyse LLM et extraction des entités...", "progress": 55})
             with open(f"template/Form_{form_id}.json", "r") as f:
                 template = json.load(f)
 
             fields_with_q = [f for f in template["fields"] if "question" in f]
-            logger.info(f"Step 3: {len(fields_with_q)} champs à extraire (batch embed + parallel rerank/LLM)...")
+            logger.info(f"[{job_id[:8]}] Step 3: {len(fields_with_q)} champs à extraire (semaphore LLM=10)...")
 
-            # Un seul appel batché pour toutes les questions (au lieu de N appels séquentiels)
             all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
 
+            # Semaphore LLM : max 10 requêtes concurrentes pour ne pas saturer la KV cache vLLM
+            llm_sem = asyncio.Semaphore(10)
+            llm_done = 0
+
             async def _retrieve_and_extract(field: Dict, q_emb) -> Dict:
-                """ChromaDB query (instant) → rerank → LLM, le tout en parallèle par champ."""
+                """ChromaDB query (instant) → rerank → LLM, avec semaphore."""
+                nonlocal llm_done
                 hits = col.query(query_embeddings=[q_emb], n_results=min(20, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits)
                 context = "\n---\n".join([r["document"] for r in reranked[:7]])
-                return await extract_field_vllm(client, context, field)
+                result = await extract_field_vllm(client, context, field, llm_sem=llm_sem)
+                llm_done += 1
+                JOBS[job_id].update({
+                    "message": f"🤖 Extraction {llm_done}/{len(fields_with_q)} champs...",
+                    "progress": 55 + int(35 * llm_done / len(fields_with_q))
+                })
+                return result
 
             results = await asyncio.gather(*[
                 _retrieve_and_extract(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
             ])
+
+            # Sauvegarder les résultats LLM bruts pour debug
+            results_debug = []
+            for r in results:
+                entry = {"field_id": r.get("id")}
+                if "result" in r:
+                    entry["value"] = r["result"].get("value")
+                    entry["source_quote"] = r["result"].get("source_quote")
+                if "error" in r:
+                    entry["error"] = r["error"]
+                results_debug.append(entry)
+            (debug_dir / "llm_results.json").write_text(
+                json.dumps(results_debug, ensure_ascii=False, indent=2), encoding="utf-8")
+
+            # Résumé dans un fichier texte lisible
+            ok_count = sum(1 for r in results if "result" in r and r["result"].get("value") and r["result"]["value"] != "Inconnu")
+            err_count = sum(1 for r in results if "error" in r)
+            inconnu_count = sum(1 for r in results if "result" in r and r["result"].get("value") == "Inconnu")
+            summary = (
+                f"Job: {job_id}\n"
+                f"Form: {form_id}\n"
+                f"Date: {datetime.now().isoformat()}\n"
+                f"Fichiers: {total_files}\n"
+                f"Chunks: {len(chunks)}\n"
+                f"Champs total: {len(fields_with_q)}\n"
+                f"  ✅ Extraits: {ok_count}\n"
+                f"  ❌ Erreurs LLM: {err_count}\n"
+                f"  ❓ Inconnu: {inconnu_count}\n"
+            )
+            (debug_dir / "summary.txt").write_text(summary, encoding="utf-8")
+            logger.info(f"[{job_id[:8]}] Résultat: {ok_count} OK, {err_count} erreurs, {inconnu_count} inconnus — Debug: {debug_dir}")
 
             # Stocker les résultats bruts pour le debug/eval
             JOBS[job_id]["_debug_results"] = results
