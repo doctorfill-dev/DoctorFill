@@ -182,15 +182,30 @@ async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str]):
     return resp.json()["results"]
 
 
+SYSTEM_PROMPT_EXTRACT = (
+    "Tu es un assistant spécialisé dans l'extraction de données depuis des documents médicaux. "
+    "On te fournit des EXTRAITS de rapports et une QUESTION.\n\n"
+    "RÈGLES STRICTES :\n"
+    "1. Cherche la réponse dans les extraits fournis. L'information peut apparaître sous différentes formes "
+    "(en-tête, tableau, texte narratif, champ de formulaire, etc.).\n"
+    "2. Extrais la valeur EXACTE telle qu'elle apparaît dans le texte.\n"
+    "3. Ne réponds \"Inconnu\" que si l'information est RÉELLEMENT ABSENTE de tous les extraits.\n"
+    "4. Réponds UNIQUEMENT en JSON valide avec ce format :\n"
+    '   {"value": "<réponse extraite>", "source_quote": "<phrase exacte du contexte contenant la réponse>"}\n'
+    "5. Pour les dates, conserve le format original du document.\n"
+    "6. Pour les noms/prénoms, conserve la casse originale."
+)
+
+
 async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dict):
-    prompt = f"CONTEXTE:\n{context}\n\nQUESTION: {field['question']}"
+    prompt = f"EXTRAITS DE DOCUMENTS :\n{context}\n\nQUESTION : {field['question']}"
     payload = {
         "model": VLLM_MODEL,
         "messages": [
-            {"role": "system", "content": "Assistant médical. Réponds en JSON: {'value': ..., 'source_quote': ...}"},
+            {"role": "system", "content": SYSTEM_PROMPT_EXTRACT},
             {"role": "user", "content": prompt}
         ],
-        "temperature": 0.1,
+        "temperature": 0.05,
         "response_format": {"type": "json_object"}
     }
     try:
