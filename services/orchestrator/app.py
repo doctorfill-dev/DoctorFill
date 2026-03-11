@@ -85,7 +85,7 @@ MAX_CONCURRENT_JOBS = int(os.getenv("MAX_CONCURRENT_JOBS", "20"))
 
 # --- [SEC-05] Limites d'upload
 MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(50 * 1024 * 1024)))  # 50 MB
-MAX_FILES = int(os.getenv("MAX_FILES", "100"))
+MAX_FILES = int(os.getenv("MAX_FILES", "200"))
 
 # --- [SEC-03] Whitelist des form_id valides (construite au démarrage)
 VALID_FORM_IDS: Set[str] = set()
@@ -223,7 +223,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
     """Exécute le pipeline complet en arrière-plan."""
     collection_name = f"col_{job_id}"
     try:
-        async with httpx.AsyncClient() as client:
+        limits = httpx.Limits(max_connections=20, max_keepalive_connections=5, keepalive_expiry=30)
+        async with httpx.AsyncClient(limits=limits) as client:
             total_files = len(report_paths)
 
             # 1. OCR parallèle (semaphore pour ne pas surcharger le GPU)
@@ -232,24 +233,34 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             logger.info(f"Step 1: OCR de {total_files} fichiers (parallèle, max 5 concurrents)...")
 
             ocr_done = 0
-            ocr_sem = asyncio.Semaphore(5)
+            ocr_sem = asyncio.Semaphore(3)
+            MAX_OCR_RETRIES = 3
 
             async def _ocr_one(path: Path) -> tuple:
                 nonlocal ocr_done
                 async with ocr_sem:
                     with open(path, "rb") as f:
                         content = f.read()
-                    resp = await client.post(
-                        f"{MARKER_URL}/extract",
-                        files={'file': (path.name, content, 'application/pdf')},
-                        timeout=300.0)
-                    resp.raise_for_status()
-                    ocr_done += 1
-                    JOBS[job_id].update({
-                        "message": f"📄 OCR {ocr_done}/{total_files} documents...",
-                        "progress": 5 + int(30 * ocr_done / total_files)
-                    })
-                    return path.name, resp.json().get("markdown", "")
+                    last_err = None
+                    for attempt in range(1, MAX_OCR_RETRIES + 1):
+                        try:
+                            resp = await client.post(
+                                f"{MARKER_URL}/extract",
+                                files={'file': (path.name, content, 'application/pdf')},
+                                timeout=600.0)
+                            resp.raise_for_status()
+                            ocr_done += 1
+                            JOBS[job_id].update({
+                                "message": f"📄 OCR {ocr_done}/{total_files} documents...",
+                                "progress": 5 + int(30 * ocr_done / total_files)
+                            })
+                            return path.name, resp.json().get("markdown", "")
+                        except (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError) as e:
+                            last_err = e
+                            logger.warning(f"OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: {e}")
+                            if attempt < MAX_OCR_RETRIES:
+                                await asyncio.sleep(2 * attempt)
+                    raise last_err
 
             ocr_results = await asyncio.gather(*[_ocr_one(p) for p in report_paths])
             full_context_md = ""
