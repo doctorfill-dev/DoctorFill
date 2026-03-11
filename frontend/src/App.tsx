@@ -264,7 +264,7 @@ export default function App() {
                   <div className="bg-white border border-zinc-200 rounded-sm p-3 flex flex-col max-h-[220px]">
                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-zinc-100">
                       <span className="text-xs font-semibold text-zinc-700">{reports.length} document(s) en file d'attente</span>
-                      <button onClick={() => setReports([])} className="text-[10px] text-red-600 hover:text-red-700 flex items-center font-medium uppercase tracking-wider bg-red-50 px-2 py-1 rounded-sm transition-colors">
+                      <button onClick={() => { setReports([]); setPdfUrl(null); setError(null); setStatusMessage(""); setProgress(0); setIsLoading(false); }} className="text-[10px] text-red-600 hover:text-red-700 flex items-center font-medium uppercase tracking-wider bg-red-50 px-2 py-1 rounded-sm transition-colors">
                         <Trash2 className="w-3 h-3 mr-1" /> Purger
                       </button>
                     </div>
