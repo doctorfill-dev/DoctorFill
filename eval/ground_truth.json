@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "description": "Valeurs de référence pour évaluer la précision du pipeline RAG DoctorFill",
+    "form_id": "AVS",
+    "patient": "Patient fictif suisse pour tests"
+  },
+  "fields": {
+    "1.2": {"expected": "NE",          "tolerance": "exact",  "category": "admin"},
+    "2.1": {"expected": "Marie",       "tolerance": "exact",  "category": "identite"},
+    "2.2": {"expected": "Dubois",      "tolerance": "exact",  "category": "identite"},
+    "2.3": {"expected": "15.03.1985",  "tolerance": "date",   "category": "identite"},
+    "2.4": {"expected": "756.1234.5678.90", "tolerance": "exact", "category": "identite"},
+    "2.5": {"expected": "Rue du Lac 12", "tolerance": "fuzzy", "category": "identite"},
+    "2.6": {"expected": "Neuchâtel",   "tolerance": "fuzzy",  "category": "identite"},
+    "2.7": {"expected": "2000",        "tolerance": "exact",  "category": "identite"},
+    "2.8": {"expected": "079/123.45.67", "tolerance": "fuzzy", "category": "identite"},
+    "2.9": {"expected": "F",           "tolerance": "exact",  "category": "identite"},
+    "2.10": {"expected": "032/555.12.34", "tolerance": "fuzzy", "category": "medecin"},
+    "2.13": {"expected": "021/555.98.76", "tolerance": "fuzzy", "category": "medecin"},
+    "3.1": {"expected": "hebdomadaire", "tolerance": "fuzzy",  "category": "traitement"},
+    "3.2": {"expected": "01.06.2025",  "tolerance": "date",   "category": "traitement"},
+    "3.3": {"expected": "31.12.2025",  "tolerance": "date",   "category": "traitement"},
+    "3.8": {"expected": "Employée de bureau", "tolerance": "fuzzy", "category": "travail"},
+    "3.9": {"expected": "50",          "tolerance": "exact",  "category": "incapacite"},
+    "3.10": {"expected": "01.06.2025", "tolerance": "date",   "category": "incapacite"},
+    "3.11": {"expected": "31.08.2025", "tolerance": "date",   "category": "incapacite"},
+    "3.12": {"expected": "30",         "tolerance": "exact",  "category": "incapacite"},
+    "3.13": {"expected": "01.09.2025", "tolerance": "date",   "category": "incapacite"},
+    "3.14": {"expected": "31.12.2025", "tolerance": "date",   "category": "incapacite"},
+    "4.1": {"expected": null,          "tolerance": "contains", "category": "medical",
+            "keywords": ["lombalgies", "hernie", "L4-L5"]},
+    "4.2": {"expected": null,          "tolerance": "contains", "category": "medical",
+            "keywords": ["douleurs", "lombaires", "irradiation"]},
+    "4.5": {"expected": null,          "tolerance": "contains", "category": "medical",
+            "keywords": ["Dafalgan", "1000", "Irfen"]},
+    "7.2": {"expected": "Dr. Jean-Pierre Martin", "tolerance": "fuzzy", "category": "medecin"}
+  }
+}

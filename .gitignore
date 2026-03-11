@@ -25,3 +25,7 @@ venv
 # ── Docker volumes / data ──
 services/orchestrator/uploads/
 services/orchestrator/results/
+
+# ── Eval (fichiers générés) ──
+eval/test_docs/
+eval/results/
