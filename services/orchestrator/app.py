@@ -183,7 +183,7 @@ async def fetch_embeddings_batched(client: httpx.AsyncClient, texts: List[str], 
 
 async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str],
                        rerank_sem: asyncio.Semaphore = None):
-    """Rerank avec semaphore + retry sur PoolTimeout/ReadError."""
+    """Rerank avec semaphore + retry sur PoolTimeout/ReadError/ConnectError."""
     MAX_RETRIES = 3
 
     async def _call():
@@ -223,8 +223,7 @@ SYSTEM_PROMPT_EXTRACT = (
 )
 
 
-async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dict,
-                             llm_sem: asyncio.Semaphore = None):
+async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dict):
     prompt = f"EXTRAITS DE DOCUMENTS :\n{context}\n\nQUESTION : {field['question']}"
     payload = {
         "model": VLLM_MODEL,
@@ -235,37 +234,23 @@ async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dic
         "temperature": 0.05,
         "response_format": {"type": "json_object"}
     }
-
-    async def _call():
-        resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=180.0)
+    try:
+        resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=120.0)
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
         return {"id": field["id"], "result": json.loads(content)}
-
-    try:
-        if llm_sem:
-            async with llm_sem:
-                return await _call()
-        else:
-            return await _call()
-    except json.JSONDecodeError as e:
-        logger.error(f"Erreur vLLM JSON parse sur {field['id']}: {e}")
-        return {"id": field["id"], "error": "json_parse_failed"}
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Erreur vLLM HTTP {e.response.status_code} sur {field['id']}: {e.response.text[:200]}")
-        return {"id": field["id"], "error": f"http_{e.response.status_code}"}
     except Exception as e:
-        logger.error(f"Erreur vLLM sur {field['id']}: {type(e).__name__}: {e}")
+        logger.error(f"Erreur vLLM sur {field['id']}: {e}")
         # [SEC-10] Ne pas exposer les détails de l'erreur au client
         return {"id": field["id"], "error": "extraction_failed"}
 
 
 async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
     """
-    Pipeline optimisé avec parallélisme :
-    - OCR → chunk → embed se font en streaming (pas besoin d'attendre tous les OCR)
-    - Rerank et LLM sont limités par semaphores indépendants
-    - Timing détaillé de chaque étape pour diagnostic
+    Pipeline avec streaming OCR→embed et semaphores rerank/LLM.
+    - OCR et embedding se font en parallèle via asyncio.Queue
+    - Rerank limité à 5 concurrents (évite PoolTimeout)
+    - LLM limité à 10 concurrents (évite saturation KV cache vLLM)
     """
     collection_name = f"col_{job_id}"
     debug_dir = DEBUG_LOG_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{job_id[:8]}"
@@ -283,8 +268,6 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             # ============================================================
             # STEP 1 : OCR + Chunking + Embedding en pipeline streaming
             # ============================================================
-            # Au lieu de : OCR(177) → chunk(all) → embed(all)  [séquentiel]
-            # On fait   : OCR(batch) → chunk+embed(batch) → ChromaDB  [en parallèle avec OCR suivant]
             JOBS[job_id].update({"status": "processing",
                                  "message": f"📄 OCR 0/{total_files} documents...", "progress": 5})
             logger.info(f"[{job_id[:8]}] Step 1: OCR+embed pipeline de {total_files} fichiers...")
@@ -294,8 +277,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             ocr_sem = asyncio.Semaphore(3)
             MAX_OCR_RETRIES = 5
             col = chroma_client.get_or_create_collection(name=collection_name)
-            chunk_index = 0  # Index global pour ChromaDB
-            all_chunks: List[str] = []  # Pour debug + RAG
+            chunk_index = 0
+            all_chunks: List[str] = []
 
             # Queue pour le pipeline OCR → embed
             ocr_queue: asyncio.Queue = asyncio.Queue()
@@ -321,6 +304,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                                 "message": f"📄 OCR {ocr_done}/{total_files} documents...",
                                 "progress": 5 + int(35 * ocr_done / total_files)
                             })
+                            # Debug : sauvegarder le markdown OCR
                             md_filename = path.stem + ".md"
                             (debug_dir / "markdown" / md_filename).write_text(md_text, encoding="utf-8")
                             # Envoyer dans la queue pour embedding immédiat
@@ -328,7 +312,6 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                             return path.name, md_text
                         except (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError) as e:
                             last_err = e
-                            # Backoff plus long pour ConnectError (service pas encore prêt)
                             delay = 10 * attempt if isinstance(e, httpx.ConnectError) else 2 * attempt
                             logger.warning(f"[{job_id[:8]}] OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: {type(e).__name__} (retry in {delay}s)")
                             if attempt < MAX_OCR_RETRIES:
@@ -338,19 +321,16 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             async def _embed_consumer():
                 """Consomme la queue OCR, chunk et embed au fil de l'eau."""
                 nonlocal chunk_index
-                EMBED_BATCH_SIZE = 10  # Accumuler N docs avant d'embed (efficacité batching)
                 pending_chunks: List[str] = []
 
                 while True:
                     try:
                         name, md_text = await asyncio.wait_for(ocr_queue.get(), timeout=2.0)
                     except asyncio.TimeoutError:
-                        # Si plus de docs en attente et OCR terminé, flush le reste
                         if ocr_queue.empty() and embed_done.is_set():
                             break
                         continue
 
-                    # Chunker ce document
                     doc_md = f"\n\n--- SOURCE: {name} ---\n\n" + md_text
                     doc_chunks = markdown_semantic_chunking(doc_md)
                     pending_chunks.extend(doc_chunks)
@@ -375,20 +355,14 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
 
             # Lancer OCR et embedding en parallèle (pipeline)
             embed_task = asyncio.create_task(_embed_consumer())
-
-            # Lancer tous les OCR (contrôlés par ocr_sem)
             await asyncio.gather(*[_ocr_one(p) for p in report_paths])
-            embed_done.set()  # Signal que tous les OCR sont terminés
-            await embed_task  # Attendre que l'embedding finisse de flush
+            embed_done.set()
+            await embed_task
 
             t_ocr_end = time.perf_counter()
             timings["ocr_embed_pipeline"] = t_ocr_end - t_ocr_start
             chunks = all_chunks
             logger.info(f"[{job_id[:8]}] Pipeline OCR+embed terminé: {len(chunks)} chunks en {timings['ocr_embed_pipeline']:.1f}s")
-
-            # Sauvegarder les chunks pour debug
-            chunks_debug = [{"index": i, "words": len(c.split()), "preview": c[:200]} for i, c in enumerate(chunks)]
-            (debug_dir / "chunks.json").write_text(json.dumps(chunks_debug, ensure_ascii=False, indent=2), encoding="utf-8")
 
             # ============================================================
             # STEP 2 : RAG — rerank + LLM avec semaphores
@@ -404,19 +378,18 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
 
             all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
 
-            # Semaphore LLM : max 10 requêtes concurrentes pour ne pas saturer la KV cache vLLM
-            llm_sem = asyncio.Semaphore(10)
-            # Semaphore Rerank : max 5 requêtes concurrentes au TEI pour éviter PoolTimeout
             rerank_sem = asyncio.Semaphore(5)
+            llm_sem = asyncio.Semaphore(10)
             llm_done = 0
 
             async def _retrieve_and_extract(field: Dict, q_emb) -> Dict:
-                """ChromaDB query (instant) → rerank (sem=5) → LLM (sem=10), avec semaphores."""
+                """ChromaDB query (instant) → rerank (sem=5) → LLM (sem=10)."""
                 nonlocal llm_done
                 hits = col.query(query_embeddings=[q_emb], n_results=min(20, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
                 context = "\n---\n".join([r["document"] for r in reranked[:7]])
-                result = await extract_field_vllm(client, context, field, llm_sem=llm_sem)
+                async with llm_sem:
+                    result = await extract_field_vllm(client, context, field)
                 llm_done += 1
                 JOBS[job_id].update({
                     "message": f"🤖 Extraction {llm_done}/{len(fields_with_q)} champs...",
@@ -430,7 +403,11 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             t_rag_end = time.perf_counter()
             timings["rag_extraction"] = t_rag_end - t_rag_start
 
-            # Sauvegarder les résultats LLM bruts pour debug
+            # Stocker les résultats bruts pour le debug/eval
+            JOBS[job_id]["_debug_results"] = results
+            JOBS[job_id]["_debug_chunks_count"] = len(chunks)
+
+            # Debug : sauvegarder les résultats LLM
             results_debug = []
             for r in results:
                 entry = {"field_id": r.get("id")}
@@ -443,30 +420,9 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             (debug_dir / "llm_results.json").write_text(
                 json.dumps(results_debug, ensure_ascii=False, indent=2), encoding="utf-8")
 
-            # Résumé dans un fichier texte lisible
-            ok_count = sum(1 for r in results if "result" in r and r["result"].get("value") and r["result"]["value"] != "Inconnu")
-            err_count = sum(1 for r in results if "error" in r)
-            inconnu_count = sum(1 for r in results if "result" in r and r["result"].get("value") == "Inconnu")
-
-            summary = (
-                f"Job: {job_id}\n"
-                f"Form: {form_id}\n"
-                f"Date: {datetime.now().isoformat()}\n"
-                f"Fichiers: {total_files}\n"
-                f"Chunks: {len(chunks)}\n"
-                f"Champs total: {len(fields_with_q)}\n"
-                f"  ✅ Extraits: {ok_count}\n"
-                f"  ❌ Erreurs LLM: {err_count}\n"
-                f"  ❓ Inconnu: {inconnu_count}\n"
-            )
-            (debug_dir / "summary.txt").write_text(summary, encoding="utf-8")
-            logger.info(f"[{job_id[:8]}] Résultat: {ok_count} OK, {err_count} erreurs, {inconnu_count} inconnus — Debug: {debug_dir}")
-
-            # Stocker les résultats bruts pour le debug/eval
-            JOBS[job_id]["_debug_results"] = results
-            JOBS[job_id]["_debug_chunks_count"] = len(chunks)
-
-            # 4. Mapping & Injection XFA
+            # ============================================================
+            # STEP 3 : Mapping & Injection XFA
+            # ============================================================
             t_xfa_start = time.perf_counter()
             JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
                             "progress": 90})
@@ -499,16 +455,18 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             timings["xfa_injection"] = t_xfa_end - t_xfa_start
             timings["total"] = time.perf_counter() - t_pipeline_start
 
-            # Écrire les timings dans le dossier debug
-            timings_str = "\n".join(f"  {k}: {v:.1f}s" for k, v in timings.items())
-            timing_summary = f"\n⏱️ Timings:\n{timings_str}\n"
-            # Append au summary existant
-            with open(debug_dir / "summary.txt", "a") as sf:
-                sf.write(timing_summary)
-            logger.info(f"[{job_id[:8]}] ⏱️ Pipeline terminé en {timings['total']:.1f}s "
-                        f"(OCR+embed: {timings['ocr_embed_pipeline']:.1f}s, "
-                        f"RAG: {timings['rag_extraction']:.1f}s, "
-                        f"XFA: {timings['xfa_injection']:.1f}s)")
+            # Debug : résumé
+            ok_count = sum(1 for r in results if "result" in r and r["result"].get("value") and r["result"]["value"] != "Inconnu")
+            err_count = sum(1 for r in results if "error" in r)
+            inconnu_count = sum(1 for r in results if "result" in r and r["result"].get("value") == "Inconnu")
+            summary = (
+                f"Job: {job_id}\nForm: {form_id}\nDate: {datetime.now().isoformat()}\n"
+                f"Fichiers: {total_files}\nChunks: {len(chunks)}\n"
+                f"Champs: {len(fields_with_q)} (OK: {ok_count}, Erreurs: {err_count}, Inconnu: {inconnu_count})\n"
+                f"Timings: OCR+embed={timings['ocr_embed_pipeline']:.1f}s, RAG={timings['rag_extraction']:.1f}s, XFA={timings['xfa_injection']:.1f}s, Total={timings['total']:.1f}s\n"
+            )
+            (debug_dir / "summary.txt").write_text(summary, encoding="utf-8")
+            logger.info(f"[{job_id[:8]}] Pipeline terminé en {timings['total']:.1f}s — Debug: {debug_dir}")
 
             JOBS[job_id].update({
                 "status": "completed",
