@@ -37,9 +37,7 @@ services:
     expose:
       - "8082"
     environment:
-      # Limiter l'allocation mémoire GPU de PyTorch (fraction de la mémoire unifiée)
-      - MARKER_GPU_MEMORY_FRACTION=0.55
-      # Réduire la fragmentation mémoire CUDA
+      # Réduire la fragmentation mémoire CUDA sur mémoire unifiée (GB10)
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True,max_split_size_mb:256
     deploy:
       resources:
