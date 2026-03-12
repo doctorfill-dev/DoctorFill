@@ -6,7 +6,7 @@ services:
     command: >
       vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ
       --max-model-len 8192
-      --gpu-memory-utilization 0.15
+      --gpu-memory-utilization 0.20
     ipc: host
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
@@ -36,6 +36,9 @@ services:
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
       - "8082"
+    volumes:
+      # Persister le cache des modèles Marker (~3 GB) entre les rebuilds
+      - ~/.cache/datalab:/root/.cache/datalab
     deploy:
       resources:
         reservations:

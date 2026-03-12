@@ -2,14 +2,19 @@
 
 ## 🎯 Endpoints
 
-- `:8082/extract` : marker_ocr
-- `:8082/health` : marker_ocr
-- `:8080/forms` : orchestrator
-- `:8080/process-form` : orchestrator
-- `:8080/status/{job_id}` : orchestrator
-- `:8080/download/{job_id}` : orchestrator
-- `:8081/embed` : tei
-- `:8081/rerank` : tei
+| Service | Endpoint | Méthode | Description |
+|---------|----------|---------|-------------|
+| Orchestrator | `:8080/health` | GET | Santé du service |
+| Orchestrator | `:8080/forms` | GET | Liste des formulaires disponibles |
+| Orchestrator | `:8080/process-form` | POST | Lancer un job de remplissage |
+| Orchestrator | `:8080/status/{job_id}` | GET | Statut et progression d'un job |
+| Orchestrator | `:8080/download/{job_id}` | GET | Télécharger le PDF rempli |
+| Orchestrator | `:8080/debug/{job_id}` | GET | Résultats bruts d'extraction (évaluation) |
+| Marker OCR | `:8082/extract` | POST | Extraire texte/layout d'un PDF |
+| Marker OCR | `:8082/health` | GET | Santé du service |
+| TEI | `:8081/embed` | POST | Générer des embeddings |
+| TEI | `:8081/rerank` | POST | Reranker des documents |
+| TEI | `:8081/health` | GET | Santé du service |
 
 ## ✅ Composants actifs
 
@@ -25,9 +30,20 @@
 - **8081** : TEI (Text Embeddings Inference)
 - **8082** : Marker OCR
 
-## 🆕 Changements récents (10.03.2026)
+## 🆕 Changements récents
 
-### Orchestrateur : traitement non-bloquant
+### 11.03.2026 — Optimisation pipeline RAG
+
+- **OCR parallélisé** avec `asyncio.Semaphore(5)` pour traiter jusqu'à 5 PDFs simultanément
+- **Embedding par batch** (taille 64) pour éviter les timeouts sur de gros corpus
+- **Retrieval étendu** : `n_results=min(20, total)` + `reranked[:7]` (au lieu de 5/3)
+- **Prompt LLM amélioré** : système de 6 règles strictes pour l'extraction médicale
+- **Température réduite** : 0.05 (quasi-déterministe)
+- **Endpoint `/debug/{job_id}`** pour l'évaluation et le debugging
+- **Support 100 documents** (MAX_FILES=100, timeouts 120s)
+- **Framework d'évaluation** : `eval/run_eval.py` + documents synthétiques
+
+### 10.03.2026 — Orchestrateur : traitement non-bloquant
 
 L’orchestrateur fonctionne désormais avec une logique de **job asynchrone** :
 

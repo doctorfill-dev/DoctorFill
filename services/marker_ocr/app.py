@@ -1,7 +1,9 @@
 import os
+import hashlib
 import logging
 import shutil
 import tempfile
+import time
 from pathlib import Path
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
@@ -25,6 +27,11 @@ logger.info("Modèles chargés avec succès !")
 UPLOAD_DIR = "/tmp/pdf_uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# --- Cache OCR par hash SHA-256 du contenu PDF ---
+# Évite de ré-OCR les mêmes documents lors de re-uploads
+OCR_CACHE: dict[str, str] = {}
+MAX_CACHE_SIZE = int(os.getenv("OCR_CACHE_SIZE", "500"))
+
 
 @app.post("/extract")
 async def extract_pdf(file: UploadFile = File(...)):
@@ -38,13 +45,34 @@ async def extract_pdf(file: UploadFile = File(...)):
     # [SEC-14] Utiliser un fichier temporaire unique (évite les race conditions)
     fd, file_path = tempfile.mkstemp(suffix=".pdf", dir=UPLOAD_DIR)
     try:
+        content = await file.read()
         with os.fdopen(fd, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(content)
 
+        # --- Cache OCR par hash : skip si déjà traité ---
+        content_hash = hashlib.sha256(content).hexdigest()
+        if content_hash in OCR_CACHE:
+            logger.info(f"Cache hit pour {safe_name} (hash={content_hash[:12]}...)")
+            return JSONResponse(content={
+                "status": "success",
+                "markdown": OCR_CACHE[content_hash],
+                "cached": True
+            })
+
+        # --- OCR synchrone (appel direct, pas de threading sur mémoire unifiée GB10) ---
+        t0 = time.perf_counter()
         rendered = converter(file_path)
         full_text, _, _ = text_from_rendered(rendered)
+        elapsed = time.perf_counter() - t0
+        logger.info(f"OCR terminé pour {safe_name}: {len(full_text)} chars en {elapsed:.1f}s")
 
-        return JSONResponse(content={"status": "success", "markdown": full_text})
+        # --- Stocker en cache (FIFO si plein) ---
+        if len(OCR_CACHE) >= MAX_CACHE_SIZE:
+            oldest_key = next(iter(OCR_CACHE))
+            del OCR_CACHE[oldest_key]
+        OCR_CACHE[content_hash] = full_text
+
+        return JSONResponse(content={"status": "success", "markdown": full_text, "cached": False})
 
     except Exception as e:
         # [SEC-10] Log détaillé côté serveur, message générique côté client

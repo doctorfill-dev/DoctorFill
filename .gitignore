@@ -26,6 +26,6 @@ venv
 services/orchestrator/uploads/
 services/orchestrator/results/
 
-# ── Eval (fichiers générés) ──
-eval/test_docs/
-eval/results/
+# ── eval & logs
+eval
+services/logs/*.md
