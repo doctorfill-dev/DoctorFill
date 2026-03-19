@@ -1,5 +1,7 @@
 # --- 1) Image de base officielle NVIDIA
-FROM nvcr.io/nvidia/pytorch:26.02-py3
+# DGX Spark = driver 580 = CUDA 13.0. Le driver 590 (CUDA 13.1) n'est pas
+# encore en stable sur aarch64. Utiliser 25.11 (CUDA 13.0.2) max.
+FROM nvcr.io/nvidia/pytorch:25.11-py3
 
 # --- 2) Définition du répertoire de travail dans le conteneur
 WORKDIR /app
