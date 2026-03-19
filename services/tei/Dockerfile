@@ -1,5 +1,5 @@
 # Base image stricte pour ARM64 Grace Blackwell
-FROM nvcr.io/nvidia/pytorch:26.02-py3
+FROM nvcr.io/nvidia/pytorch:25.11-py3
 
 WORKDIR /app
 
