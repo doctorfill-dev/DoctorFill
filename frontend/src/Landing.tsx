@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Terminal, Database, FileOutput, Lock, ChevronRight, Mail, X } from "lucide-react";
-import { Link } from "react-router-dom";
 
 export default function Landing() {
   const [showContact, setShowContact] = useState(false);
@@ -51,13 +50,13 @@ export default function Landing() {
         </div>
 
         <div className="flex items-center gap-4 text-sm font-medium">
-          <Link
-            to="/app"
+          <a
+            href="/app"
             className="flex items-center gap-2 bg-zinc-900 text-white px-4 py-2 rounded-sm hover:bg-zinc-800 transition-colors"
           >
             <Lock className="w-3.5 h-3.5" />
             Accès Interface
-          </Link>
+          </a>
         </div>
       </nav>
 
@@ -79,12 +78,12 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              to="/app"
+            <a
+              href="/app"
               className="inline-flex items-center justify-center bg-zinc-100 border border-zinc-300 text-zinc-900 px-5 py-2.5 rounded-sm text-sm font-medium hover:bg-zinc-200 transition-colors"
             >
               Tester l'application <ChevronRight className="ml-1 w-4 h-4" />
-            </Link>
+            </a>
 
             <button
               onClick={() => { setShowContact(true); setContactSent(false); }}
