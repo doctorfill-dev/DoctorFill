@@ -22,10 +22,11 @@ from fastapi.responses import FileResponse
 import chromadb
 import shutil
 
-from core.extract import extract_xfa_datasets
+from core.extract import extract_xfa_datasets, PDFNoXFAError
 from core.fill import update_datasets
 from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
+from core.acroform import detect_form_type, fill_acroform
 from medical_synthesis import run_medical_synthesis
 from prompts import SYSTEM_PROMPT_EXTRACT, build_field_extraction_prompt
 
@@ -453,10 +454,11 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 json.dumps(results_debug, ensure_ascii=False, indent=2), encoding="utf-8")
 
             # ============================================================
-            # STEP 4 : Mapping & Injection XFA
+            # STEP 4 : Injection des valeurs dans le formulaire PDF
+            #          Supporte XFA, AcroForm pur et formulaires hybrides
             # ============================================================
             t_xfa_start = time.perf_counter()
-            JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
+            JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le formulaire PDF...",
                             "progress": 90})
             empty_form_path = tmp_dir / "empty.pdf"
 
@@ -465,23 +467,53 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 raise FileNotFoundError(f"Template introuvable pour form_id={form_id}")
             shutil.copy(source_template_path, empty_form_path)
 
-            base_xml = tmp_dir / "base.xml"
-            extract_xfa_datasets(empty_form_path, base_xml)
+            # Détecter le type de formulaire
+            form_type = detect_form_type(empty_form_path)
+            logger.info(f"[{job_id[:8]}] Type de formulaire détecté : {form_type}")
 
-            filled_values = {}
+            # Construire les valeurs extraites par champ
+            xfa_values: Dict[str, str] = {}    # xml_path → valeur
+            acro_values: Dict[str, str] = {}   # acroform_name → valeur
+
             for res in results:
-                if "result" in res and res["result"].get("value"):
-                    f_def = next(f for f in template["fields"] if f.get("id") == res["id"])
-                    filled_values[f_def["xml_path"]] = res["result"]["value"]
-
-            checkbox_paths = discover_checkbox_paths(base_xml)
-            normalize_checkboxes(filled_values, checkbox_paths)
-
-            filled_xml = tmp_dir / "filled.xml"
-            update_datasets(base_xml, filled_values, filled_xml, template["fields"])
+                if "result" not in res or not res["result"].get("value"):
+                    continue
+                value = res["result"]["value"]
+                f_def = next((f for f in template["fields"] if f.get("id") == res["id"]), None)
+                if f_def is None:
+                    continue
+                # XFA path
+                if f_def.get("xml_path"):
+                    xfa_values[f_def["xml_path"]] = value
+                # AcroForm name (champ optionnel dans le template JSON)
+                if f_def.get("acroform_name"):
+                    acro_values[f_def["acroform_name"]] = value
 
             output_pdf = tmp_dir / "output.pdf"
-            inject_datasets(empty_form_path, filled_xml, output_pdf)
+
+            if form_type in ("xfa", "hybrid"):
+                # --- Injection XFA ---
+                base_xml = tmp_dir / "base.xml"
+                try:
+                    extract_xfa_datasets(empty_form_path, base_xml)
+                    checkbox_paths = discover_checkbox_paths(base_xml)
+                    normalize_checkboxes(xfa_values, checkbox_paths)
+                    filled_xml = tmp_dir / "filled.xml"
+                    update_datasets(base_xml, xfa_values, filled_xml, template["fields"])
+                    # Pour un hybride, on part du template pour la base XFA
+                    inject_datasets(empty_form_path, filled_xml, output_pdf)
+                except PDFNoXFAError:
+                    logger.warning(f"[{job_id[:8]}] XFA introuvable malgré détection hybrid — fallback AcroForm")
+                    form_type = "acroform"
+
+            if form_type == "acroform" or (form_type == "hybrid" and acro_values):
+                # --- Injection AcroForm ---
+                # Pour un hybride : repartir du PDF XFA déjà rempli si disponible, sinon template
+                acro_source = output_pdf if (form_type == "hybrid" and output_pdf.exists()) else empty_form_path
+                fill_acroform(acro_source, acro_values, output_pdf)
+
+            if form_type == "none" or not output_pdf.exists():
+                raise ValueError(f"Impossible de remplir le formulaire (type={form_type})")
 
             t_xfa_end = time.perf_counter()
             timings["xfa_injection"] = t_xfa_end - t_xfa_start
@@ -499,11 +531,12 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             summary = (
                 f"Job: {job_id}\nForm: {form_id}\nDate: {datetime.now().isoformat()}\n"
                 f"Fichiers: {total_files}\nChunks: {len(chunks)}\n"
+                f"Type formulaire: {form_type}\n"
                 f"Synthèse médicale: {synthesis_info}\n"
                 f"Champs: {len(fields_with_q)} (OK: {ok_count}, Erreurs: {err_count}, Inconnu: {inconnu_count})\n"
                 f"Timings: OCR+embed={timings['ocr_embed_pipeline']:.1f}s, "
                 f"Synthèse={timings.get('medical_synthesis', 0):.1f}s, "
-                f"RAG={timings['rag_extraction']:.1f}s, XFA={timings['xfa_injection']:.1f}s, "
+                f"RAG={timings['rag_extraction']:.1f}s, Injection={timings['xfa_injection']:.1f}s, "
                 f"Total={timings['total']:.1f}s\n"
             )
             (debug_dir / "summary.txt").write_text(summary, encoding="utf-8")
