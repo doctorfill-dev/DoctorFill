@@ -5,7 +5,8 @@
       "name": "accidentNumber",
       "question": "Quel est le numéro de sinistre (numéro de dossier accident/LAA) attribué par l'assureur au cas du patient ?",
       "required": false,
-      "xml_path": "topmostSubform/page1/lawS1Struct/caseID"
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseID[0]"
     },
     {
       "id": "1.2",
@@ -80,7 +81,7 @@
     {
       "id": "2.1",
       "name": "diagnosis",
-      "question": "Quels sont les diagnostics médicaux posés pour le patient en lien avec l'accident (lésions, fractures, atteintes) ? Lister tous les diagnostics pertinents.",
+      "question": "Quels sont TOUS les diagnostics médicaux posés pour le patient en lien avec l'accident (lésions, fractures, contusions, atteintes) ? Lister chaque diagnostic avec son code CIM-10 si disponible.",
       "required": false,
       "xml_path": "topmostSubform/page1/diag4Unemployability"
     },
@@ -94,9 +95,10 @@
     {
       "id": "3.2",
       "name": "unempDegree",
-      "question": "Quel est le degré d'incapacité de travail du patient, exprimé en pourcentage (%) ? Par exemple 50% ou 100%. Ne pas confondre avec des valeurs de tests médicaux (spirométrie, force, etc.).",
+      "question": "Quel est le degré d'incapacité de travail du patient, exprimé en pourcentage (%) ? Répondre par un chiffre seul (ex. : 50 ou 100). Ne pas confondre avec des valeurs de tests médicaux.",
       "required": false,
-      "xml_path": "topmostSubform/page1/unemployabilityDegree"
+      "xml_path": "topmostSubform/page1/unemployabilityDegree",
+      "type": "percent"
     },
     {
       "id": "4.1",
@@ -122,7 +124,7 @@
     {
       "id": "5.1",
       "name": "providerBlockAddress",
-      "question": "Quelles sont les coordonnées complètes du médecin traitant (et non celles du patient) : nom, prénom, adresse du cabinet, NPA et localité ? Formater en bloc adresse.",
+      "question": "Quelles sont les coordonnées complètes du médecin traitant (et non celles du patient) : nom, prénom, adresse du cabinet, NPA et localité ?",
       "required": false,
       "xml_path": "topmostSubform/page2/providerS1Address/blockAddress"
     },
@@ -150,7 +152,7 @@
     {
       "id": "5.5",
       "name": "providerRCC",
-      "question": "Quel est le numéro RCC (aussi appelé ZSR, Zahlstellenregister) du médecin traitant ? C'est un identifiant de facturation suisse.",
+      "question": "Quel est le numéro RCC (aussi appelé ZSR, Zahlstellenregister) du médecin traitant ?",
       "required": false,
       "xml_path": "topmostSubform/page2/providerS1Address/zsr"
     },

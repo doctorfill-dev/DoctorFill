@@ -151,6 +151,32 @@ def markdown_semantic_chunking(md_text: str, max_words: int = 800) -> List[str]:
     return final_chunks
 
 
+def _normalize_field_value(value: str, field_type: str | None) -> str:
+    """Normalise la valeur extraite selon le type du champ déclaré dans le template."""
+    if not value or not field_type:
+        return value
+    if field_type == "sex":
+        # Normalise vers M ou F
+        v = value.strip().upper()
+        if v in ("M", "MASCULIN", "HOMME", "MALE", "H"):
+            return "M"
+        if v in ("F", "FÉMININ", "FEMININ", "FEMME", "FEMALE"):
+            return "F"
+        # Cas où le LLM a renvoyé "M (masculin)" ou "F (féminin)"
+        if v.startswith("M"):
+            return "M"
+        if v.startswith("F"):
+            return "F"
+        return value  # Valeur non reconnue : on laisse passer
+    if field_type == "percent":
+        # Garde uniquement les chiffres (et éventuellement une virgule/point décimale)
+        match = re.search(r'\d+(?:[.,]\d+)?', value.replace("%", ""))
+        if match:
+            return match.group(0).replace(",", ".")
+        return value
+    return value
+
+
 def _sanitize_filename(filename: str, index: int) -> str:
     """
     [SEC-01] Assainit un nom de fichier uploadé.
@@ -478,10 +504,12 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             for res in results:
                 if "result" not in res or not res["result"].get("value"):
                     continue
-                value = res["result"]["value"]
+                value = str(res["result"]["value"])
                 f_def = next((f for f in template["fields"] if f.get("id") == res["id"]), None)
                 if f_def is None:
                     continue
+                # Normalisation selon le type déclaré dans le template
+                value = _normalize_field_value(value, f_def.get("type"))
                 # XFA path
                 if f_def.get("xml_path"):
                     xfa_values[f_def["xml_path"]] = value
