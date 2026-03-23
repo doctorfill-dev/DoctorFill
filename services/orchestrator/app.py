@@ -26,6 +26,8 @@ from core.extract import extract_xfa_datasets
 from core.fill import update_datasets
 from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
+from medical_synthesis import run_medical_synthesis
+from prompts import SYSTEM_PROMPT_EXTRACT, build_field_extraction_prompt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -132,7 +134,7 @@ async def _cleanup_expired_jobs():
 # ---------------------------------------------------
 # --- UTILS ---
 
-def markdown_semantic_chunking(md_text: str, max_words: int = 400) -> List[str]:
+def markdown_semantic_chunking(md_text: str, max_words: int = 800) -> List[str]:
     raw_chunks = re.split(r'(?=\n#{1,3} )', md_text)
     final_chunks = []
     for chunk in raw_chunks:
@@ -141,7 +143,7 @@ def markdown_semantic_chunking(md_text: str, max_words: int = 400) -> List[str]:
             continue
         words = chunk.split()
         if len(words) > max_words:
-            for i in range(0, len(words), max_words - 50):
+            for i in range(0, len(words), max_words - 100):
                 final_chunks.append(" ".join(words[i:i + max_words]))
         else:
             final_chunks.append(chunk)
@@ -208,31 +210,25 @@ async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str],
         return await _call_with_retry()
 
 
-SYSTEM_PROMPT_EXTRACT = (
-    "Tu es un assistant spécialisé dans l'extraction de données depuis des documents médicaux. "
-    "On te fournit des EXTRAITS de rapports et une QUESTION.\n\n"
-    "RÈGLES STRICTES :\n"
-    "1. Cherche la réponse dans les extraits fournis. L'information peut apparaître sous différentes formes "
-    "(en-tête, tableau, texte narratif, champ de formulaire, etc.).\n"
-    "2. Extrais la valeur EXACTE telle qu'elle apparaît dans le texte.\n"
-    "3. Ne réponds \"Inconnu\" que si l'information est RÉELLEMENT ABSENTE de tous les extraits.\n"
-    "4. Réponds UNIQUEMENT en JSON valide avec ce format :\n"
-    '   {"value": "<réponse extraite>", "source_quote": "<phrase exacte du contexte contenant la réponse>"}\n'
-    "5. Pour les dates, conserve le format original du document.\n"
-    "6. Pour les noms/prénoms, conserve la casse originale."
-)
-
-
-async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dict):
-    prompt = f"EXTRAITS DE DOCUMENTS :\n{context}\n\nQUESTION : {field['question']}"
+async def extract_field_vllm(
+    client: httpx.AsyncClient,
+    chunks_context: str,
+    field: Dict,
+    synthesis_json: str | None = None,
+):
+    prompt = build_field_extraction_prompt(
+        question=field["question"],
+        synthesis_json=synthesis_json,
+        chunks_context=chunks_context,
+    )
     payload = {
         "model": VLLM_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT_EXTRACT},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": prompt},
         ],
         "temperature": 0.05,
-        "response_format": {"type": "json_object"}
+        "response_format": {"type": "json_object"},
     }
     try:
         resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=120.0)
@@ -247,10 +243,11 @@ async def extract_field_vllm(client: httpx.AsyncClient, context: str, field: Dic
 
 async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
     """
-    Pipeline avec streaming OCR→embed et semaphores rerank/LLM.
-    - OCR et embedding se font en parallèle via asyncio.Queue
-    - Rerank limité à 5 concurrents (évite PoolTimeout)
-    - LLM limité à 10 concurrents (évite saturation KV cache vLLM)
+    Pipeline avec streaming OCR→embed, synthèse médicale globale et semaphores rerank/LLM.
+    - STEP 1 : OCR et embedding en parallèle via asyncio.Queue
+    - STEP 2 : Synthèse médicale globale (LLM lit tous les documents, produit un JSON structuré)
+    - STEP 3 : RAG hybride (synthèse + chunks reranked) pour chaque champ
+    - STEP 4 : Injection XFA
     """
     collection_name = f"col_{job_id}"
     debug_dir = DEBUG_LOG_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{job_id[:8]}"
@@ -258,6 +255,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
     (debug_dir / "markdown").mkdir(exist_ok=True)
 
     timings: Dict[str, float] = {}
+    # Résultats OCR bruts (nécessaires pour la synthèse)
+    ocr_raw_results: List[Dict[str, str]] = []
 
     try:
         limits = httpx.Limits(max_connections=50, max_keepalive_connections=10, keepalive_expiry=30)
@@ -307,6 +306,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                             # Debug : sauvegarder le markdown OCR
                             md_filename = path.stem + ".md"
                             (debug_dir / "markdown" / md_filename).write_text(md_text, encoding="utf-8")
+                            # Accumuler pour la synthèse médicale
+                            ocr_raw_results.append({"filename": path.name, "markdown": md_text})
                             # Envoyer dans la queue pour embedding immédiat
                             await ocr_queue.put((path.name, md_text))
                             return path.name, md_text
@@ -365,11 +366,39 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             logger.info(f"[{job_id[:8]}] Pipeline OCR+embed terminé: {len(chunks)} chunks en {timings['ocr_embed_pipeline']:.1f}s")
 
             # ============================================================
-            # STEP 2 : RAG — rerank + LLM avec semaphores
+            # STEP 2 : Synthèse médicale globale (nouveau)
+            # ============================================================
+            JOBS[job_id].update({
+                "status": "processing",
+                "message": "🧠 Synthèse médicale de tous les documents...",
+                "progress": 42,
+            })
+            t_synthesis_start = time.perf_counter()
+            synthesis = await run_medical_synthesis(ocr_raw_results, VLLM_URL, VLLM_MODEL)
+            timings["medical_synthesis"] = time.perf_counter() - t_synthesis_start
+
+            synthesis_json: str | None = None
+            if synthesis:
+                synthesis_json = json.dumps(synthesis, ensure_ascii=False)
+                nb_dx = len(synthesis.get("diagnostics", []))
+                nb_it = len(synthesis.get("incapacites_travail", []))
+                logger.info(
+                    f"[{job_id[:8]}] Synthèse OK en {timings['medical_synthesis']:.1f}s "
+                    f"— {nb_dx} diagnostics, {nb_it} périodes d'incapacité"
+                )
+                # Debug : sauvegarder la synthèse
+                (debug_dir / "medical_synthesis.json").write_text(
+                    json.dumps(synthesis, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+            else:
+                logger.warning(f"[{job_id[:8]}] Synthèse échouée — mode RAG pur activé")
+
+            # ============================================================
+            # STEP 3 : RAG hybride — rerank + LLM avec semaphores
             # ============================================================
             t_rag_start = time.perf_counter()
             JOBS[job_id].update({"status": "processing",
-                                 "message": "🤖 Analyse LLM et extraction des entités...", "progress": 45})
+                                 "message": "🤖 Analyse LLM et extraction des entités...", "progress": 50})
             with open(f"template/Form_{form_id}.json", "r") as f:
                 template = json.load(f)
 
@@ -383,13 +412,15 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             llm_done = 0
 
             async def _retrieve_and_extract(field: Dict, q_emb) -> Dict:
-                """ChromaDB query (instant) → rerank (sem=5) → LLM (sem=10)."""
+                """ChromaDB query (instant) → rerank (sem=5) → LLM hybride (sem=10)."""
                 nonlocal llm_done
-                hits = col.query(query_embeddings=[q_emb], n_results=min(20, len(chunks)))["documents"][0]
+                hits = col.query(query_embeddings=[q_emb], n_results=min(30, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
-                context = "\n---\n".join([r["document"] for r in reranked[:7]])
+                chunks_context = "\n---\n".join([r["document"] for r in reranked[:20]])
                 async with llm_sem:
-                    result = await extract_field_vllm(client, context, field)
+                    result = await extract_field_vllm(
+                        client, chunks_context, field, synthesis_json=synthesis_json
+                    )
                 llm_done += 1
                 JOBS[job_id].update({
                     "message": f"🤖 Extraction {llm_done}/{len(fields_with_q)} champs...",
@@ -406,6 +437,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             # Stocker les résultats bruts pour le debug/eval
             JOBS[job_id]["_debug_results"] = results
             JOBS[job_id]["_debug_chunks_count"] = len(chunks)
+            JOBS[job_id]["_debug_synthesis"] = synthesis
 
             # Debug : sauvegarder les résultats LLM
             results_debug = []
@@ -421,7 +453,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 json.dumps(results_debug, ensure_ascii=False, indent=2), encoding="utf-8")
 
             # ============================================================
-            # STEP 3 : Mapping & Injection XFA
+            # STEP 4 : Mapping & Injection XFA
             # ============================================================
             t_xfa_start = time.perf_counter()
             JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le PDF XFA...",
@@ -459,11 +491,20 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             ok_count = sum(1 for r in results if "result" in r and r["result"].get("value") and r["result"]["value"] != "Inconnu")
             err_count = sum(1 for r in results if "error" in r)
             inconnu_count = sum(1 for r in results if "result" in r and r["result"].get("value") == "Inconnu")
+            synthesis_info = "Non disponible (fallback RAG pur)"
+            if synthesis:
+                nb_dx = len(synthesis.get("diagnostics", []))
+                nb_it = len(synthesis.get("incapacites_travail", []))
+                synthesis_info = f"{nb_dx} diagnostics, {nb_it} périodes d'incapacité"
             summary = (
                 f"Job: {job_id}\nForm: {form_id}\nDate: {datetime.now().isoformat()}\n"
                 f"Fichiers: {total_files}\nChunks: {len(chunks)}\n"
+                f"Synthèse médicale: {synthesis_info}\n"
                 f"Champs: {len(fields_with_q)} (OK: {ok_count}, Erreurs: {err_count}, Inconnu: {inconnu_count})\n"
-                f"Timings: OCR+embed={timings['ocr_embed_pipeline']:.1f}s, RAG={timings['rag_extraction']:.1f}s, XFA={timings['xfa_injection']:.1f}s, Total={timings['total']:.1f}s\n"
+                f"Timings: OCR+embed={timings['ocr_embed_pipeline']:.1f}s, "
+                f"Synthèse={timings.get('medical_synthesis', 0):.1f}s, "
+                f"RAG={timings['rag_extraction']:.1f}s, XFA={timings['xfa_injection']:.1f}s, "
+                f"Total={timings['total']:.1f}s\n"
             )
             (debug_dir / "summary.txt").write_text(summary, encoding="utf-8")
             logger.info(f"[{job_id[:8]}] Pipeline terminé en {timings['total']:.1f}s — Debug: {debug_dir}")
@@ -612,10 +653,12 @@ async def debug_results(job_id: str, token: str = ""):
         raise HTTPException(status_code=403, detail="Token invalide.")
 
     debug_results = JOBS[job_id].get("_debug_results", [])
+    debug_synthesis = JOBS[job_id].get("_debug_synthesis")
     return {
         "job_id": job_id,
         "status": JOBS[job_id].get("status"),
         "chunks_count": JOBS[job_id].get("_debug_chunks_count", 0),
+        "medical_synthesis": debug_synthesis,
         "extractions": [
             {
                 "field_id": r.get("id"),
