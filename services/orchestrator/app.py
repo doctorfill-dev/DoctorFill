@@ -18,7 +18,8 @@ from pathlib import Path
 from typing import List, Dict, Any, Set
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from pydantic import BaseModel
 import chromadb
 import shutil
 
@@ -28,7 +29,7 @@ from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 from core.acroform import detect_form_type, fill_acroform
 from medical_synthesis import run_medical_synthesis
-from prompts import SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt, SECTION_SYNTHESIS_KEYS
+from prompts import SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt, SECTION_SYNTHESIS_KEYS, build_chat_messages
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -127,6 +128,10 @@ async def _cleanup_expired_jobs():
             if tmp_dir.exists():
                 shutil.rmtree(tmp_dir, ignore_errors=True)
                 logger.info(f"Cleanup: fichiers temporaires supprimés pour job {jid}")
+            try:
+                chroma_client.delete_collection(name=f"col_{jid}")
+            except Exception:
+                pass
             JOBS.pop(jid, None)
         if expired:
             logger.info(f"Cleanup: {len(expired)} job(s) expiré(s) purgé(s)")
@@ -644,10 +649,8 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             "completed_at": time.time()
         })
     finally:
-        try:
-            chroma_client.delete_collection(name=collection_name)
-        except Exception:
-            pass
+        # Collection kept alive for chat sessions — cleaned up by _cleanup_expired_jobs
+        pass
 
 
 # ---------------------------------------------------------------
@@ -739,6 +742,86 @@ async def get_status(job_id: str):
         "message": job.get("message"),
         "progress": job.get("progress"),
     }
+
+
+# ---------------------------------------------------------------
+# --- CHAT INTERACTIF ---
+
+class ChatRequest(BaseModel):
+    job_id: str
+    message: str
+    history: List[Dict[str, Any]] = []
+
+
+@app.post("/chat")
+async def chat_endpoint(request: ChatRequest):
+    """Chat interactif sur les documents d'un job déjà traité. Streame la réponse."""
+    # Validation
+    if len(request.message) > 2000:
+        raise HTTPException(status_code=400, detail="Message trop long (max 2000 caractères).")
+    if len(request.history) > 40:
+        raise HTTPException(status_code=400, detail="Historique trop long (max 20 échanges).")
+
+    job = JOBS.get(request.job_id)
+    if not job or job.get("status") != "completed":
+        raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
+
+    synthesis = job.get("_debug_synthesis")
+    synthesis_json = json.dumps(synthesis, ensure_ascii=False) if synthesis else None
+    collection_name = f"col_{request.job_id}"
+
+    # Récupérer les chunks pertinents depuis ChromaDB
+    chunks_context: str | None = None
+    try:
+        col = chroma_client.get_collection(name=collection_name)
+        col_count = col.count()
+        if col_count > 0:
+            async with httpx.AsyncClient(limits=httpx.Limits(max_connections=10)) as client:
+                q_emb = (await fetch_embeddings(client, [request.message]))[0]
+                hits = col.query(
+                    query_embeddings=[q_emb],
+                    n_results=min(15, col_count)
+                )["documents"][0]
+                reranked = await fetch_rerank(client, request.message, hits)
+                top_chunks = [r["document"] for r in reranked[:6]]
+                chunks_context = "\n---\n".join(top_chunks)
+    except Exception as e:
+        logger.warning(f"[chat/{request.job_id[:8]}] ChromaDB inaccessible: {e}")
+
+    messages = build_chat_messages(
+        synthesis_json=synthesis_json,
+        chunks_context=chunks_context,
+        history=request.history,
+        question=request.message,
+    )
+
+    async def _stream():
+        payload = {
+            "model": VLLM_MODEL,
+            "messages": messages,
+            "temperature": 0.2,
+            "max_tokens": 1024,
+            "stream": True,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
+                async with client.stream(
+                    "POST", f"{VLLM_URL}/chat/completions", json=payload
+                ) as resp:
+                    resp.raise_for_status()
+                    async for line in resp.aiter_lines():
+                        if not line:
+                            continue
+                        if line == "data: [DONE]":
+                            yield "data: [DONE]\n\n"
+                            return
+                        if line.startswith("data: "):
+                            yield line + "\n\n"
+        except Exception as e:
+            logger.error(f"[chat/{request.job_id[:8]}] Erreur streaming vLLM: {e}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
 
 
 @app.get("/download/{job_id}")

@@ -275,3 +275,57 @@ def build_field_extraction_prompt(
         synthesis_json=synthesis_json,
         chunks_context=chunks_context,
     )
+
+
+# ---------------------------------------------------------------------------
+# 4. CHAT MÉDICAL INTERACTIF
+# ---------------------------------------------------------------------------
+
+SYSTEM_PROMPT_CHAT = """\
+Tu es un assistant médical expert qui analyse le dossier médical d'un patient spécifique.
+Tu as accès à une synthèse structurée du dossier et aux extraits pertinents des documents originaux.
+
+RÈGLES STRICTES :
+1. Réponds en français, de manière précise et concise.
+2. Base-toi UNIQUEMENT sur les informations présentes dans la synthèse ou les extraits fournis.
+3. Si l'information demandée est absente des documents, dis-le clairement : "Cette information ne figure pas dans les documents."
+4. Ne pose pas de diagnostic, ne prescris rien — tu analyses et résumes des données existantes.
+5. Cite les sources quand c'est utile (ex: "selon le rapport du Dr X datant du...").
+6. Pour les listes (diagnostics, traitements), présente chaque élément sur une ligne séparée.
+"""
+
+
+def build_chat_messages(
+    synthesis_json: str | None,
+    chunks_context: str | None,
+    history: List[Dict],
+    question: str,
+) -> List[Dict]:
+    """Construit la liste de messages pour le chat médical (format OpenAI)."""
+    messages: List[Dict] = [{"role": "system", "content": SYSTEM_PROMPT_CHAT}]
+
+    # Injecter le contexte comme premier échange (grounding)
+    context_parts = []
+    if synthesis_json:
+        context_parts.append(f"SYNTHÈSE MÉDICALE STRUCTURÉE :\n{synthesis_json}")
+    if chunks_context:
+        context_parts.append(f"EXTRAITS PERTINENTS DES DOCUMENTS ORIGINAUX :\n{chunks_context}")
+
+    if context_parts:
+        messages.append({
+            "role": "user",
+            "content": "Voici le dossier médical du patient :\n\n" + "\n\n---\n\n".join(context_parts),
+        })
+        messages.append({
+            "role": "assistant",
+            "content": "J'ai pris connaissance du dossier médical. Je suis prêt à répondre à vos questions.",
+        })
+
+    # Historique de conversation
+    for msg in history:
+        if msg.get("role") in ("user", "assistant") and msg.get("content"):
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    # Question courante
+    messages.append({"role": "user", "content": question})
+    return messages
