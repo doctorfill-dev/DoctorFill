@@ -4,8 +4,10 @@ prompts.py — Centralisation de tous les prompts LLM de DoctorFill.
 Trois familles de prompts :
 1. Synthèse médicale globale (nouveau pipeline)
 2. Résumé par document (pipeline hiérarchique, si trop de documents)
-3. Extraction de champ (remplissage du formulaire)
+3. Extraction de champs (remplissage du formulaire — mode batch)
 """
+
+from typing import Dict, List
 
 # ---------------------------------------------------------------------------
 # 1. SYNTHÈSE MÉDICALE GLOBALE
@@ -33,10 +35,6 @@ RÈGLES ABSOLUES :
 
 
 def build_synthesis_prompt(docs_text: str) -> str:
-    """
-    Prompt utilisateur pour la synthèse globale (tous les documents en un seul appel).
-    Utilisé quand le total de tokens est < 28 000.
-    """
     return f"""\
 DOCUMENTS MÉDICAUX À ANALYSER :
 {docs_text}
@@ -116,10 +114,6 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ou après.
 
 
 def build_per_doc_summary_prompt(doc_text: str, doc_name: str) -> str:
-    """
-    Prompt pour résumer un document individuel (pipeline hiérarchique).
-    Utilisé quand le total de tokens dépasse 28 000.
-    """
     return f"""\
 DOCUMENT : {doc_name}
 
@@ -177,9 +171,6 @@ Réponds UNIQUEMENT en JSON valide, sans texte avant ou après.
 
 
 def build_merge_summaries_prompt(summaries_json: str) -> str:
-    """
-    Prompt pour fusionner les résumés de chaque document en un seul JSON.
-    """
     return f"""\
 RÉSUMÉS DES DOCUMENTS MÉDICAUX :
 {summaries_json}
@@ -196,24 +187,81 @@ Ajoute un champ "document_source" à chaque diagnostic et chaque période d'inca
 
 
 # ---------------------------------------------------------------------------
-# 3. EXTRACTION DE CHAMP (remplissage du formulaire)
+# 3. EXTRACTION BATCH (remplissage du formulaire — plusieurs champs par appel)
 # ---------------------------------------------------------------------------
 
-SYSTEM_PROMPT_EXTRACT = """\
-Tu es un assistant spécialisé dans l'extraction de données depuis des documents médicaux.
-On te fournit une SYNTHÈSE MÉDICALE STRUCTURÉE et/ou des EXTRAITS de documents,
-ainsi qu'une QUESTION sur un champ de formulaire.
+# Mapping section → clés de la synthèse pertinentes
+# La clé est le préfixe de l'ID du champ (avant le premier '.')
+SECTION_SYNTHESIS_KEYS: Dict[str, List[str]] = {
+    "1":  ["canton_traitement", "patient"],
+    "2":  ["patient", "medecins"],
+    "3":  ["incapacites_travail", "dates_cles"],
+    "4":  ["diagnostics", "traitements"],
+    "5":  ["incapacites_travail", "pronostic"],
+    "6":  ["incapacites_travail", "traitements"],
+    "7":  ["medecins"],
+    "8":  ["diagnostics", "traitements"],
+    "9":  ["medecins"],
+    "10": ["pronostic"],
+}
+
+
+SYSTEM_PROMPT_BATCH_EXTRACT = """\
+Tu es un assistant spécialisé dans l'extraction précise de données depuis des dossiers médicaux suisses.
+On te fournit une SYNTHÈSE MÉDICALE structurée et/ou des EXTRAITS de documents, \
+ainsi qu'une liste de CHAMPS à remplir pour un formulaire administratif.
 
 RÈGLES STRICTES :
-1. Cherche la réponse en priorité dans la SYNTHÈSE MÉDICALE si elle est fournie.
+1. Cherche la réponse de chaque champ EN PRIORITÉ dans la SYNTHÈSE MÉDICALE si elle est fournie.
 2. Si la synthèse ne contient pas l'information, cherche dans les EXTRAITS DE DOCUMENTS.
-3. Extrais la valeur EXACTE telle qu'elle apparaît dans les sources.
-4. Ne réponds "Inconnu" que si l'information est RÉELLEMENT ABSENTE de toutes les sources.
-5. Réponds UNIQUEMENT en JSON valide avec la structure : {"value": "...", "source_quote": "..."}.
-6. Pour les dates, conserve le format DD.MM.YYYY.
-7. Pour les noms/prénoms, conserve la casse originale.
-8. Pour les listes de diagnostics, liste-les TOUS séparés par des virgules ou retours à la ligne.
+3. Si l'information est introuvable dans toutes les sources, retourne exactement "" (chaîne vide).
+4. NE JAMAIS inventer, déduire ou supposer une valeur absente des sources.
+5. Réponds UNIQUEMENT en JSON valide, sans texte avant ou après.
+6. Réponds à TOUS les IDs demandés, même si la valeur est "".
+7. Pour les dates, utilise le format DD.MM.YYYY.
+8. Pour les listes (ex: diagnostics), liste TOUTES les entrées séparées par des sauts de ligne.
+9. "source_quote" doit être la citation EXACTE du texte source (max 100 caractères).
+   Si valeur vide, mettre "" pour source_quote aussi.
 """
+
+
+def build_batch_extraction_prompt(
+    fields: List[Dict],
+    synthesis_json: str | None,
+    chunks_context: str | None,
+) -> str:
+    """
+    Construit le prompt pour extraire plusieurs champs en un seul appel LLM.
+    La synthèse est déjà pré-filtrée sur la section pertinente.
+    """
+    import json as _json
+
+    parts = []
+
+    if synthesis_json:
+        parts.append(f"SYNTHÈSE MÉDICALE (source principale) :\n{synthesis_json}")
+
+    if chunks_context:
+        parts.append(f"EXTRAITS DE DOCUMENTS (source secondaire) :\n{chunks_context}")
+
+    field_lines = "\n".join(f'• [{f["id"]}] {f["question"]}' for f in fields)
+    parts.append(f"CHAMPS À EXTRAIRE :\n{field_lines}")
+
+    # Fournir un exemple JSON avec tous les IDs pour guider le modèle
+    example = {str(f["id"]): {"value": "...", "source_quote": "..."} for f in fields}
+    parts.append(
+        f"RÉPONDS UNIQUEMENT avec ce JSON (tous les IDs sont obligatoires) :\n"
+        + _json.dumps(example, ensure_ascii=False, indent=2)
+    )
+
+    return "\n\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# Compatibilité ascendante (ancienne interface mono-champ)
+# ---------------------------------------------------------------------------
+
+SYSTEM_PROMPT_EXTRACT = SYSTEM_PROMPT_BATCH_EXTRACT
 
 
 def build_field_extraction_prompt(
@@ -221,18 +269,9 @@ def build_field_extraction_prompt(
     synthesis_json: str | None,
     chunks_context: str | None,
 ) -> str:
-    """
-    Construit le prompt utilisateur pour l'extraction d'un champ.
-    Utilise la synthèse comme source primaire et les chunks comme source secondaire.
-    """
-    parts = []
-
-    if synthesis_json:
-        parts.append(f"SYNTHÈSE MÉDICALE DU PATIENT :\n{synthesis_json}")
-
-    if chunks_context:
-        parts.append(f"EXTRAITS DE DOCUMENTS (source secondaire) :\n{chunks_context}")
-
-    parts.append(f"QUESTION : {question}")
-
-    return "\n\n".join(parts)
+    """Interface mono-champ conservée pour compatibilité."""
+    return build_batch_extraction_prompt(
+        fields=[{"id": "result", "question": question}],
+        synthesis_json=synthesis_json,
+        chunks_context=chunks_context,
+    )

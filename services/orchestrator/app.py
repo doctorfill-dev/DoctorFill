@@ -28,7 +28,7 @@ from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 from core.acroform import detect_form_type, fill_acroform
 from medical_synthesis import run_medical_synthesis
-from prompts import SYSTEM_PROMPT_EXTRACT, build_field_extraction_prompt
+from prompts import SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt, SECTION_SYNTHESIS_KEYS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -237,35 +237,64 @@ async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str],
         return await _call_with_retry()
 
 
-async def extract_field_vllm(
+def _filter_synthesis_for_section(synthesis: Dict | None, section_id: str) -> str | None:
+    """Retourne uniquement les clés de synthèse pertinentes pour la section donnée."""
+    if not synthesis:
+        return None
+    keys = SECTION_SYNTHESIS_KEYS.get(section_id, list(synthesis.keys()))
+    filtered = {k: synthesis[k] for k in keys if k in synthesis and synthesis[k]}
+    return json.dumps(filtered, ensure_ascii=False) if filtered else None
+
+
+def _group_fields_into_batches(fields: List[Dict], max_batch_size: int = 7) -> List[List[Dict]]:
+    """Groupe les champs par section (préfixe de l'ID), max max_batch_size par batch."""
+    from collections import defaultdict
+    by_section: Dict[str, List[Dict]] = defaultdict(list)
+    for f in fields:
+        section = str(f["id"]).split(".")[0]
+        by_section[section].append(f)
+    batches = []
+    for section_fields in by_section.values():
+        for i in range(0, len(section_fields), max_batch_size):
+            batches.append(section_fields[i:i + max_batch_size])
+    return batches
+
+
+async def extract_fields_batch_vllm(
     client: httpx.AsyncClient,
+    fields: List[Dict],
     chunks_context: str,
-    field: Dict,
-    synthesis_json: str | None = None,
-):
-    prompt = build_field_extraction_prompt(
-        question=field["question"],
-        synthesis_json=synthesis_json,
-        chunks_context=chunks_context,
-    )
+    synthesis_json: str | None,
+    llm_sem: asyncio.Semaphore,
+) -> List[Dict]:
+    """Extrait plusieurs champs en un seul appel LLM (mode batch)."""
+    prompt = build_batch_extraction_prompt(fields, synthesis_json, chunks_context)
     payload = {
         "model": VLLM_MODEL,
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT_EXTRACT},
+            {"role": "system", "content": SYSTEM_PROMPT_BATCH_EXTRACT},
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.05,
         "response_format": {"type": "json_object"},
     }
     try:
-        resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=120.0)
-        resp.raise_for_status()
-        content = resp.json()["choices"][0]["message"]["content"]
-        return {"id": field["id"], "result": json.loads(content)}
+        async with llm_sem:
+            resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=180.0)
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"]
+            data = json.loads(content)
+        results = []
+        for field in fields:
+            fid = str(field["id"])
+            if fid in data and isinstance(data[fid], dict):
+                results.append({"id": field["id"], "result": data[fid]})
+            else:
+                results.append({"id": field["id"], "error": "field_missing_in_response"})
+        return results
     except Exception as e:
-        logger.error(f"Erreur vLLM sur {field['id']}: {e}")
-        # [SEC-10] Ne pas exposer les détails de l'erreur au client
-        return {"id": field["id"], "error": "extraction_failed"}
+        logger.error(f"Erreur batch vLLM ({[f['id'] for f in fields]}): {e}")
+        return [{"id": f["id"], "error": "extraction_failed"} for f in fields]
 
 
 async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
@@ -421,7 +450,9 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 logger.warning(f"[{job_id[:8]}] Synthèse échouée — mode RAG pur activé")
 
             # ============================================================
-            # STEP 3 : RAG hybride — rerank + LLM avec semaphores
+            # STEP 3 : RAG hybride — rerank par champ + batch LLM par section
+            # Phase A : retrieval + rerank en parallèle (sem=5), top-8 chunks/champ
+            # Phase B : batch LLM par section (sem=10), ~7 champs par appel
             # ============================================================
             t_rag_start = time.perf_counter()
             JOBS[job_id].update({"status": "processing",
@@ -430,34 +461,59 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 template = json.load(f)
 
             fields_with_q = [f for f in template["fields"] if "question" in f]
-            logger.info(f"[{job_id[:8]}] Step 2: {len(fields_with_q)} champs à extraire (rerank_sem=5, llm_sem=10)...")
+            n_fields = len(fields_with_q)
+            logger.info(f"[{job_id[:8]}] Step 3: {n_fields} champs — phase A rerank, phase B batch-LLM...")
 
             all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
 
             rerank_sem = asyncio.Semaphore(5)
             llm_sem = asyncio.Semaphore(10)
-            llm_done = 0
 
-            async def _retrieve_and_extract(field: Dict, q_emb) -> Dict:
-                """ChromaDB query (instant) → rerank (sem=5) → LLM hybride (sem=10)."""
-                nonlocal llm_done
-                hits = col.query(query_embeddings=[q_emb], n_results=min(30, len(chunks)))["documents"][0]
+            # --- Phase A : retrieval + rerank par champ (top-8 chunks) ---
+            async def _retrieve_for_field(field: Dict, q_emb) -> List[str]:
+                hits = col.query(query_embeddings=[q_emb], n_results=min(20, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
-                chunks_context = "\n---\n".join([r["document"] for r in reranked[:20]])
-                async with llm_sem:
-                    result = await extract_field_vllm(
-                        client, chunks_context, field, synthesis_json=synthesis_json
-                    )
-                llm_done += 1
+                return [r["document"] for r in reranked[:8]]
+
+            field_top_chunks: List[List[str]] = await asyncio.gather(*[
+                _retrieve_for_field(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
+            ])
+            field_chunk_map: Dict[str, List[str]] = {
+                str(f["id"]): cks for f, cks in zip(fields_with_q, field_top_chunks)
+            }
+
+            # --- Phase B : batch LLM par section ---
+            batches = _group_fields_into_batches(fields_with_q, max_batch_size=7)
+            batches_done = 0
+
+            async def _extract_batch(batch_fields: List[Dict]) -> List[Dict]:
+                nonlocal batches_done
+                # Fusionner les chunks uniques du batch (max 16 chunks fusionnés)
+                seen: set = set()
+                merged_chunks: List[str] = []
+                for bf in batch_fields:
+                    for c in field_chunk_map.get(str(bf["id"]), []):
+                        if c not in seen:
+                            seen.add(c)
+                            merged_chunks.append(c)
+                chunks_ctx = "\n---\n".join(merged_chunks[:16])
+
+                # Filtrer la synthèse sur la section de ce batch
+                section = str(batch_fields[0]["id"]).split(".")[0]
+                filtered_synthesis = _filter_synthesis_for_section(synthesis, section)
+
+                result = await extract_fields_batch_vllm(
+                    client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem
+                )
+                batches_done += 1
                 JOBS[job_id].update({
-                    "message": f"🤖 Extraction {llm_done}/{len(fields_with_q)} champs...",
-                    "progress": 50 + int(40 * llm_done / len(fields_with_q))
+                    "message": f"🤖 Extraction {batches_done}/{len(batches)} sections...",
+                    "progress": 50 + int(40 * batches_done / len(batches))
                 })
                 return result
 
-            results = await asyncio.gather(*[
-                _retrieve_and_extract(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
-            ])
+            batch_results = await asyncio.gather(*[_extract_batch(b) for b in batches])
+            results = [item for batch in batch_results for item in batch]
             t_rag_end = time.perf_counter()
             timings["rag_extraction"] = t_rag_end - t_rag_start
 
@@ -548,9 +604,9 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             timings["total"] = time.perf_counter() - t_pipeline_start
 
             # Debug : résumé
-            ok_count = sum(1 for r in results if "result" in r and r["result"].get("value") and r["result"]["value"] != "Inconnu")
+            ok_count = sum(1 for r in results if "result" in r and r["result"].get("value"))
             err_count = sum(1 for r in results if "error" in r)
-            inconnu_count = sum(1 for r in results if "result" in r and r["result"].get("value") == "Inconnu")
+            empty_count = sum(1 for r in results if "result" in r and not r["result"].get("value"))
             synthesis_info = "Non disponible (fallback RAG pur)"
             if synthesis:
                 nb_dx = len(synthesis.get("diagnostics", []))
@@ -561,7 +617,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 f"Fichiers: {total_files}\nChunks: {len(chunks)}\n"
                 f"Type formulaire: {form_type}\n"
                 f"Synthèse médicale: {synthesis_info}\n"
-                f"Champs: {len(fields_with_q)} (OK: {ok_count}, Erreurs: {err_count}, Inconnu: {inconnu_count})\n"
+                f"Champs: {n_fields} (OK: {ok_count}, Erreurs: {err_count}, Vides: {empty_count})\n"
                 f"Timings: OCR+embed={timings['ocr_embed_pipeline']:.1f}s, "
                 f"Synthèse={timings.get('medical_synthesis', 0):.1f}s, "
                 f"RAG={timings['rag_extraction']:.1f}s, Injection={timings['xfa_injection']:.1f}s, "
