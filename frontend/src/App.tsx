@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Loader2, FolderArchive, FileCheck, FileText, Trash2,
-  ChevronRight, Server, Send, Bot, User, ClipboardList, MessageSquare,
+  ChevronRight, Server, Send, Bot, User, ClipboardList, MessageSquare, Copy, Check,
 } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -25,9 +25,29 @@ interface ChatMessage {
 interface FormField {
   id: string;
   label: string;
+  question: string;
   section: string;
   value: string | null;
   source_quote: string | null;
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copier la réponse"
+      className="shrink-0 p-1.5 rounded-sm border border-zinc-200 hover:border-emerald-400 hover:text-emerald-600 text-zinc-400 transition-colors"
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+    </button>
+  );
 }
 
 // Group fields by section number
@@ -548,6 +568,12 @@ export default function App() {
                             msg.content
                           )}
                         </div>
+                        {/* Bouton copier — uniquement pour les messages assistant terminés */}
+                        {msg.role === "assistant" && msg.content && (
+                          <div className="self-end mb-0.5">
+                            <CopyButton text={msg.content} />
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
@@ -599,31 +625,37 @@ export default function App() {
                         </div>
                         <div className="divide-y divide-zinc-50">
                           {fields.map((f) => (
-                            <div key={f.id} className="px-5 py-3 flex items-start gap-4 hover:bg-zinc-50/50 group transition-colors">
-                              <div className="shrink-0 w-10 text-right">
-                                <span className="text-[10px] font-mono text-zinc-400">{f.id}</span>
-                              </div>
+                            <div key={f.id} className="px-5 py-3.5 flex items-start gap-4 hover:bg-zinc-50/50 group transition-colors">
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs text-zinc-500 mb-0.5">{f.label}</p>
+                                {/* Descriptif / question du champ */}
+                                <p className="text-xs font-medium text-zinc-700 mb-1 leading-snug">{f.label}</p>
+                                {f.question && (
+                                  <p className="text-[11px] text-zinc-400 mb-1.5 leading-snug">{f.question}</p>
+                                )}
+                                {/* Valeur extraite */}
                                 {f.value ? (
-                                  <p className="text-sm font-medium text-zinc-900 break-words">{f.value}</p>
+                                  <p className="text-sm font-semibold text-zinc-900 break-words">{f.value}</p>
                                 ) : (
                                   <p className="text-sm text-zinc-300 italic">Non renseigné</p>
                                 )}
+                                {/* Citation source */}
                                 {f.source_quote && (
-                                  <p className="text-[11px] text-zinc-400 mt-1 italic truncate" title={f.source_quote}>
+                                  <p className="text-[11px] text-zinc-400 mt-1.5 italic line-clamp-2" title={f.source_quote}>
                                     « {f.source_quote} »
                                   </p>
                                 )}
                               </div>
-                              {/* Ask about this field */}
-                              <button
-                                onClick={() => handleChatSend(`Explique-moi la valeur du champ "${f.label}" (${f.id}) : ${f.value ?? "non renseigné"}`)}
-                                title="Poser une question sur ce champ"
-                                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-sm border border-zinc-200 hover:border-emerald-400 hover:text-emerald-600 text-zinc-400"
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                              </button>
+                              {/* Actions hover */}
+                              <div className="shrink-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity self-start pt-0.5">
+                                <span className="text-[9px] font-mono text-zinc-300 select-none">{f.id}</span>
+                                <button
+                                  onClick={() => handleChatSend(`Explique-moi la valeur du champ "${f.label}" : ${f.value ?? "non renseigné"}`)}
+                                  title="Poser une question sur ce champ"
+                                  className="p-1.5 rounded-sm border border-zinc-200 hover:border-emerald-400 hover:text-emerald-600 text-zinc-400 transition-colors"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>

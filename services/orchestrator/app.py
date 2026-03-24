@@ -774,6 +774,7 @@ async def get_fields(job_id: str, token: str = ""):
         fields_out.append({
             "id": fid,
             "label": f.get("label", str(fid)),
+            "question": f.get("question", ""),
             "section": f.get("section", ""),
             "value": value,
             "source_quote": source,
