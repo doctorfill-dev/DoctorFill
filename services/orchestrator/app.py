@@ -29,7 +29,8 @@ from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 from core.acroform import detect_form_type, fill_acroform
 from medical_synthesis import run_medical_synthesis
-from prompts import SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt, SECTION_SYNTHESIS_KEYS, build_chat_messages
+from prompts import (SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt,
+                     SECTION_SYNTHESIS_KEYS, build_chat_messages, build_synthesis_refine_messages)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -642,7 +643,9 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 "message": f"✅ Formulaire généré en {timings['total']:.0f}s !",
                 "progress": 100,
                 "file_path": str(output_pdf),
-                "completed_at": time.time()
+                "completed_at": time.time(),
+                "_form_id": form_id,
+                "_tmp_dir": str(tmp_dir),
             })
 
     except Exception as e:
@@ -884,6 +887,237 @@ async def chat_endpoint(request: ChatRequest):
             "Connection": "keep-alive",
         },
     )
+
+
+# ---------------------------------------------------------------
+# --- CONTEXTE GLOBAL (SYNTHÈSE MÉDICALE) ---
+
+class SynthesisUpdateRequest(BaseModel):
+    token: str
+    synthesis: Dict[str, Any]
+
+class SynthesisRefineRequest(BaseModel):
+    token: str
+    instruction: str
+
+
+def _validate_job_token(job_id: str, token: str) -> Dict:
+    """Valide job_id + token et retourne le job ou lève HTTPException."""
+    job = JOBS.get(job_id)
+    if not job or job.get("status") not in ("completed", "processing"):
+        raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
+    expected = job.get("token", "")
+    if expected and not secrets.compare_digest(token, expected):
+        raise HTTPException(status_code=403, detail="Token invalide.")
+    return job
+
+
+@app.get("/synthesis/{job_id}")
+async def get_synthesis(job_id: str, token: str = ""):
+    """Retourne la synthèse médicale générée pour ce job."""
+    job = _validate_job_token(job_id, token)
+    synthesis = job.get("_debug_synthesis")
+    if synthesis is None:
+        raise HTTPException(status_code=404, detail="Synthèse non disponible pour ce job.")
+    return {"synthesis": synthesis}
+
+
+@app.post("/synthesis/{job_id}/update")
+async def update_synthesis(job_id: str, request: SynthesisUpdateRequest):
+    """Met à jour la synthèse médicale en mémoire (pour affiner avant re-run)."""
+    _validate_job_token(job_id, request.token)
+    JOBS[job_id]["_debug_synthesis"] = request.synthesis
+    logger.info(f"[{job_id[:8]}] Synthèse mise à jour manuellement.")
+    return {"ok": True}
+
+
+@app.post("/synthesis/{job_id}/refine")
+async def refine_synthesis(job_id: str, request: SynthesisRefineRequest):
+    """LLM-assisted: propose une synthèse améliorée selon l'instruction. Retourne la suggestion JSON."""
+    job = _validate_job_token(job_id, request.token)
+    if len(request.instruction) > 1000:
+        raise HTTPException(status_code=400, detail="Instruction trop longue (max 1000 caractères).")
+    synthesis = job.get("_debug_synthesis")
+    if not synthesis:
+        raise HTTPException(status_code=404, detail="Synthèse non disponible.")
+
+    synthesis_json = json.dumps(synthesis, ensure_ascii=False, indent=2)
+    messages = build_synthesis_refine_messages(synthesis_json, request.instruction)
+
+    async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
+        resp = await client.post(f"{VLLM_URL}/chat/completions", json={
+            "model": VLLM_MODEL,
+            "messages": messages,
+            "temperature": 0.1,
+            "max_tokens": 4096,
+            "stream": False,
+        })
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"].strip()
+
+    # Extraire le JSON (peut être entouré de ```json ... ```)
+    json_match = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", raw)
+    json_str = json_match.group(1) if json_match else raw
+    try:
+        suggested = json.loads(json_str)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="Le LLM n'a pas retourné un JSON valide.")
+
+    return {"suggestion": suggested, "raw": raw}
+
+
+async def rerun_pipeline_task(job_id: str):
+    """Re-run rapide : saute l'OCR/embedding, réutilise le ChromaDB existant avec la synthèse mise à jour."""
+    form_id = JOBS[job_id].get("_form_id")
+    synthesis = JOBS[job_id].get("_debug_synthesis")
+    collection_name = f"col_{job_id}"
+    tmp_dir = Path(JOBS[job_id].get("_tmp_dir", f"/tmp/{job_id}"))
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        JOBS[job_id].update({"status": "processing", "message": "🔄 Re-run : chargement du contexte...", "progress": 5})
+
+        col = chroma_client.get_collection(name=collection_name)
+        col_count = col.count()
+        if col_count == 0:
+            raise ValueError("ChromaDB vide — session expirée, impossible de relancer sans re-OCR.")
+
+        with open(f"template/Form_{form_id}.json", "r") as f:
+            template = json.load(f)
+
+        fields_with_q = [f for f in template["fields"] if "question" in f]
+        n_fields = len(fields_with_q)
+        logger.info(f"[{job_id[:8]}] Re-run: {n_fields} champs, {col_count} chunks en ChromaDB.")
+
+        limits = httpx.Limits(max_connections=50, max_keepalive_connections=10, keepalive_expiry=30)
+        async with httpx.AsyncClient(limits=limits) as client:
+            JOBS[job_id].update({"message": "🔄 Re-run : re-encodage des questions...", "progress": 15})
+            all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
+
+            rerank_sem = asyncio.Semaphore(5)
+            llm_sem = asyncio.Semaphore(10)
+
+            async def _retrieve_field(field: Dict, q_emb) -> List[str]:
+                hits = col.query(query_embeddings=[q_emb], n_results=min(30, col_count))["documents"][0]
+                reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
+                return [r["document"] for r in reranked[:12]]
+
+            JOBS[job_id].update({"message": "🔄 Re-run : retrieval + reranking...", "progress": 30})
+            field_top_chunks: List[List[str]] = await asyncio.gather(*[
+                _retrieve_field(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
+            ])
+            field_chunk_map: Dict[str, List[str]] = {
+                str(f["id"]): cks for f, cks in zip(fields_with_q, field_top_chunks)
+            }
+
+            batches = _group_fields_into_batches(fields_with_q, max_batch_size=7)
+            batches_done = 0
+
+            async def _extract_batch_rerun(batch_fields: List[Dict]) -> List[Dict]:
+                nonlocal batches_done
+                seen: set = set()
+                merged: List[str] = []
+                for bf in batch_fields:
+                    for c in field_chunk_map.get(str(bf["id"]), []):
+                        if c not in seen:
+                            seen.add(c)
+                            merged.append(c)
+                chunks_ctx = "\n---\n".join(merged[:24])
+                section = str(batch_fields[0]["id"]).split(".")[0]
+                filtered_synthesis = _filter_synthesis_for_section(synthesis, section)
+                result = await extract_fields_batch_vllm(client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem)
+                batches_done += 1
+                JOBS[job_id].update({
+                    "message": f"🔄 Re-run : extraction {batches_done}/{len(batches)}...",
+                    "progress": 40 + int(45 * batches_done / len(batches))
+                })
+                return result
+
+            batch_results = await asyncio.gather(*[_extract_batch_rerun(b) for b in batches])
+            results = [item for batch in batch_results for item in batch]
+
+            JOBS[job_id]["_debug_results"] = results
+            JOBS[job_id]["_template_fields"] = [
+                {"id": f["id"], "label": f.get("label", str(f["id"])),
+                 "question": f.get("question", ""), "section": str(f["id"]).split(".")[0]}
+                for f in fields_with_q
+            ]
+
+            # Step 4: PDF fill
+            JOBS[job_id].update({"message": "✍️ Re-run : injection dans le formulaire...", "progress": 88})
+            empty_form_path = tmp_dir / "empty_rerun.pdf"
+            source_template_path = Path(f"forms/Form_{form_id}.pdf")
+            if not source_template_path.exists():
+                raise FileNotFoundError(f"Template PDF introuvable pour form_id={form_id}")
+            shutil.copy(source_template_path, empty_form_path)
+
+            form_type = detect_form_type(empty_form_path)
+            xfa_values: Dict[str, str] = {}
+            acro_values: Dict[str, str] = {}
+
+            for res in results:
+                if "result" not in res or not res["result"].get("value"):
+                    continue
+                value = str(res["result"]["value"])
+                f_def = next((f for f in template["fields"] if f.get("id") == res["id"]), None)
+                if f_def is None:
+                    continue
+                value = _normalize_field_value(value, f_def.get("type"))
+                if f_def.get("xml_path"):
+                    xfa_values[f_def["xml_path"]] = value
+                if f_def.get("acroform_name"):
+                    acro_values[f_def["acroform_name"]] = value
+
+            output_pdf = tmp_dir / "output_rerun.pdf"
+
+            if form_type in ("xfa", "hybrid"):
+                base_xml = tmp_dir / "base_rerun.xml"
+                try:
+                    extract_xfa_datasets(empty_form_path, base_xml)
+                    checkbox_paths = discover_checkbox_paths(base_xml)
+                    normalize_checkboxes(xfa_values, checkbox_paths)
+                    filled_xml = tmp_dir / "filled_rerun.xml"
+                    update_datasets(base_xml, xfa_values, filled_xml, template["fields"])
+                    inject_datasets(empty_form_path, filled_xml, output_pdf)
+                except PDFNoXFAError:
+                    form_type = "acroform"
+
+            if form_type == "acroform" or (form_type == "hybrid" and acro_values):
+                acro_source = output_pdf if (form_type == "hybrid" and output_pdf.exists()) else empty_form_path
+                fill_acroform(acro_source, acro_values, output_pdf)
+
+            if not output_pdf.exists():
+                raise ValueError(f"Impossible de générer le formulaire re-run (type={form_type})")
+
+        JOBS[job_id].update({
+            "status": "completed",
+            "message": "✅ Re-run terminé — formulaire mis à jour !",
+            "progress": 100,
+            "file_path": str(output_pdf),
+            "completed_at": time.time(),
+        })
+        logger.info(f"[{job_id[:8]}] Re-run terminé avec succès.")
+
+    except Exception as e:
+        logger.error(f"[{job_id[:8]}] Erreur re-run: {e}", exc_info=True)
+        JOBS[job_id].update({
+            "status": "failed",
+            "message": "Erreur lors du re-run. La session a peut-être expiré.",
+            "progress": 0,
+            "completed_at": time.time(),
+        })
+
+
+@app.post("/rerun/{job_id}")
+async def trigger_rerun(job_id: str, background_tasks: BackgroundTasks, token: str = ""):
+    """Relance l'extraction + remplissage avec la synthèse mise à jour. Saute l'OCR."""
+    job = _validate_job_token(job_id, token)
+    if job.get("status") == "processing":
+        raise HTTPException(status_code=409, detail="Un traitement est déjà en cours.")
+    if not job.get("_form_id"):
+        raise HTTPException(status_code=400, detail="Métadonnées de re-run manquantes (job trop ancien ?).")
+    background_tasks.add_task(rerun_pipeline_task, job_id)
+    return {"ok": True, "job_id": job_id}
 
 
 @app.get("/download/{job_id}")

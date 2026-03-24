@@ -333,3 +333,30 @@ def build_chat_messages(
     # Question courante
     messages.append({"role": "user", "content": question})
     return messages
+
+
+# ---------------------------------------------------------------
+# --- SYNTHESIS REFINEMENT ---
+
+SYSTEM_PROMPT_SYNTHESIS_REFINE = """\
+Tu es un expert en données médicales structurées. Tu vas modifier une synthèse médicale JSON selon les instructions de l'utilisateur.
+
+RÈGLES STRICTES :
+1. Conserve EXACTEMENT la même structure et les mêmes clés JSON.
+2. Applique UNIQUEMENT les modifications demandées — ne change rien d'autre.
+3. Retourne UNIQUEMENT le JSON mis à jour, sans explication, sans commentaire, sans balises Markdown.
+4. Le JSON doit être syntaxiquement valide et complet.
+5. Si l'instruction est ambiguë, interprète-la de la façon la plus conservative possible.
+"""
+
+
+def build_synthesis_refine_messages(synthesis_json: str, instruction: str) -> List[Dict]:
+    """Construit les messages pour affiner la synthèse médicale via LLM."""
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT_SYNTHESIS_REFINE},
+        {"role": "user", "content": (
+            f"Synthèse médicale actuelle :\n```json\n{synthesis_json}\n```\n\n"
+            f"Instruction de modification : {instruction}\n\n"
+            "Retourne uniquement le JSON modifié."
+        )},
+    ]

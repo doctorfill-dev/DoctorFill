@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Loader2, FolderArchive, FileCheck, FileText, Trash2,
   ChevronRight, Server, Send, Bot, User, ClipboardList, MessageSquare, Copy, Check,
+  Brain, RefreshCw, Save, Wand2, AlertTriangle,
 } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -73,16 +74,25 @@ export default function App() {
 
   // Chat state
   const [jobId, setJobId] = useState<string | null>(null);
-  const [_jobToken, setJobToken] = useState<string>("");
+  const [jobToken, setJobToken] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
-  const [chatTab, setChatTab] = useState<"assistant" | "fields">("assistant");
+  const [chatTab, setChatTab] = useState<"assistant" | "fields" | "context">("assistant");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Fields state
   const [formFields, setFormFields] = useState<FormField[]>([]);
   const [fieldsLoading, setFieldsLoading] = useState(false);
+
+  // Synthesis / context state
+  const [synthesisText, setSynthesisText] = useState<string>("");
+  const [synthesisDirty, setSynthesisDirty] = useState(false);
+  const [synthesisSaving, setSynthesisSaving] = useState(false);
+  const [refineInstruction, setRefineInstruction] = useState("");
+  const [refineLoading, setRefineLoading] = useState(false);
+  const [refineError, setRefineError] = useState<string | null>(null);
+  const [isRerunning, setIsRerunning] = useState(false);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -186,6 +196,85 @@ export default function App() {
     }
   };
 
+  const fetchSynthesis = async (jid: string, token: string) => {
+    try {
+      const res = await apiFetch(`${BASE_URL}/synthesis/${jid}?token=${encodeURIComponent(token)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSynthesisText(JSON.stringify(data.synthesis, null, 2));
+        setSynthesisDirty(false);
+      }
+    } catch (e) {
+      console.error("Erreur chargement synthèse", e);
+    }
+  };
+
+  const handleSaveSynthesis = async () => {
+    if (!jobId || !jobToken) return;
+    setSynthesisSaving(true);
+    try {
+      const parsed = JSON.parse(synthesisText);
+      await apiFetch(`${BASE_URL}/synthesis/${jobId}/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: jobToken, synthesis: parsed }),
+      });
+      setSynthesisDirty(false);
+    } catch {
+      alert("JSON invalide ou erreur de sauvegarde.");
+    } finally {
+      setSynthesisSaving(false);
+    }
+  };
+
+  const handleRefineSynthesis = async () => {
+    if (!jobId || !jobToken || !refineInstruction.trim()) return;
+    setRefineLoading(true);
+    setRefineError(null);
+    try {
+      const res = await apiFetch(`${BASE_URL}/synthesis/${jobId}/refine`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: jobToken, instruction: refineInstruction.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Erreur LLM.");
+      }
+      const data = await res.json();
+      setSynthesisText(JSON.stringify(data.suggestion, null, 2));
+      setSynthesisDirty(true);
+      setRefineInstruction("");
+    } catch (e: any) {
+      setRefineError(e.message || "Erreur lors de l'amélioration.");
+    } finally {
+      setRefineLoading(false);
+    }
+  };
+
+  const handleRerun = async () => {
+    if (!jobId || !jobToken || isRerunning) return;
+    // Sauvegarder d'abord si modifié
+    if (synthesisDirty) await handleSaveSynthesis();
+    setIsRerunning(true);
+    setPdfUrl(null);
+    setFormFields([]);
+    try {
+      const res = await apiFetch(`${BASE_URL}/rerun/${jobId}?token=${encodeURIComponent(jobToken)}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Erreur re-run.");
+      }
+      // Reprendre le polling — quand "completed", pdfUrl et fields se mettent à jour
+      pollStatus(jobId, jobToken);
+    } catch (e: any) {
+      setError(e.message || "Erreur lors du re-run.");
+      setIsRerunning(false);
+    }
+  };
+
   const pollStatus = async (jid: string, token: string) => {
     try {
       const res = await apiFetch(`${BASE_URL}/status/${jid}`);
@@ -199,10 +288,12 @@ export default function App() {
         const blob = await pdfRes.blob();
         setPdfUrl(URL.createObjectURL(blob));
         setIsLoading(false);
+        setIsRerunning(false);
         setStatusMessage("");
         setProgress(0);
-        // Charger les champs du formulaire pour le panel Résultats
+        // Charger champs + synthèse
         fetchFormFields(jid, token);
+        fetchSynthesis(jid, token);
       } else if (data.status === "failed") {
         setError(data.message);
         setIsLoading(false);
@@ -224,9 +315,12 @@ export default function App() {
     setStatusMessage("Initialisation de la connexion...");
     setChatMessages([]);
     setFormFields([]);
+    setSynthesisText("");
+    setSynthesisDirty(false);
     setJobId(null);
     setJobToken("");
     setChatTab("assistant");
+    setIsRerunning(false);
 
     const formData = new FormData();
     formData.append("form_id", formId);
@@ -330,6 +424,9 @@ export default function App() {
     setIsLoading(false);
     setChatMessages([]);
     setFormFields([]);
+    setSynthesisText("");
+    setSynthesisDirty(false);
+    setIsRerunning(false);
     setJobId(null);
     setJobToken("");
     setChatInput("");
@@ -501,11 +598,25 @@ export default function App() {
                 }`}
               >
                 <ClipboardList className="w-4 h-4" />
-                Résultats du formulaire
+                Résultats
                 {filledCount > 0 && (
                   <span className="ml-1 text-[10px] bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full px-1.5 py-0.5 font-mono">
                     {filledCount}/{formFields.length}
                   </span>
+                )}
+              </button>
+              <button
+                onClick={() => setChatTab("context")}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  chatTab === "context"
+                    ? "border-emerald-500 text-zinc-900"
+                    : "border-transparent text-zinc-400 hover:text-zinc-700"
+                }`}
+              >
+                <Brain className="w-4 h-4" />
+                Contexte global
+                {synthesisDirty && (
+                  <span className="ml-1 w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" title="Modifications non sauvegardées" />
                 )}
               </button>
             </div>
@@ -663,6 +774,106 @@ export default function App() {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            )}
+
+            {/* TAB: CONTEXT */}
+            {chatTab === "context" && (
+              <CardContent className="p-5 flex flex-col gap-5">
+
+                {/* Explanation */}
+                <div className="flex items-start gap-3 bg-zinc-50 border border-zinc-200 rounded-sm p-3.5 text-xs text-zinc-600 leading-relaxed">
+                  <Brain className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    La synthèse médicale est le contexte global utilisé pour remplir le formulaire.
+                    Vous pouvez la modifier directement ou utiliser l'assistant pour l'améliorer, puis relancer le remplissage.
+                    <strong className="text-zinc-800"> La session expire après 1h.</strong>
+                  </span>
+                </div>
+
+                {/* JSON Editor */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider">Synthèse JSON</label>
+                    {synthesisDirty && (
+                      <span className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                        Modifications non sauvegardées
+                      </span>
+                    )}
+                  </div>
+                  <textarea
+                    value={synthesisText}
+                    onChange={(e) => { setSynthesisText(e.target.value); setSynthesisDirty(true); }}
+                    className="w-full h-72 font-mono text-xs text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-sm p-3 resize-y outline-none focus:ring-1 focus:ring-emerald-500 transition-all leading-relaxed"
+                    spellCheck={false}
+                    placeholder="Synthèse médicale au format JSON..."
+                  />
+                </div>
+
+                {/* LLM Refinement */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Wand2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Améliorer avec l'IA
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={refineInstruction}
+                      onChange={(e) => { setRefineInstruction(e.target.value); setRefineError(null); }}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleRefineSynthesis(); } }}
+                      placeholder='Ex: "Ajouter un diagnostic M54.5 Lombalgie depuis janvier 2024" ou "Corriger le taux d incapacite a 50%"'
+                      disabled={refineLoading}
+                      className="flex-1 h-10 px-3 text-sm rounded-sm border border-zinc-300 bg-white outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 transition-all placeholder:text-zinc-400"
+                    />
+                    <Button
+                      onClick={handleRefineSynthesis}
+                      disabled={refineLoading || !refineInstruction.trim()}
+                      className="h-10 px-4 bg-emerald-700 hover:bg-emerald-600 text-white rounded-sm text-sm font-medium disabled:opacity-50 gap-2"
+                    >
+                      {refineLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                      {refineLoading ? "Analyse..." : "Suggérer"}
+                    </Button>
+                  </div>
+                  {refineError && (
+                    <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-sm px-3 py-2">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      {refineError}
+                    </div>
+                  )}
+                  {refineLoading && (
+                    <p className="text-[11px] text-zinc-400 font-mono">Le LLM analyse et reformule la synthèse...</p>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-3 pt-2 border-t border-zinc-100">
+                  <Button
+                    onClick={handleSaveSynthesis}
+                    disabled={synthesisSaving || !synthesisDirty}
+                    variant="outline"
+                    className="h-9 px-4 rounded-sm border-zinc-300 text-sm font-medium gap-2 disabled:opacity-40"
+                  >
+                    {synthesisSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    {synthesisSaving ? "Sauvegarde..." : "Sauvegarder"}
+                  </Button>
+                  <Button
+                    onClick={handleRerun}
+                    disabled={isRerunning}
+                    className="h-9 px-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-sm text-sm font-medium gap-2 disabled:opacity-50"
+                  >
+                    {isRerunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                    {isRerunning ? "Re-run en cours..." : "Relancer le remplissage"}
+                  </Button>
+                  {isRerunning && (
+                    <span className="text-xs font-mono text-zinc-400 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {statusMessage || "Traitement..."}
+                    </span>
+                  )}
+                </div>
+
               </CardContent>
             )}
 
