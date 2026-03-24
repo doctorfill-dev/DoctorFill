@@ -522,10 +522,16 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             t_rag_end = time.perf_counter()
             timings["rag_extraction"] = t_rag_end - t_rag_start
 
-            # Stocker les résultats bruts pour le debug/eval
+            # Stocker les résultats bruts pour le debug/eval + chat
             JOBS[job_id]["_debug_results"] = results
             JOBS[job_id]["_debug_chunks_count"] = len(chunks)
             JOBS[job_id]["_debug_synthesis"] = synthesis
+            # Stocker les définitions de champs pour l'endpoint /fields
+            JOBS[job_id]["_template_fields"] = [
+                {"id": f["id"], "label": f.get("label", str(f["id"])),
+                 "question": f.get("question", ""), "section": str(f["id"]).split(".")[0]}
+                for f in fields_with_q
+            ]
 
             # Debug : sauvegarder les résultats LLM
             results_debug = []
@@ -745,6 +751,37 @@ async def get_status(job_id: str):
 
 
 # ---------------------------------------------------------------
+# --- RÉSULTATS DU FORMULAIRE ---
+
+@app.get("/fields/{job_id}")
+async def get_fields(job_id: str, token: str = ""):
+    """Retourne les champs du formulaire rempli avec leurs valeurs (pour affichage chat)."""
+    if job_id not in JOBS or JOBS[job_id].get("status") != "completed":
+        raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
+    expected_token = JOBS[job_id].get("token", "")
+    if expected_token and token != expected_token:
+        raise HTTPException(status_code=403, detail="Token invalide.")
+
+    template_fields = JOBS[job_id].get("_template_fields", [])
+    raw_results = {r["id"]: r for r in JOBS[job_id].get("_debug_results", [])}
+
+    fields_out = []
+    for f in template_fields:
+        fid = f["id"]
+        r = raw_results.get(fid, {})
+        value = r.get("result", {}).get("value") if "result" in r else None
+        source = r.get("result", {}).get("source_quote") if "result" in r else None
+        fields_out.append({
+            "id": fid,
+            "label": f.get("label", str(fid)),
+            "section": f.get("section", ""),
+            "value": value,
+            "source_quote": source,
+        })
+    return {"fields": fields_out}
+
+
+# ---------------------------------------------------------------
 # --- CHAT INTERACTIF ---
 
 class ChatRequest(BaseModel):
@@ -770,6 +807,21 @@ async def chat_endpoint(request: ChatRequest):
     synthesis_json = json.dumps(synthesis, ensure_ascii=False) if synthesis else None
     collection_name = f"col_{request.job_id}"
 
+    # Construire le contexte des champs remplis (label → valeur)
+    fields_context: str | None = None
+    template_fields = job.get("_template_fields", [])
+    raw_results = {r["id"]: r for r in job.get("_debug_results", [])}
+    if template_fields:
+        lines = []
+        for f in template_fields:
+            fid = f["id"]
+            r = raw_results.get(fid, {})
+            value = r.get("result", {}).get("value") if "result" in r else None
+            if value:
+                lines.append(f"[{fid}] {f.get('label', fid)} : {value}")
+        if lines:
+            fields_context = "\n".join(lines)
+
     # Récupérer les chunks pertinents depuis ChromaDB
     chunks_context: str | None = None
     try:
@@ -791,6 +843,7 @@ async def chat_endpoint(request: ChatRequest):
     messages = build_chat_messages(
         synthesis_json=synthesis_json,
         chunks_context=chunks_context,
+        fields_context=fields_context,
         history=request.history,
         question=request.message,
     )

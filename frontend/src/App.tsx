@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef, DragEvent } from "react";
+import ReactMarkdown from "react-markdown";
 import JSZip from "jszip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, FolderArchive, FileCheck, FileText, Trash2, ChevronRight, Server, Send, Bot, User } from "lucide-react";
+import {
+  Loader2, FolderArchive, FileCheck, FileText, Trash2,
+  ChevronRight, Server, Send, Bot, User, ClipboardList, MessageSquare,
+} from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
@@ -18,6 +22,24 @@ interface ChatMessage {
   content: string;
 }
 
+interface FormField {
+  id: string;
+  label: string;
+  section: string;
+  value: string | null;
+  source_quote: string | null;
+}
+
+// Group fields by section number
+function groupBySection(fields: FormField[]): Record<string, FormField[]> {
+  return fields.reduce((acc, f) => {
+    const s = f.section || "Autres";
+    if (!acc[s]) acc[s] = [];
+    acc[s].push(f);
+    return acc;
+  }, {} as Record<string, FormField[]>);
+}
+
 export default function App() {
   const [reports, setReports] = useState<File[]>([]);
   const [availableForms, setAvailableForms] = useState<string[]>([]);
@@ -31,10 +53,16 @@ export default function App() {
 
   // Chat state
   const [jobId, setJobId] = useState<string | null>(null);
+  const [_jobToken, setJobToken] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [chatTab, setChatTab] = useState<"assistant" | "fields">("assistant");
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Fields state
+  const [formFields, setFormFields] = useState<FormField[]>([]);
+  const [fieldsLoading, setFieldsLoading] = useState(false);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -123,6 +151,21 @@ export default function App() {
     });
   };
 
+  const fetchFormFields = async (jid: string, token: string) => {
+    setFieldsLoading(true);
+    try {
+      const res = await apiFetch(`${BASE_URL}/fields/${jid}?token=${encodeURIComponent(token)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFormFields(data.fields || []);
+      }
+    } catch (e) {
+      console.error("Erreur chargement champs", e);
+    } finally {
+      setFieldsLoading(false);
+    }
+  };
+
   const pollStatus = async (jid: string, token: string) => {
     try {
       const res = await apiFetch(`${BASE_URL}/status/${jid}`);
@@ -138,6 +181,8 @@ export default function App() {
         setIsLoading(false);
         setStatusMessage("");
         setProgress(0);
+        // Charger les champs du formulaire pour le panel Résultats
+        fetchFormFields(jid, token);
       } else if (data.status === "failed") {
         setError(data.message);
         setIsLoading(false);
@@ -158,7 +203,10 @@ export default function App() {
     setProgress(0);
     setStatusMessage("Initialisation de la connexion...");
     setChatMessages([]);
+    setFormFields([]);
     setJobId(null);
+    setJobToken("");
+    setChatTab("assistant");
 
     const formData = new FormData();
     formData.append("form_id", formId);
@@ -173,6 +221,7 @@ export default function App() {
       const data = await response.json();
       if (data.job_id) {
         setJobId(data.job_id);
+        setJobToken(data.token || "");
         pollStatus(data.job_id, data.token || "");
       } else {
         throw new Error("Job ID manquant dans la réponse.");
@@ -183,11 +232,12 @@ export default function App() {
     }
   };
 
-  const handleChatSend = async () => {
-    if (!chatInput.trim() || !jobId || chatLoading) return;
-
-    const userMsg = chatInput.trim();
-    setChatInput("");
+  const handleChatSend = async (overrideMessage?: string) => {
+    const userMsg = (overrideMessage ?? chatInput).trim();
+    if (!userMsg || !jobId || chatLoading) return;
+    if (!overrideMessage) setChatInput("");
+    // Switch to assistant tab if sending from fields tab
+    setChatTab("assistant");
 
     const newHistory = [...chatMessages, { role: "user" as const, content: userMsg }];
     setChatMessages([...newHistory, { role: "assistant" as const, content: "" }]);
@@ -214,7 +264,6 @@ export default function App() {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        // Split on both \r\n and \n for SSE compatibility
         const lines = buffer.split(/\r?\n/);
         buffer = lines.pop() ?? "";
 
@@ -238,7 +287,7 @@ export default function App() {
           } catch { /* ignore malformed SSE lines */ }
         }
       }
-    } catch (err: any) {
+    } catch {
       setChatMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = {
@@ -260,9 +309,15 @@ export default function App() {
     setProgress(0);
     setIsLoading(false);
     setChatMessages([]);
+    setFormFields([]);
     setJobId(null);
+    setJobToken("");
     setChatInput("");
+    setChatTab("assistant");
   };
+
+  const fieldGroups = groupBySection(formFields);
+  const filledCount = formFields.filter((f) => f.value).length;
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] p-6 md:p-10 text-zinc-900 selection:bg-emerald-100 selection:text-emerald-900 font-sans">
@@ -400,81 +455,185 @@ export default function App() {
           </div>
         </div>
 
-        {/* CHAT PANEL — visible once form is generated */}
+        {/* CHAT + FIELDS PANEL — visible once form is generated */}
         {pdfUrl && jobId && (
           <Card className="shadow-none rounded-sm border-zinc-200 bg-white">
-            <CardHeader className="border-b border-zinc-100 py-3 flex flex-row items-center gap-3 space-y-0">
-              <div className="w-7 h-7 rounded-sm bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-semibold">Assistant médical</CardTitle>
-                <p className="text-xs text-zinc-500 mt-0.5">Posez vos questions sur le dossier traité</p>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 flex flex-col">
 
-              {/* Messages */}
-              <div className="flex flex-col gap-4 p-5 min-h-[200px] max-h-[500px] overflow-y-auto custom-scrollbar">
-                {chatMessages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-zinc-400 gap-3">
-                    <Bot className="w-8 h-8" strokeWidth={1.5} />
-                    <p className="text-sm text-center max-w-sm leading-relaxed">
-                      Le dossier médical est chargé. Vous pouvez poser des questions sur les diagnostics, les périodes d'incapacité, les traitements, etc.
-                    </p>
-                  </div>
-                ) : (
-                  chatMessages.map((msg, i) => (
-                    <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
-                      <div className={`w-7 h-7 rounded-sm shrink-0 flex items-center justify-center border ${
-                        msg.role === "user"
-                          ? "bg-zinc-900 border-zinc-700"
-                          : "bg-emerald-50 border-emerald-200"
-                      }`}>
-                        {msg.role === "user"
-                          ? <User className="w-3.5 h-3.5 text-white" />
-                          : <Bot className="w-3.5 h-3.5 text-emerald-600" />
-                        }
-                      </div>
-                      <div className={`max-w-[80%] rounded-sm px-4 py-2.5 text-sm leading-relaxed border ${
-                        msg.role === "user"
-                          ? "bg-zinc-900 text-white border-zinc-700"
-                          : "bg-zinc-50 text-zinc-800 border-zinc-200"
-                      }`}>
-                        {msg.content || (
-                          <span className="flex items-center gap-1.5 text-zinc-400">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            Analyse en cours...
-                          </span>
-                        )}
+            {/* Tab bar */}
+            <div className="flex items-center border-b border-zinc-100">
+              <button
+                onClick={() => setChatTab("assistant")}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  chatTab === "assistant"
+                    ? "border-emerald-500 text-zinc-900"
+                    : "border-transparent text-zinc-400 hover:text-zinc-700"
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Assistant médical
+              </button>
+              <button
+                onClick={() => setChatTab("fields")}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  chatTab === "fields"
+                    ? "border-emerald-500 text-zinc-900"
+                    : "border-transparent text-zinc-400 hover:text-zinc-700"
+                }`}
+              >
+                <ClipboardList className="w-4 h-4" />
+                Résultats du formulaire
+                {filledCount > 0 && (
+                  <span className="ml-1 text-[10px] bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full px-1.5 py-0.5 font-mono">
+                    {filledCount}/{formFields.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* TAB: ASSISTANT */}
+            {chatTab === "assistant" && (
+              <CardContent className="p-0 flex flex-col">
+                <div className="flex flex-col gap-4 p-5 min-h-[220px] max-h-[520px] overflow-y-auto custom-scrollbar">
+                  {chatMessages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-zinc-400 gap-3">
+                      <Bot className="w-8 h-8" strokeWidth={1.5} />
+                      <p className="text-sm text-center max-w-sm leading-relaxed">
+                        Le dossier médical est chargé. Posez vos questions sur les diagnostics, les périodes d'incapacité, les traitements, etc.
+                      </p>
+                      {/* Quick suggestions */}
+                      <div className="flex flex-wrap gap-2 justify-center mt-2">
+                        {["Quels sont tous les diagnostics ?", "Quelle est la période d'incapacité ?", "Qui est le médecin traitant ?"].map((q) => (
+                          <button
+                            key={q}
+                            onClick={() => handleChatSend(q)}
+                            className="text-xs border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 rounded-sm px-3 py-1.5 transition-colors"
+                          >
+                            {q}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  ))
+                  ) : (
+                    chatMessages.map((msg, i) => (
+                      <div key={i} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+                        <div className={`w-7 h-7 rounded-sm shrink-0 flex items-center justify-center border ${
+                          msg.role === "user"
+                            ? "bg-zinc-900 border-zinc-700"
+                            : "bg-emerald-50 border-emerald-200"
+                        }`}>
+                          {msg.role === "user"
+                            ? <User className="w-3.5 h-3.5 text-white" />
+                            : <Bot className="w-3.5 h-3.5 text-emerald-600" />
+                          }
+                        </div>
+                        <div className={`max-w-[80%] rounded-sm px-4 py-2.5 text-sm leading-relaxed border ${
+                          msg.role === "user"
+                            ? "bg-zinc-900 text-white border-zinc-700"
+                            : "bg-zinc-50 text-zinc-800 border-zinc-200"
+                        }`}>
+                          {msg.role === "assistant" && !msg.content ? (
+                            <span className="flex items-center gap-1.5 text-zinc-400">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Analyse en cours...
+                            </span>
+                          ) : msg.role === "assistant" ? (
+                            <div className="prose prose-sm prose-zinc max-w-none
+                              prose-headings:font-semibold prose-headings:text-zinc-800
+                              prose-p:my-1 prose-ul:my-1 prose-li:my-0.5
+                              prose-strong:text-zinc-900 prose-code:bg-zinc-100
+                              prose-code:px-1 prose-code:rounded prose-code:text-xs">
+                              <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            </div>
+                          ) : (
+                            msg.content
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="border-t border-zinc-100 p-4 flex gap-3">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
+                    placeholder="Ex: Quels sont tous les diagnostics du patient ?"
+                    disabled={chatLoading}
+                    className="flex-1 h-10 px-3 text-sm rounded-sm border border-zinc-300 bg-white outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 transition-all placeholder:text-zinc-400"
+                  />
+                  <Button
+                    onClick={() => handleChatSend()}
+                    disabled={chatLoading || !chatInput.trim()}
+                    className="h-10 px-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-sm text-sm font-medium disabled:opacity-50"
+                  >
+                    {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+
+            {/* TAB: FIELDS */}
+            {chatTab === "fields" && (
+              <CardContent className="p-0">
+                {fieldsLoading ? (
+                  <div className="flex items-center justify-center py-16 text-zinc-400 gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Chargement des résultats...</span>
+                  </div>
+                ) : formFields.length === 0 ? (
+                  <div className="flex items-center justify-center py-16 text-zinc-400 text-sm">
+                    Aucun résultat disponible.
+                  </div>
+                ) : (
+                  <div className="max-h-[560px] overflow-y-auto custom-scrollbar divide-y divide-zinc-100">
+                    {Object.entries(fieldGroups).sort(([a], [b]) => Number(a) - Number(b)).map(([section, fields]) => (
+                      <div key={section}>
+                        <div className="px-5 py-2 bg-zinc-50 border-b border-zinc-100">
+                          <span className="text-xs font-mono font-semibold text-zinc-500 uppercase tracking-wider">
+                            Section {section}
+                          </span>
+                        </div>
+                        <div className="divide-y divide-zinc-50">
+                          {fields.map((f) => (
+                            <div key={f.id} className="px-5 py-3 flex items-start gap-4 hover:bg-zinc-50/50 group transition-colors">
+                              <div className="shrink-0 w-10 text-right">
+                                <span className="text-[10px] font-mono text-zinc-400">{f.id}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-zinc-500 mb-0.5">{f.label}</p>
+                                {f.value ? (
+                                  <p className="text-sm font-medium text-zinc-900 break-words">{f.value}</p>
+                                ) : (
+                                  <p className="text-sm text-zinc-300 italic">Non renseigné</p>
+                                )}
+                                {f.source_quote && (
+                                  <p className="text-[11px] text-zinc-400 mt-1 italic truncate" title={f.source_quote}>
+                                    « {f.source_quote} »
+                                  </p>
+                                )}
+                              </div>
+                              {/* Ask about this field */}
+                              <button
+                                onClick={() => handleChatSend(`Explique-moi la valeur du champ "${f.label}" (${f.id}) : ${f.value ?? "non renseigné"}`)}
+                                title="Poser une question sur ce champ"
+                                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-sm border border-zinc-200 hover:border-emerald-400 hover:text-emerald-600 text-zinc-400"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
-                <div ref={chatEndRef} />
-              </div>
+              </CardContent>
+            )}
 
-              {/* Input */}
-              <div className="border-t border-zinc-100 p-4 flex gap-3">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
-                  placeholder="Ex: Quels sont tous les diagnostics du patient ?"
-                  disabled={chatLoading}
-                  className="flex-1 h-10 px-3 text-sm rounded-sm border border-zinc-300 bg-white outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 transition-all placeholder:text-zinc-400"
-                />
-                <Button
-                  onClick={handleChatSend}
-                  disabled={chatLoading || !chatInput.trim()}
-                  className="h-10 px-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-sm text-sm font-medium disabled:opacity-50"
-                >
-                  {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                </Button>
-              </div>
-
-            </CardContent>
           </Card>
         )}
 

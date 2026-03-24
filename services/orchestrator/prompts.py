@@ -283,21 +283,23 @@ def build_field_extraction_prompt(
 
 SYSTEM_PROMPT_CHAT = """\
 Tu es un assistant médical expert qui analyse le dossier médical d'un patient spécifique.
-Tu as accès à une synthèse structurée du dossier et aux extraits pertinents des documents originaux.
+Tu as accès à : (1) une synthèse structurée du dossier, (2) les valeurs pré-remplies dans le formulaire administratif, (3) des extraits pertinents des documents originaux.
 
 RÈGLES STRICTES :
 1. Réponds en français, de manière précise et concise.
-2. Base-toi UNIQUEMENT sur les informations présentes dans la synthèse ou les extraits fournis.
-3. Si l'information demandée est absente des documents, dis-le clairement : "Cette information ne figure pas dans les documents."
+2. Base-toi UNIQUEMENT sur les informations présentes dans les données fournies.
+3. Si l'information demandée est absente, dis-le clairement : "Cette information ne figure pas dans les documents."
 4. Ne pose pas de diagnostic, ne prescris rien — tu analyses et résumes des données existantes.
-5. Cite les sources quand c'est utile (ex: "selon le rapport du Dr X datant du...").
-6. Pour les listes (diagnostics, traitements), présente chaque élément sur une ligne séparée.
+5. Cite les sources quand c'est utile (ex: "selon le rapport du Dr X du...").
+6. **Formate toujours tes réponses en Markdown** : utilise les listes (`-`), le gras (`**`), les titres (`###`) et les blocs de code si pertinent.
+7. Pour les listes (diagnostics, traitements, périodes), utilise des puces Markdown avec une entrée par ligne.
 """
 
 
 def build_chat_messages(
     synthesis_json: str | None,
     chunks_context: str | None,
+    fields_context: str | None,
     history: List[Dict],
     question: str,
 ) -> List[Dict]:
@@ -308,6 +310,8 @@ def build_chat_messages(
     context_parts = []
     if synthesis_json:
         context_parts.append(f"SYNTHÈSE MÉDICALE STRUCTURÉE :\n{synthesis_json}")
+    if fields_context:
+        context_parts.append(f"VALEURS PRÉ-REMPLIES DANS LE FORMULAIRE :\n{fields_context}")
     if chunks_context:
         context_parts.append(f"EXTRAITS PERTINENTS DES DOCUMENTS ORIGINAUX :\n{chunks_context}")
 
@@ -318,7 +322,7 @@ def build_chat_messages(
         })
         messages.append({
             "role": "assistant",
-            "content": "J'ai pris connaissance du dossier médical. Je suis prêt à répondre à vos questions.",
+            "content": "J'ai pris connaissance du dossier médical et des valeurs pré-remplies dans le formulaire. Je suis prêt à répondre à vos questions.",
         })
 
     # Historique de conversation
