@@ -646,6 +646,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 "completed_at": time.time(),
                 "_form_id": form_id,
                 "_tmp_dir": str(tmp_dir),
+                "_debug_dir": str(debug_dir),
             })
 
     except Exception as e:
@@ -914,12 +915,39 @@ def _validate_job_token(job_id: str, token: str) -> Dict:
 
 @app.get("/synthesis/{job_id}")
 async def get_synthesis(job_id: str, token: str = ""):
-    """Retourne la synthèse médicale générée pour ce job."""
+    """Retourne la synthèse médicale générée pour ce job (null si non disponible)."""
     job = _validate_job_token(job_id, token)
     synthesis = job.get("_debug_synthesis")
+    return {"synthesis": synthesis, "available": synthesis is not None}
+
+
+@app.post("/synthesis/{job_id}/generate")
+async def generate_synthesis(job_id: str, token: str = ""):
+    """(Re)génère la synthèse médicale depuis les fichiers OCR sauvegardés sur disque."""
+    job = _validate_job_token(job_id, token)
+    debug_dir = Path(job.get("_debug_dir", ""))
+    markdown_dir = debug_dir / "markdown"
+    if not markdown_dir.exists():
+        raise HTTPException(status_code=404, detail="Fichiers OCR introuvables (session expirée ou trop ancienne).")
+
+    ocr_results = []
+    for md_file in sorted(markdown_dir.glob("*.md")):
+        try:
+            ocr_results.append({"filename": md_file.name, "markdown": md_file.read_text(encoding="utf-8")})
+        except Exception:
+            pass
+
+    if not ocr_results:
+        raise HTTPException(status_code=404, detail="Aucun fichier OCR trouvé pour régénérer la synthèse.")
+
+    logger.info(f"[{job_id[:8]}] Régénération synthèse depuis {len(ocr_results)} fichiers OCR...")
+    synthesis = await run_medical_synthesis(ocr_results, VLLM_URL, VLLM_MODEL)
     if synthesis is None:
-        raise HTTPException(status_code=404, detail="Synthèse non disponible pour ce job.")
-    return {"synthesis": synthesis}
+        raise HTTPException(status_code=502, detail="Le LLM n'a pas pu générer la synthèse. Vérifiez les logs.")
+
+    JOBS[job_id]["_debug_synthesis"] = synthesis
+    logger.info(f"[{job_id[:8]}] Synthèse régénérée avec succès.")
+    return {"synthesis": synthesis, "available": True}
 
 
 @app.post("/synthesis/{job_id}/update")

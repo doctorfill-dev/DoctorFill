@@ -87,8 +87,10 @@ export default function App() {
 
   // Synthesis / context state
   const [synthesisText, setSynthesisText] = useState<string>("");
+  const [synthesisAvailable, setSynthesisAvailable] = useState<boolean | null>(null);
   const [synthesisLoading, setSynthesisLoading] = useState(false);
   const [synthesisLoadError, setSynthesisLoadError] = useState<string | null>(null);
+  const [synthesisGenerating, setSynthesisGenerating] = useState(false);
   const [synthesisDirty, setSynthesisDirty] = useState(false);
   const [synthesisSaving, setSynthesisSaving] = useState(false);
   const [refineInstruction, setRefineInstruction] = useState("");
@@ -205,8 +207,13 @@ export default function App() {
       const res = await apiFetch(`${BASE_URL}/synthesis/${jid}?token=${encodeURIComponent(token)}`);
       if (res.ok) {
         const data = await res.json();
-        setSynthesisText(JSON.stringify(data.synthesis, null, 2));
-        setSynthesisDirty(false);
+        setSynthesisAvailable(data.available);
+        if (data.available && data.synthesis) {
+          setSynthesisText(JSON.stringify(data.synthesis, null, 2));
+          setSynthesisDirty(false);
+        } else {
+          setSynthesisText("");
+        }
       } else {
         const err = await res.json().catch(() => ({}));
         setSynthesisLoadError(err.detail || `Erreur ${res.status}`);
@@ -218,9 +225,33 @@ export default function App() {
     }
   };
 
-  // Auto-load synthesis when switching to context tab
+  const handleGenerateSynthesis = async () => {
+    if (!jobId || !jobToken || synthesisGenerating) return;
+    setSynthesisGenerating(true);
+    setSynthesisLoadError(null);
+    try {
+      const res = await apiFetch(`${BASE_URL}/synthesis/${jobId}/generate?token=${encodeURIComponent(jobToken)}`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSynthesisAvailable(true);
+        setSynthesisText(JSON.stringify(data.synthesis, null, 2));
+        setSynthesisDirty(false);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setSynthesisLoadError(err.detail || "Erreur lors de la génération.");
+      }
+    } catch (e: any) {
+      setSynthesisLoadError(e.message || "Erreur réseau.");
+    } finally {
+      setSynthesisGenerating(false);
+    }
+  };
+
+  // Auto-load synthesis when switching to context tab (only once)
   useEffect(() => {
-    if (chatTab === "context" && jobId && jobToken && !synthesisText && !synthesisLoading) {
+    if (chatTab === "context" && jobId && jobToken && synthesisAvailable === null && !synthesisLoading) {
       fetchSynthesis(jobId, jobToken);
     }
   }, [chatTab]);
@@ -441,6 +472,7 @@ export default function App() {
     setChatMessages([]);
     setFormFields([]);
     setSynthesisText("");
+    setSynthesisAvailable(null);
     setSynthesisDirty(false);
     setIsRerunning(false);
     setJobId(null);
@@ -850,13 +882,35 @@ export default function App() {
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Chargement de la synthèse...
                     </div>
+                  ) : synthesisAvailable === false ? (
+                    /* Synthèse non générée — proposer de la créer */
+                    <div className="w-full h-72 bg-zinc-50 border border-dashed border-zinc-300 rounded-sm flex flex-col items-center justify-center gap-4 text-center px-8">
+                      <div className="w-10 h-10 rounded-sm bg-amber-50 border border-amber-200 flex items-center justify-center">
+                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-zinc-700 mb-1">Synthèse médicale non disponible</p>
+                        <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
+                          La synthèse n'a pas pu être générée lors du traitement initial. Vous pouvez la générer maintenant depuis les documents OCR sauvegardés.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleGenerateSynthesis}
+                        disabled={synthesisGenerating}
+                        className="h-9 px-5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-sm text-sm font-medium gap-2"
+                      >
+                        {synthesisGenerating
+                          ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Génération en cours...</>
+                          : <><Wand2 className="w-3.5 h-3.5" /> Générer la synthèse</>}
+                      </Button>
+                    </div>
                   ) : (
                     <textarea
                       value={synthesisText}
                       onChange={(e) => { setSynthesisText(e.target.value); setSynthesisDirty(true); }}
                       className="w-full h-72 font-mono text-xs text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-sm p-3 resize-y outline-none focus:ring-1 focus:ring-emerald-500 transition-all leading-relaxed"
                       spellCheck={false}
-                      placeholder={synthesisLoadError ? "Synthèse non disponible." : "Chargement..."}
+                      placeholder="Chargement..."
                     />
                   )}
                 </div>
