@@ -471,9 +471,9 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
 
             # --- Phase A : retrieval + rerank par champ (top-8 chunks) ---
             async def _retrieve_for_field(field: Dict, q_emb) -> List[str]:
-                hits = col.query(query_embeddings=[q_emb], n_results=min(20, len(chunks)))["documents"][0]
+                hits = col.query(query_embeddings=[q_emb], n_results=min(30, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
-                return [r["document"] for r in reranked[:8]]
+                return [r["document"] for r in reranked[:12]]
 
             field_top_chunks: List[List[str]] = await asyncio.gather(*[
                 _retrieve_for_field(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
@@ -496,7 +496,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                         if c not in seen:
                             seen.add(c)
                             merged_chunks.append(c)
-                chunks_ctx = "\n---\n".join(merged_chunks[:16])
+                chunks_ctx = "\n---\n".join(merged_chunks[:24])
 
                 # Filtrer la synthèse sur la section de ce batch
                 section = str(batch_fields[0]["id"]).split(".")[0]
