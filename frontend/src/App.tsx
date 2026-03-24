@@ -87,6 +87,8 @@ export default function App() {
 
   // Synthesis / context state
   const [synthesisText, setSynthesisText] = useState<string>("");
+  const [synthesisLoading, setSynthesisLoading] = useState(false);
+  const [synthesisLoadError, setSynthesisLoadError] = useState<string | null>(null);
   const [synthesisDirty, setSynthesisDirty] = useState(false);
   const [synthesisSaving, setSynthesisSaving] = useState(false);
   const [refineInstruction, setRefineInstruction] = useState("");
@@ -197,17 +199,31 @@ export default function App() {
   };
 
   const fetchSynthesis = async (jid: string, token: string) => {
+    setSynthesisLoading(true);
+    setSynthesisLoadError(null);
     try {
       const res = await apiFetch(`${BASE_URL}/synthesis/${jid}?token=${encodeURIComponent(token)}`);
       if (res.ok) {
         const data = await res.json();
         setSynthesisText(JSON.stringify(data.synthesis, null, 2));
         setSynthesisDirty(false);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setSynthesisLoadError(err.detail || `Erreur ${res.status}`);
       }
-    } catch (e) {
-      console.error("Erreur chargement synthèse", e);
+    } catch (e: any) {
+      setSynthesisLoadError(e.message || "Impossible de charger la synthèse.");
+    } finally {
+      setSynthesisLoading(false);
     }
   };
+
+  // Auto-load synthesis when switching to context tab
+  useEffect(() => {
+    if (chatTab === "context" && jobId && jobToken && !synthesisText && !synthesisLoading) {
+      fetchSynthesis(jobId, jobToken);
+    }
+  }, [chatTab]);
 
   const handleSaveSynthesis = async () => {
     if (!jobId || !jobToken) return;
@@ -794,21 +810,55 @@ export default function App() {
                 {/* JSON Editor */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider">Synthèse JSON</label>
-                    {synthesisDirty && (
-                      <span className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-                        Modifications non sauvegardées
-                      </span>
-                    )}
+                    <label className="text-xs font-semibold text-zinc-700 uppercase tracking-wider flex items-center gap-2">
+                      Synthèse médicale
+                      {synthesisLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {synthesisDirty && (
+                        <span className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                          Non sauvegardé
+                        </span>
+                      )}
+                      {!synthesisLoading && jobId && jobToken && (
+                        <button
+                          onClick={() => fetchSynthesis(jobId, jobToken)}
+                          className="text-[10px] text-zinc-400 hover:text-emerald-600 flex items-center gap-1 transition-colors"
+                          title="Recharger depuis le serveur"
+                        >
+                          <RefreshCw className="w-3 h-3" /> Recharger
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <textarea
-                    value={synthesisText}
-                    onChange={(e) => { setSynthesisText(e.target.value); setSynthesisDirty(true); }}
-                    className="w-full h-72 font-mono text-xs text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-sm p-3 resize-y outline-none focus:ring-1 focus:ring-emerald-500 transition-all leading-relaxed"
-                    spellCheck={false}
-                    placeholder="Synthèse médicale au format JSON..."
-                  />
+
+                  {synthesisLoadError && (
+                    <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-sm px-3 py-2">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      {synthesisLoadError}
+                      {jobId && jobToken && (
+                        <button onClick={() => fetchSynthesis(jobId, jobToken)} className="ml-auto underline hover:no-underline">
+                          Réessayer
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {synthesisLoading ? (
+                    <div className="w-full h-72 bg-zinc-50 border border-zinc-200 rounded-sm flex items-center justify-center gap-2 text-zinc-400 text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Chargement de la synthèse...
+                    </div>
+                  ) : (
+                    <textarea
+                      value={synthesisText}
+                      onChange={(e) => { setSynthesisText(e.target.value); setSynthesisDirty(true); }}
+                      className="w-full h-72 font-mono text-xs text-zinc-800 bg-zinc-50 border border-zinc-200 rounded-sm p-3 resize-y outline-none focus:ring-1 focus:ring-emerald-500 transition-all leading-relaxed"
+                      spellCheck={false}
+                      placeholder={synthesisLoadError ? "Synthèse non disponible." : "Chargement..."}
+                    />
+                  )}
                 </div>
 
                 {/* LLM Refinement */}
