@@ -214,18 +214,23 @@ export default function App() {
         const { done, value } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
+        // Split on both \r\n and \n for SSE compatibility
+        const lines = buffer.split(/\r?\n/);
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
-          if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+          const payload = trimmed.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
           try {
-            const parsed = JSON.parse(line.slice(6));
-            const delta = parsed.choices?.[0]?.delta?.content ?? "";
+            const parsed = JSON.parse(payload);
+            const delta = parsed?.choices?.[0]?.delta?.content ?? "";
             if (delta) {
               setChatMessages((prev) => {
                 const updated = [...prev];
                 const last = updated[updated.length - 1];
+                if (!last) return prev;
                 updated[updated.length - 1] = { ...last, content: last.content + delta };
                 return updated;
               });

@@ -821,7 +821,15 @@ async def chat_endpoint(request: ChatRequest):
             logger.error(f"[chat/{request.job_id[:8]}] Erreur streaming vLLM: {e}")
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-    return StreamingResponse(_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        _stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 @app.get("/download/{job_id}")
