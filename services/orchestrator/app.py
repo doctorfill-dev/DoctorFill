@@ -13,6 +13,7 @@ import httpx
 import json
 import logging
 import time
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Set
@@ -100,16 +101,71 @@ MAX_FILES = int(os.getenv("MAX_FILES", "200"))
 # --- [SEC-03] Whitelist des form_id valides (construite au démarrage)
 VALID_FORM_IDS: Set[str] = set()
 
+# Expose aussi les templates générés mais pas encore relus (`_reviewed: false`).
+SHOW_DRAFT_FORMS = os.getenv("SHOW_DRAFT_FORMS", "false").lower() == "true"
+
+# --- Contrôle qualité de l'extraction
+# Longueur minimale (après normalisation) d'une citation pour être vérifiable.
+MIN_QUOTE_LEN = 12
+# Score de rerank en dessous duquel le meilleur chunk d'un champ est jugé non pertinent.
+MIN_RERANK_SCORE = float(os.getenv("MIN_RERANK_SCORE", "0.05"))
+# Plafond de génération pour un batch d'extraction (~7 champs × valeur + citation).
+MAX_TOKENS_EXTRACT = int(os.getenv("MAX_TOKENS_EXTRACT", "2048"))
+# Retries sur un appel LLM d'extraction (l'OCR en a 5, le rerank 3, celui-ci n'en avait aucun).
+MAX_LLM_RETRIES = 3
+
+# Requêtes LLM en vol. À garder aligné sur --max-num-seqs de vLLM (docker-compose) :
+# en dessous, le batch continu de vLLM tourne à vide ; au-dessus, les requêtes
+# excédentaires attendent simplement dans sa file.
+LLM_CONCURRENCY = int(os.getenv("LLM_CONCURRENCY", "24"))
+RERANK_CONCURRENCY = int(os.getenv("RERANK_CONCURRENCY", "5"))
+
+# Embeddings des questions d'un template : identiques d'un job à l'autre et d'un
+# re-run à l'autre, alors qu'ils étaient recalculés à chaque fois.
+_QUESTION_EMB_CACHE: Dict[str, List] = {}
+
+
+def _scan_templates() -> Set[str]:
+    """
+    Liste les formulaires publiables.
+
+    Un template généré par tools/gen_template.py porte `_reviewed: false` tant
+    que ses questions n'ont pas été relues. Le proposer à un clinicien donnerait
+    un formulaire partiellement rempli sans qu'il sache lesquels des champs ont
+    été ignorés — on ne l'expose donc qu'une fois relu. SHOW_DRAFT_FORMS lève la
+    barrière pour la mise au point.
+    """
+    available: Set[str] = set()
+    template_dir = Path("template")
+    if not template_dir.exists():
+        return available
+
+    for path in sorted(template_dir.glob("Form_*.json")):
+        form_id = path.stem.replace("Form_", "")
+        try:
+            reviewed = json.loads(path.read_text(encoding="utf-8")).get("_reviewed", True)
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.error(f"Template illisible, ignoré ({path.name}): {exc}")
+            continue
+        if not (Path("forms") / f"Form_{form_id}.pdf").exists():
+            # Les PDF vierges ne sont pas versionnés (voir .gitignore) : ils sont
+            # récupérés par tools/gen_catalog.py. Sans PDF, le job échouerait
+            # à l'étape d'injection — autant ne pas proposer le formulaire.
+            logger.warning(f"Template {form_id} sans PDF dans forms/ — masqué")
+            continue
+        if reviewed or SHOW_DRAFT_FORMS:
+            available.add(form_id)
+        else:
+            logger.info(f"Template {form_id} non relu — masqué (SHOW_DRAFT_FORMS=true pour l'afficher)")
+    return available
+
 
 @app.on_event("startup")
 async def startup_tasks():
     """Initialisation au démarrage : whitelist form_id + cleanup périodique."""
     # [SEC-03] Scanner les templates disponibles
-    template_dir = Path("template")
-    if template_dir.exists():
-        for f in template_dir.glob("Form_*.json"):
-            VALID_FORM_IDS.add(f.stem.replace("Form_", ""))
-        logger.info(f"Form IDs valides: {VALID_FORM_IDS}")
+    VALID_FORM_IDS.update(_scan_templates())
+    logger.info(f"Form IDs valides: {sorted(VALID_FORM_IDS)}")
 
     asyncio.create_task(_cleanup_expired_jobs())
 
@@ -216,6 +272,24 @@ async def fetch_embeddings_batched(client: httpx.AsyncClient, texts: List[str], 
     return all_embeddings
 
 
+async def fetch_question_embeddings(client: httpx.AsyncClient, form_id: str,
+                                    questions: List[str]) -> List:
+    """
+    Embeddings des questions d'un template, mis en cache par formulaire.
+
+    Les questions sont statiques : les recalculer à chaque job et à chaque re-run
+    coûtait un aller-retour TEI pour un résultat identique. La clé inclut le
+    contenu des questions pour que toute modification du template invalide le cache.
+    """
+    signature = f"{form_id}:{hash(tuple(questions))}"
+    cached = _QUESTION_EMB_CACHE.get(signature)
+    if cached is not None:
+        return cached
+    embeddings = await fetch_embeddings_batched(client, questions)
+    _QUESTION_EMB_CACHE[signature] = embeddings
+    return embeddings
+
+
 async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str],
                        rerank_sem: asyncio.Semaphore = None):
     """Rerank avec semaphore + retry sur PoolTimeout/ReadError/ConnectError."""
@@ -252,6 +326,60 @@ def _filter_synthesis_for_section(synthesis: Dict | None, section_id: str) -> st
     return json.dumps(filtered, ensure_ascii=False) if filtered else None
 
 
+def _normalize_for_match(text: str) -> str:
+    """Minuscules, sans accents ni ponctuation, espaces compactés — pour comparer deux textes."""
+    stripped = unicodedata.normalize("NFKD", text.lower())
+    stripped = "".join(c for c in stripped if not unicodedata.combining(c))
+    return re.sub(r"[^a-z0-9]+", " ", stripped).strip()
+
+
+def _verify_source_quote(quote: str, chunks: List[str]) -> bool:
+    """
+    Vérifie qu'une citation produite par le LLM apparaît bien dans les chunks fournis.
+
+    La comparaison est normalisée (casse, accents, ponctuation, espaces) car le LLM
+    reformate souvent la citation. Une citation trop courte n'est pas discriminante.
+    """
+    needle = _normalize_for_match(quote)
+    if len(needle) < MIN_QUOTE_LEN:
+        return False
+    return any(needle in _normalize_for_match(c) for c in chunks)
+
+
+def _annotate_confidence(results: List[Dict], chunks: List[str],
+                         field_score_map: Dict[str, float]) -> None:
+    """
+    Enrichit sur place chaque résultat d'extraction avec des signaux de confiance.
+
+    Trois signaux, aucun appel LLM supplémentaire :
+    - rerank_score  : pertinence du meilleur chunk retrouvé pour ce champ
+    - quote_verified: la citation du LLM se retrouve-t-elle vraiment dans les chunks
+    - flags         : motifs d'alerte, à afficher à la relecture
+
+    On ne supprime jamais une valeur — c'est au clinicien de trancher.
+    """
+    for res in results:
+        payload = res.get("result")
+        if not isinstance(payload, dict):
+            continue
+        fid = str(res["id"])
+        score = field_score_map.get(fid, 0.0)
+        payload["rerank_score"] = round(score, 4)
+
+        flags: List[str] = []
+        value = str(payload.get("value") or "").strip()
+        if value:
+            quote = str(payload.get("source_quote") or "").strip()
+            verified = _verify_source_quote(quote, chunks) if quote else False
+            payload["quote_verified"] = verified
+            if not verified:
+                flags.append("quote_unverified")
+            if score < MIN_RERANK_SCORE:
+                flags.append("weak_retrieval")
+        if flags:
+            payload["flags"] = flags
+
+
 def _group_fields_into_batches(fields: List[Dict], max_batch_size: int = 7) -> List[List[Dict]]:
     """Groupe les champs par section (préfixe de l'ID), max max_batch_size par batch."""
     from collections import defaultdict
@@ -283,13 +411,27 @@ async def extract_fields_batch_vllm(
         ],
         "temperature": 0.05,
         "response_format": {"type": "json_object"},
+        "max_tokens": MAX_TOKENS_EXTRACT,
     }
+
+    async def _call_with_retry() -> Dict:
+        """Un JSON tronqué ou un pic de charge ne doit pas condamner les 7 champs du batch."""
+        for attempt in range(1, MAX_LLM_RETRIES + 1):
+            try:
+                async with llm_sem:
+                    resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=180.0)
+                    resp.raise_for_status()
+                    return json.loads(resp.json()["choices"][0]["message"]["content"])
+            except (httpx.PoolTimeout, httpx.ReadError, httpx.ConnectError,
+                    httpx.ReadTimeout, httpx.HTTPStatusError, json.JSONDecodeError) as e:
+                if attempt == MAX_LLM_RETRIES:
+                    raise
+                logger.warning(f"LLM retry {attempt}/{MAX_LLM_RETRIES} "
+                               f"({[f['id'] for f in fields]}): {type(e).__name__}: {e}")
+                await asyncio.sleep(2 * attempt)
+
     try:
-        async with llm_sem:
-            resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=180.0)
-            resp.raise_for_status()
-            content = resp.json()["choices"][0]["message"]["content"]
-            data = json.loads(content)
+        data = await _call_with_retry()
         results = []
         for field in fields:
             fid = str(field["id"])
@@ -466,26 +608,36 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             with open(f"template/Form_{form_id}.json", "r") as f:
                 template = json.load(f)
 
-            fields_with_q = [f for f in template["fields"] if "question" in f]
+            # Une question vide ne produit qu'un embedding parasite : les templates
+            # générés par tools/gen_template.py la laissent à "" tant qu'elle n'est
+            # pas rédigée.
+            fields_with_q = [f for f in template["fields"] if f.get("question", "").strip()]
             n_fields = len(fields_with_q)
             logger.info(f"[{job_id[:8]}] Step 3: {n_fields} champs — phase A rerank, phase B batch-LLM...")
 
-            all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
+            all_q_embs = await fetch_question_embeddings(
+                client, form_id, [f["question"] for f in fields_with_q])
 
-            rerank_sem = asyncio.Semaphore(5)
-            llm_sem = asyncio.Semaphore(10)
+            rerank_sem = asyncio.Semaphore(RERANK_CONCURRENCY)
+            llm_sem = asyncio.Semaphore(LLM_CONCURRENCY)
 
-            # --- Phase A : retrieval + rerank par champ (top-8 chunks) ---
-            async def _retrieve_for_field(field: Dict, q_emb) -> List[str]:
+            # --- Phase A : retrieval + rerank par champ (top-12 chunks) ---
+            async def _retrieve_for_field(field: Dict, q_emb) -> tuple[List[str], float]:
                 hits = col.query(query_embeddings=[q_emb], n_results=min(30, len(chunks)))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
-                return [r["document"] for r in reranked[:12]]
+                top = reranked[:12]
+                # Le meilleur score sert d'indice de pertinence du retrieval pour ce champ.
+                best_score = float(top[0].get("score", 0.0)) if top else 0.0
+                return [r["document"] for r in top], best_score
 
-            field_top_chunks: List[List[str]] = await asyncio.gather(*[
+            retrieved: List[tuple[List[str], float]] = await asyncio.gather(*[
                 _retrieve_for_field(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
             ])
             field_chunk_map: Dict[str, List[str]] = {
-                str(f["id"]): cks for f, cks in zip(fields_with_q, field_top_chunks)
+                str(f["id"]): cks for f, (cks, _) in zip(fields_with_q, retrieved)
+            }
+            field_score_map: Dict[str, float] = {
+                str(f["id"]): score for f, (_, score) in zip(fields_with_q, retrieved)
             }
 
             # --- Phase B : batch LLM par section ---
@@ -511,6 +663,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 result = await extract_fields_batch_vllm(
                     client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem
                 )
+                _annotate_confidence(result, merged_chunks[:24], field_score_map)
                 batches_done += 1
                 JOBS[job_id].update({
                     "message": f"🤖 Extraction {batches_done}/{len(batches)} sections...",
@@ -673,8 +826,9 @@ async def health_check():
 
 @app.get("/forms")
 async def list_forms():
-    template_path = Path("template")
-    return {"forms": [f.stem.replace("Form_", "") for f in template_path.glob("Form_*.json")]}
+    # Même filtre que la whitelist de démarrage : un formulaire non relu ne doit
+    # pas être proposé, sinon /process-form le refuserait ensuite avec un 400.
+    return {"forms": sorted(_scan_templates())}
 
 
 @app.post("/process-form")
@@ -773,15 +927,17 @@ async def get_fields(job_id: str, token: str = ""):
     for f in template_fields:
         fid = f["id"]
         r = raw_results.get(fid, {})
-        value = r.get("result", {}).get("value") if "result" in r else None
-        source = r.get("result", {}).get("source_quote") if "result" in r else None
+        payload = r.get("result", {}) if "result" in r else {}
         fields_out.append({
             "id": fid,
             "label": f.get("label", str(fid)),
             "question": f.get("question", ""),
             "section": f.get("section", ""),
-            "value": value,
-            "source_quote": source,
+            "value": payload.get("value"),
+            "source_quote": payload.get("source_quote"),
+            "quote_verified": payload.get("quote_verified"),
+            "rerank_score": payload.get("rerank_score"),
+            "flags": payload.get("flags", []),
         })
     return {"fields": fields_out}
 
@@ -1013,29 +1169,35 @@ async def rerun_pipeline_task(job_id: str):
         with open(f"template/Form_{form_id}.json", "r") as f:
             template = json.load(f)
 
-        fields_with_q = [f for f in template["fields"] if "question" in f]
+        fields_with_q = [f for f in template["fields"] if f.get("question", "").strip()]
         n_fields = len(fields_with_q)
         logger.info(f"[{job_id[:8]}] Re-run: {n_fields} champs, {col_count} chunks en ChromaDB.")
 
         limits = httpx.Limits(max_connections=50, max_keepalive_connections=10, keepalive_expiry=30)
         async with httpx.AsyncClient(limits=limits) as client:
             JOBS[job_id].update({"message": "🔄 Re-run : re-encodage des questions...", "progress": 15})
-            all_q_embs = await fetch_embeddings_batched(client, [f["question"] for f in fields_with_q])
+            all_q_embs = await fetch_question_embeddings(
+                client, form_id, [f["question"] for f in fields_with_q])
 
-            rerank_sem = asyncio.Semaphore(5)
-            llm_sem = asyncio.Semaphore(10)
+            rerank_sem = asyncio.Semaphore(RERANK_CONCURRENCY)
+            llm_sem = asyncio.Semaphore(LLM_CONCURRENCY)
 
-            async def _retrieve_field(field: Dict, q_emb) -> List[str]:
+            async def _retrieve_field(field: Dict, q_emb) -> tuple[List[str], float]:
                 hits = col.query(query_embeddings=[q_emb], n_results=min(30, col_count))["documents"][0]
                 reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
-                return [r["document"] for r in reranked[:12]]
+                top = reranked[:12]
+                best_score = float(top[0].get("score", 0.0)) if top else 0.0
+                return [r["document"] for r in top], best_score
 
             JOBS[job_id].update({"message": "🔄 Re-run : retrieval + reranking...", "progress": 30})
-            field_top_chunks: List[List[str]] = await asyncio.gather(*[
+            retrieved: List[tuple[List[str], float]] = await asyncio.gather(*[
                 _retrieve_field(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
             ])
             field_chunk_map: Dict[str, List[str]] = {
-                str(f["id"]): cks for f, cks in zip(fields_with_q, field_top_chunks)
+                str(f["id"]): cks for f, (cks, _) in zip(fields_with_q, retrieved)
+            }
+            field_score_map: Dict[str, float] = {
+                str(f["id"]): score for f, (_, score) in zip(fields_with_q, retrieved)
             }
 
             batches = _group_fields_into_batches(fields_with_q, max_batch_size=7)
@@ -1054,6 +1216,7 @@ async def rerun_pipeline_task(job_id: str):
                 section = str(batch_fields[0]["id"]).split(".")[0]
                 filtered_synthesis = _filter_synthesis_for_section(synthesis, section)
                 result = await extract_fields_batch_vllm(client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem)
+                _annotate_confidence(result, merged[:24], field_score_map)
                 batches_done += 1
                 JOBS[job_id].update({
                     "message": f"🔄 Re-run : extraction {batches_done}/{len(batches)}...",
@@ -1188,6 +1351,9 @@ async def debug_results(job_id: str, token: str = ""):
                 "field_id": r.get("id"),
                 "value": r.get("result", {}).get("value") if "result" in r else None,
                 "source_quote": r.get("result", {}).get("source_quote") if "result" in r else None,
+                "quote_verified": r.get("result", {}).get("quote_verified") if "result" in r else None,
+                "rerank_score": r.get("result", {}).get("rerank_score") if "result" in r else None,
+                "flags": r.get("result", {}).get("flags", []) if "result" in r else [],
                 "error": r.get("error"),
             }
             for r in debug_results
