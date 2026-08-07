@@ -16,6 +16,8 @@ from typing import Any
 import pikepdf
 from pypdf import PdfReader
 
+from core.appearance import build_appearance
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -93,10 +95,12 @@ def _collect_fields(
         name_part = str(t) if t is not None else ""
         full_name = f"{parent_name}.{name_part}" if parent_name and name_part else (name_part or parent_name)
 
-        # Champ feuille : a une valeur /V
+        # Champ terminal : /FT le désigne comme un vrai champ de formulaire.
+        # On l'enregistre même sans /V — un formulaire vierge n'en a pas, et les
+        # omettre rendait invisibles tous les champs à remplir.
         v = obj.get("/V")
-        if v is not None and full_name:
-            result[full_name] = str(v)
+        if full_name and (obj.get("/FT") is not None or v is not None):
+            result[full_name] = str(v) if v is not None else ""
 
         # Champ parent : descendre dans /Kids
         kids = obj.get("/Kids")
@@ -132,37 +136,67 @@ def extract_acroform_field_names(pdf_path: str | Path) -> dict[str, str]:
 
 _CHECKBOX_TRUTHY = {"on", "true", "1", "yes", "y", "x", "checked", "oui"}
 
+# Drapeaux /Ff, numérotés à partir de 1 dans la spec PDF.
+_FF_RADIO = 1 << 15        # bit 16
+_FF_PUSHBUTTON = 1 << 16   # bit 17
 
-def _normalize_acroform_value(value: Any, is_checkbox: bool) -> pikepdf.Object:
+
+def _checkbox_on_state(field_obj: pikepdf.Object) -> pikepdf.Name:
+    """
+    Détermine le nom de l'état « coché » d'une case.
+
+    Les widgets medForms n'ont pas de /AP, donc on ne peut pas lire l'état depuis
+    les apparences. On tente /AP puis /Opt, et on retombe sur /On — la convention
+    des formulaires générés par Designer — plutôt que sur /Yes.
+    """
+    ap = field_obj.get("/AP")
+    if ap is not None:
+        normal = ap.get("/N")
+        if normal is not None:
+            for key in normal.keys():
+                if key != "/Off":
+                    return pikepdf.Name(key)
+    return pikepdf.Name("/On")
+
+
+def _normalize_acroform_value(value: Any, on_state: pikepdf.Name | None) -> pikepdf.Object:
     """Convertit une valeur Python en objet pikepdf pour /V."""
-    if is_checkbox:
+    if on_state is not None:
         s = str(value).strip().lower() if value is not None else ""
-        return pikepdf.Name("/Yes") if s in _CHECKBOX_TRUTHY else pikepdf.Name("/Off")
+        return on_state if s in _CHECKBOX_TRUTHY else pikepdf.Name("/Off")
     if value is None:
         return pikepdf.String("")
     return pikepdf.String(str(value))
 
 
 def _is_checkbox(field_obj: pikepdf.Object) -> bool:
-    """Détecte si un champ est une case à cocher."""
+    """
+    Détecte si un champ est une case à cocher.
+
+    /Ff est absent sur la grande majorité des cases medForms (une case n'a aucun
+    drapeau à poser) : son absence signifie donc « ni radio ni pushbutton », pas
+    « pas une case ». Traiter l'absence comme un échec écrivait une chaîne dans
+    un champ qui attend un /Name.
+    """
     ft = field_obj.get("/FT")
-    if ft is not None and str(ft) == "/Btn":
-        ff = field_obj.get("/Ff")
-        if ff is not None:
-            # Bit 17 = Pushbutton, bit 16 = Radio
-            # Si aucun de ces bits → checkbox
-            flags = int(ff)
-            return not (flags & (1 << 16)) and not (flags & (1 << 15))
-    return False
+    if ft is None or str(ft) != "/Btn":
+        return False
+    ff = field_obj.get("/Ff")
+    if ff is None:
+        return True
+    flags = int(ff)
+    return not (flags & _FF_PUSHBUTTON) and not (flags & _FF_RADIO)
 
 
 def _fill_fields_recursive(
+    pdf: pikepdf.Pdf,
+    acroform: pikepdf.Object,
     fields_array: pikepdf.Array,
     values_by_name: dict[str, str],
     parent_name: str = "",
     filled: set[str] | None = None,
 ) -> None:
-    """Remplit récursivement les champs AcroForm."""
+    """Remplit récursivement les champs AcroForm et génère leurs apparences."""
     if filled is None:
         filled = set()
 
@@ -179,18 +213,36 @@ def _fill_fields_recursive(
         # Champ feuille : le remplir si on a une valeur pour lui
         if full_name in values_by_name and full_name not in filled:
             value = values_by_name[full_name]
-            checkbox = _is_checkbox(obj)
-            obj["/V"] = _normalize_acroform_value(value, checkbox)
-            # Supprimer l'apparence calculée pour forcer le viewer à la recalculer
-            if "/AP" in obj:
-                del obj["/AP"]
+            on_state = _checkbox_on_state(obj) if _is_checkbox(obj) else None
+            obj["/V"] = _normalize_acroform_value(value, on_state)
+            # On construit l'apparence nous-mêmes : PDFium n'honore pas /NeedAppearances.
+            try:
+                build_appearance(pdf, acroform, obj, value, on_state)
+            except Exception as exc:
+                logger.warning("Apparence non générée pour %s : %s", full_name, exc)
             filled.add(full_name)
             logger.debug("AcroForm fill: %s = %r", full_name, value)
 
         # Champ parent : descendre dans /Kids
         kids = obj.get("/Kids")
         if kids is not None:
-            _fill_fields_recursive(kids, values_by_name, full_name, filled)
+            _fill_fields_recursive(pdf, acroform, kids, values_by_name, full_name, filled)
+
+
+def _strip_usage_rights(pdf: pikepdf.Pdf) -> None:
+    """
+    Retire la signature de droits d'usage étendus (/Perms/UR3).
+
+    Les formulaires medForms sont Reader-extended : toute réécriture invalide
+    cette signature et Acrobat affiche un bandeau d'avertissement. Comme on ne
+    peut pas la conserver valide, autant la supprimer proprement.
+    """
+    perms = pdf.Root.get("/Perms")
+    if perms is not None and "/UR3" in perms:
+        del perms["/UR3"]
+        if len(perms.keys()) == 0:
+            del pdf.Root["/Perms"]
+        logger.debug("Signature UR3 retirée (invalidée par le remplissage)")
 
 
 def fill_acroform(
@@ -217,15 +269,21 @@ def fill_acroform(
         if acroform is None:
             raise ValueError("PDF ne contient pas d'AcroForm")
 
-        # Activer NeedAppearances pour que les viewers régénèrent les apparences
-        acroform["/NeedAppearances"] = pikepdf.Boolean(True)
+        # On génère les apparences nous-mêmes (voir core/appearance.py), donc on
+        # désactive NeedAppearances : le laisser actif pousse les lecteurs à
+        # redessiner *tous* les champs, y compris ceux qu'on n'a pas touchés, ce
+        # qui décale la typographie d'origine du formulaire.
+        acroform["/NeedAppearances"] = pikepdf.Boolean(False)
 
         fields = acroform.get("/Fields")
         if fields is None:
             raise ValueError("AcroForm sans /Fields")
 
         filled: set[str] = set()
-        _fill_fields_recursive(fields, {k: v for k, v in values_by_name.items()}, filled=filled)
+        _fill_fields_recursive(pdf, acroform, fields,
+                               {k: v for k, v in values_by_name.items()}, filled=filled)
+
+        _strip_usage_rights(pdf)
 
         output_path = Path(output_pdf)
         output_path.parent.mkdir(parents=True, exist_ok=True)

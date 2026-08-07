@@ -24,27 +24,47 @@ def _iter_children(node: ET.Element, tag: str) -> Iterable[ET.Element]:
             yield child
 
 
+def _split_segment(segment: str) -> tuple[str, int]:
+    """
+    Split a path segment into (tag, occurrence index).
+
+    `phone` and `phone[0]` both mean the first occurrence; `phone[1]` the second.
+    Sibling fields sharing a name are common in the medForms address blocks.
+    """
+    if segment.endswith("]") and "[" in segment:
+        tag, _, raw = segment.partition("[")
+        try:
+            return tag, int(raw[:-1])
+        except ValueError:
+            return segment, 0
+    return segment, 0
+
+
 def _find(root: ET.Element, path: str) -> Optional[ET.Element]:
     """
     Find element by XFA path.
 
-    Searches anywhere in the tree for the first segment,
-    then navigates down through children.
+    Searches anywhere in the tree for the first segment, then navigates down
+    through children. Segments may carry an occurrence index (`phone[1]`);
+    without one the first occurrence is used, as before.
     """
     parts = [p for p in path.split("/") if p]
     if not parts:
         return None
 
-    # Find all nodes matching first segment
-    candidates = [n for n in root.iter() if _local(n.tag) == parts[0]]
-    if not candidates:
+    tag, index = _split_segment(parts[0])
+    candidates = [n for n in root.iter() if _local(n.tag) == tag]
+    if len(candidates) <= index:
         return None
+    candidates = candidates[index:index + 1] if index else candidates
 
-    # Navigate through remaining path
     for part in parts[1:]:
+        tag, index = _split_segment(part)
         next_candidates = []
         for node in candidates:
-            next_candidates.extend(_iter_children(node, part))
+            children = list(_iter_children(node, tag))
+            if len(children) > index:
+                next_candidates.append(children[index])
         if not next_candidates:
             return None
         candidates = next_candidates
