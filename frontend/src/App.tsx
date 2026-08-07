@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import JSZip from "jszip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PdfViewer } from "@/components/PdfViewer";
 import {
   Loader2, FolderArchive, FileCheck, FileText, Trash2,
   ChevronRight, Server, Send, Bot, User, ClipboardList, MessageSquare, Copy, Check,
@@ -595,7 +596,7 @@ export default function App() {
           <div className="lg:col-span-7">
             <Card className="h-[750px] flex flex-col shadow-none border-zinc-200 rounded-sm overflow-hidden bg-white">
               <CardHeader className="bg-zinc-50/50 border-b border-zinc-200 py-3 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-semibold text-zinc-800">Visualiseur XFA</CardTitle>
+                <CardTitle className="text-sm font-semibold text-zinc-800">Formulaire rempli</CardTitle>
                 {pdfUrl && (
                   <a href={pdfUrl} download={`Final_${formId}.pdf`}>
                     <Button variant="outline" size="sm" className="h-8 rounded-sm border-zinc-300 bg-white text-xs font-medium hover:bg-zinc-50 hover:text-zinc-900">
@@ -606,7 +607,7 @@ export default function App() {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col items-center justify-center p-0 bg-zinc-100 relative">
                 {pdfUrl ? (
-                  <iframe src={pdfUrl} className="w-full h-full border-0" title="PDF Result" />
+                  <PdfViewer url={pdfUrl} />
                 ) : (
                   <div className="text-zinc-400 flex flex-col items-center space-y-4">
                     <div className="w-16 h-16 rounded-sm border border-zinc-200 bg-white shadow-sm flex items-center justify-center">

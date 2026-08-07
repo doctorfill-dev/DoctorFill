@@ -74,7 +74,7 @@ export default function Landing() {
           </h1>
 
           <p className="text-lg text-zinc-600 leading-relaxed mb-8">
-            DoctorFill est un outil expérimental conçu pour extraire les informations pertinentes de dossiers médicaux non structurés (PDF, ZIP) et pré-remplir automatiquement des formulaires administratifs complexes (format XFA).
+            DoctorFill est un outil expérimental conçu pour extraire les informations pertinentes de dossiers médicaux non structurés (PDF, ZIP) et pré-remplir automatiquement les formulaires administratifs du catalogue medForms.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -128,9 +128,9 @@ export default function Landing() {
             <div className="p-6 border border-zinc-200 rounded-sm bg-zinc-50/50 relative">
               <div className="absolute top-0 right-0 p-4 opacity-10 font-mono text-4xl font-bold">03</div>
               <FileOutput className="w-5 h-5 text-zinc-700 mb-4" />
-              <h3 className="text-base font-semibold mb-2">Injection XFA</h3>
+              <h3 className="text-base font-semibold mb-2">Remplissage du PDF</h3>
               <p className="text-sm text-zinc-600 leading-relaxed">
-                Les réponses extraites sont formatées et injectées dans l'arborescence XML d'un fichier PDF vierge, générant le document final sans altérer sa structure officielle.
+                Les réponses extraites sont injectées dans les deux couches du formulaire vierge — champs AcroForm et arborescence XFA — sans altérer sa structure officielle. Le document reste lisible dans Adobe Reader comme dans un navigateur.
               </p>
             </div>
 
