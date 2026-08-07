@@ -78,7 +78,7 @@ async def _call_llm(
         "response_format": {"type": "json_object"},
     }
     async with httpx.AsyncClient(timeout=timeout) as client:
-        resp = await client.post(f"{vllm_url}/v1/chat/completions", json=payload)
+        resp = await client.post(f"{vllm_url}/chat/completions", json=payload)
         resp.raise_for_status()
         data = resp.json()
     return data["choices"][0]["message"]["content"]
@@ -196,7 +196,7 @@ async def run_medical_synthesis(
 
     Args:
         ocr_results: liste de dicts {"filename": str, "markdown": str}
-        vllm_url: URL du service vLLM (ex: "http://vllm:8000")
+        vllm_url: URL du service vLLM, préfixe /v1 inclus (ex: "http://vllm:8000/v1")
         model_name: nom du modèle vLLM
 
     Returns:

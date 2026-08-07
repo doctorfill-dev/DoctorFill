@@ -209,7 +209,9 @@ def fill_acroform(
     Returns:
         Ensemble des noms de champs effectivement remplis
     """
-    pdf = pikepdf.open(str(input_pdf))
+    # allow_overwriting_input : en hybride, input_pdf et output_pdf sont le même
+    # fichier (sortie de l'injection XFA reprise comme source)
+    pdf = pikepdf.open(str(input_pdf), allow_overwriting_input=True)
     try:
         acroform = pdf.Root.get("/AcroForm")
         if acroform is None:
