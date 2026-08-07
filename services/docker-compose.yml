@@ -3,12 +3,19 @@ services:
   vllm:
     container_name: df-services-vllm
     image: nvcr.io/nvidia/vllm:25.11-py3
+    # Le GB10 est limité par sa bande passante mémoire (273 Go/s) : à concurrence 1
+    # on plafonne vers 21 tok/s, à 32 on atteint ~156 tok/s. La charge de DoctorFill
+    # est un lot de requêtes d'extraction simultanées, donc c'est le débit agrégé qui
+    # compte, pas la latence par flux — d'où max-num-seqs relevé de 8 à 24.
+    # --enable-prefix-caching : tous les batchs d'un job partagent le même prompt
+    # système et le même bloc de synthèse, préfilé une seule fois.
     command: >
       vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ
       --max-model-len 32768
       --gpu-memory-utilization 0.70
-      --max-num-seqs 8
+      --max-num-seqs 24
       --enable-chunked-prefill
+      --enable-prefix-caching
     ipc: host
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
