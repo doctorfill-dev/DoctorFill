@@ -1,0 +1,49 @@
+# Catalogue medForms (FR) — formulaires pris en charge par DoctorFill.
+#
+# Format : <code medForms>  <identifiant DoctorFill>
+#
+# Le code n'est pas à deviner : il est inscrit dans le PDF lui-même, dans le
+# chemin de taxonomie du packet XFA `config`. Pour l'obtenir depuis un PDF :
+#     python -m tools.gen_template <fichier.pdf> --identify
+#
+# La nomenclature suit le régime d'assurance de la taxonomie medForms
+# (40.assurers/10.IVG → AI_, /20.KVG → LAMal_, /30.MVG → LAM_, /40.UVG → LAA_,
+# /50.VVG → LCA_) ou le type d'adressage pour les formulaires de référence.
+#
+# Régénérer :
+#     python -m tools.gen_catalog --list tools/catalog_fr.txt --write
+
+# --- Assurance-invalidité (AI / IVG) ---------------------------------------
+medforms.40.10.5030_fr        AI_MoyensAuxiliaires
+medforms.40.10.5060_fr        AI_ReadaptationRente
+medforms.40.10.5150_fr        AI_RapportIntermediaire_Actualisation
+medforms.40.10.5160_fr        AI_RapportIntermediaire_Revision
+
+# --- Assurance-maladie (LAMal / KVG) ---------------------------------------
+medforms.40.20.40.5010_fr     LAMal_RapportInitial
+
+# --- Assurance militaire (LAM / MVG) ---------------------------------------
+medforms.40.30.5020_fr        LAM_FeuilleMaladieAccident
+medforms.40.30.5030_fr        LAM_RapportIntermediaire
+
+# --- Assurance-accidents (LAA / UVG) ---------------------------------------
+medforms.40.40.10.5010_fr     LAA_CertificatMedical_Suva
+medforms.40.40.10.5020_fr     LAA_RapportIntermediaire_Suva
+medforms.40.40.40.5010_fr     LAA_RapportInitial
+medforms.40.40.40.5020_fr     LAA_RapportAbrege
+medforms.40.40.40.5030_fr     LAA_PremierDiagnostic_MTBI
+medforms.40.40.5210_fr        LAA_PriseEnChargeHospitaliere
+medforms.40.40.60.5010_fr     LAA_MoyensAuxiliaires
+medforms.40.40.60.5020_fr     LAA_Physiotherapie
+medforms.40.40.60.5030_fr     LAA_Physiotherapie_LongueDuree
+
+# --- Assurance complémentaire / vie (LCA / VVG) ----------------------------
+medforms.40.50.40.5060_fr     LCA_IncapaciteTravail
+
+# --- Adressage à un spécialiste --------------------------------------------
+medforms.20.10.25.5010_fr     Adressage_Angiologie
+medforms.20.10.140.5010_fr    Adressage_Cardiologie
+
+# --- Autres prescriptions ---------------------------------------------------
+medforms.20.10.90.5010_fr     Gyneco_AnnonceMaternite
+medforms.30.10.10.5010_fr     Prescription_EnseignementDiabete
