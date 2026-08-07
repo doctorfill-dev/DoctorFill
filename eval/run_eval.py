@@ -113,7 +113,7 @@ def compare_field(field_id: str, extracted: str, gt_entry: dict) -> dict:
 # PIPELINE D'ÉVALUATION
 # ---------------------------------------------------------------------------
 
-def run_evaluation(api_url: str, api_key: str = "", form_id: str = "AVS"):
+def run_evaluation(api_url: str, api_key: str = "", form_id: str = "AI_ReadaptationRente"):
     """Exécute l'évaluation complète."""
     gt = load_ground_truth()
     assert gt["_meta"]["form_id"] == form_id, f"Ground truth pour {gt['_meta']['form_id']}, pas {form_id}"
@@ -296,6 +296,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Évaluation du pipeline RAG DoctorFill")
     parser.add_argument("--api", default="http://localhost:8080", help="URL de l'API (default: localhost:8080)")
     parser.add_argument("--api-key", default="", help="Clé API (X-API-Key)")
-    parser.add_argument("--form", default="AVS", help="Form ID (default: AVS)")
+    parser.add_argument("--form", default="AI_ReadaptationRente", help="Form ID (default: AI_ReadaptationRente)")
     args = parser.parse_args()
     run_evaluation(api_url=args.api, api_key=args.api_key, form_id=args.form)

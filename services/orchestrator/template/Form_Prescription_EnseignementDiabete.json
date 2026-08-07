@@ -1,0 +1,813 @@
+{
+  "_generated_from": "medforms.30.10.10.5010_fr.pdf",
+  "_reviewed": false,
+  "fields": [
+    {
+      "comments": "Section 1 — page1"
+    },
+    {
+      "id": "1.1",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète du destinataire du formulaire (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/consumerS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "1.2",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) du destinataire du formulaire ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/consumerS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.3",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du destinataire du formulaire ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/consumerS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].email[0]"
+    },
+    {
+      "id": "1.4",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du destinataire du formulaire ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/consumerS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.5",
+      "name": "fax",
+      "label": "fax",
+      "question": "Quel est le numéro de fax du destinataire du formulaire ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/consumerS1Address/fax",
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].fax[0]"
+    },
+    {
+      "id": "1.6",
+      "name": "zsr",
+      "label": "zsr",
+      "question": "Quel est le numéro RCC (ZSR) du destinataire du formulaire ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/consumerS1Address/zsr",
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].zsr[0]"
+    },
+    {
+      "id": "1.7",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du destinataire du formulaire ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/consumerS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].input[0]"
+    },
+    {
+      "id": "1.8",
+      "name": "condensedName",
+      "label": "Assurance:",
+      "question": "Quel est le nom complet de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/condensedName",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedName[0]"
+    },
+    {
+      "id": "1.9",
+      "name": "condensedAddress",
+      "label": "condensedAddress",
+      "question": "Quelle est l'adresse complète de l'assureur (rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/condensedAddress",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedAddress[0]"
+    },
+    {
+      "id": "1.10",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.11",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
+    },
+    {
+      "id": "1.12",
+      "name": "lastName",
+      "label": "Nom:",
+      "question": "Quel est le nom de famille du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/lastName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].lastName[0]"
+    },
+    {
+      "id": "1.13",
+      "name": "firstName",
+      "label": "Prénom:",
+      "question": "Quel est le prénom du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/firstName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].firstName[0]"
+    },
+    {
+      "id": "1.14",
+      "name": "birthDate",
+      "label": "birthDate",
+      "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/birthDate",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].birthDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.15",
+      "name": "street",
+      "label": "Rue:",
+      "question": "Quelle est la rue et le numéro de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/street",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].street[0]"
+    },
+    {
+      "id": "1.16",
+      "name": "city",
+      "label": "/",
+      "question": "Quelle est la localité de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/city",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].city[0]"
+    },
+    {
+      "id": "1.17",
+      "name": "zip",
+      "label": "NPA/Domicile:",
+      "question": "Quel est le code postal (NPA) de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/zip",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].zip[0]"
+    },
+    {
+      "id": "1.18",
+      "name": "sex",
+      "label": "sex",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/sex",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].sex[0]",
+      "type": "sex",
+      "options": [
+        "M",
+        "F"
+      ]
+    },
+    {
+      "id": "1.19",
+      "name": "ssn",
+      "label": "ssn",
+      "question": "Quel est le numéro AVS du patient ? [format : 756.XXXX.XXXX.XX]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/ssn",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].ssn[0]"
+    },
+    {
+      "id": "1.20",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.21",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/phone[1]",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[1]"
+    },
+    {
+      "id": "1.22",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].email[0]"
+    },
+    {
+      "id": "1.23",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
+    },
+    {
+      "id": "1.24",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète du médecin traitant (fournisseur de prestations) (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "1.25",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.26",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].email[0]"
+    },
+    {
+      "id": "1.27",
+      "name": "zsr",
+      "label": "zsr",
+      "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/zsr",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].zsr[0]"
+    },
+    {
+      "id": "1.28",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.29",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].input[0]"
+    },
+    {
+      "id": "1.30",
+      "name": "modificationDate",
+      "label": "Date:",
+      "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/formS1Struct/modificationDate",
+      "acroform_name": "topmostSubform[0].page1[0].formS1Struct[0].modificationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.31",
+      "name": "creationDate",
+      "label": "creationDate",
+      "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/formS1Struct/creationDate",
+      "acroform_name": "topmostSubform[0].page1[0].formS1Struct[0].creationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.32",
+      "name": "generalPractitionerCentredModel",
+      "label": "generalPractitionerCentredModel",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/generalPractitionerCentredModel",
+      "acroform_name": "topmostSubform[0].page1[0].generalPractitionerCentredModel[0]"
+    },
+    {
+      "id": "1.33",
+      "name": "ambitionConseling",
+      "label": "Consultation diabétique",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ambitionConseling",
+      "acroform_name": "topmostSubform[0].page1[0].ambitionConseling[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.34",
+      "name": "diabetesInstructions",
+      "label": "Informations générales",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/diabetesInstructions",
+      "acroform_name": "topmostSubform[0].page1[0].diabetesInstructions[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.35",
+      "name": "insulinInjection",
+      "label": "Injections pour insuline",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insulinInjection",
+      "acroform_name": "topmostSubform[0].page1[0].insulinInjection[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.36",
+      "name": "outComeIllness",
+      "label": "Complications tardives",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/outComeIllness",
+      "acroform_name": "topmostSubform[0].page1[0].outComeIllness[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.37",
+      "name": "controllingBloodGlucose",
+      "label": "Autocontrôle de la glycémie",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/controllingBloodGlucose",
+      "acroform_name": "topmostSubform[0].page1[0].controllingBloodGlucose[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.38",
+      "name": "hypoglycemia",
+      "label": "Hypoglycémie",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/hypoglycemia",
+      "acroform_name": "topmostSubform[0].page1[0].hypoglycemia[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.39",
+      "name": "spezSituation",
+      "label": "Situations particulières",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/spezSituation",
+      "acroform_name": "topmostSubform[0].page1[0].spezSituation[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.40",
+      "name": "pumpInstructions",
+      "label": "Mode d'emploi de la pompe",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/pumpInstructions",
+      "acroform_name": "topmostSubform[0].page1[0].pumpInstructions[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.41",
+      "name": "footCare",
+      "label": "Soins des pieds",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/footCare",
+      "acroform_name": "topmostSubform[0].page1[0].footCare[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.42",
+      "name": "carTravelSport",
+      "label": "Conduite/voyages/sports",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/carTravelSport",
+      "acroform_name": "topmostSubform[0].page1[0].carTravelSport[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.43",
+      "name": "nutritionConseling",
+      "label": "Conseils nutritionnels",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/nutritionConseling",
+      "acroform_name": "topmostSubform[0].page1[0].nutritionConseling[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.44",
+      "name": "qualitativeDiabetesNutrition",
+      "label": "Alimentation (qualitative):",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/qualitativeDiabetesNutrition",
+      "acroform_name": "topmostSubform[0].page1[0].qualitativeDiabetesNutrition[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.45",
+      "name": "quantitativeDiabetesNutrition",
+      "label": "Alimentation (quantitative):",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/quantitativeDiabetesNutrition",
+      "acroform_name": "topmostSubform[0].page1[0].quantitativeDiabetesNutrition[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.46",
+      "name": "weightReductionTarget",
+      "label": "weightReductionTarget",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/weightReductionTarget",
+      "acroform_name": "topmostSubform[0].page1[0].weightReductionTarget[0]"
+    },
+    {
+      "id": "1.47",
+      "name": "quantitativeDiet",
+      "label": "quantitativeDiet",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/quantitativeDiet",
+      "acroform_name": "topmostSubform[0].page1[0].quantitativeDiet[0]"
+    },
+    {
+      "id": "1.48",
+      "name": "oralentidiabetica",
+      "label": "A.D.O.:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/oralentidiabetica",
+      "acroform_name": "topmostSubform[0].page1[0].oralentidiabetica[0]"
+    },
+    {
+      "id": "1.49",
+      "name": "insulin",
+      "label": "Insuline:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insulin",
+      "acroform_name": "topmostSubform[0].page1[0].insulin[0]"
+    },
+    {
+      "id": "1.50",
+      "name": "cholesterolComplete",
+      "label": "Cholestérol total:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/cholesterolComplete",
+      "acroform_name": "topmostSubform[0].page1[0].cholesterolComplete[0]"
+    },
+    {
+      "id": "1.51",
+      "name": "HbA1C",
+      "label": "HbA1c:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/HbA1C",
+      "acroform_name": "topmostSubform[0].page1[0].HbA1C[0]"
+    },
+    {
+      "id": "1.52",
+      "name": "currentBloodGlucose",
+      "label": "Glycémie actuelle:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/currentBloodGlucose",
+      "acroform_name": "topmostSubform[0].page1[0].currentBloodGlucose[0]"
+    },
+    {
+      "id": "1.53",
+      "name": "weight",
+      "label": "Poids:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/weight",
+      "acroform_name": "topmostSubform[0].page1[0].weight[0]"
+    },
+    {
+      "id": "1.54",
+      "name": "size",
+      "label": "Taille:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/size",
+      "acroform_name": "topmostSubform[0].page1[0].size[0]"
+    },
+    {
+      "id": "1.55",
+      "name": "triglyceride",
+      "label": "Triglycéride:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/triglyceride",
+      "acroform_name": "topmostSubform[0].page1[0].triglyceride[0]"
+    },
+    {
+      "id": "1.56",
+      "name": "HDL",
+      "label": "HDL:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/HDL",
+      "acroform_name": "topmostSubform[0].page1[0].HDL[0]"
+    },
+    {
+      "id": "1.57",
+      "name": "bloodPressure",
+      "label": "Tension artérielle:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/bloodPressure",
+      "acroform_name": "topmostSubform[0].page1[0].bloodPressure[0]"
+    },
+    {
+      "id": "1.58",
+      "name": "written",
+      "label": "par écrit",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/written",
+      "acroform_name": "topmostSubform[0].page1[0].written[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.59",
+      "name": "byPhone",
+      "label": "par téléphone",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/byPhone",
+      "acroform_name": "topmostSubform[0].page1[0].byPhone[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.60",
+      "name": "noReportNecessary",
+      "label": "rapport pas nécessaire",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/noReportNecessary",
+      "acroform_name": "topmostSubform[0].page1[0].noReportNecessary[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.61",
+      "name": "counselingLanguage",
+      "label": "counselingLanguage",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/counselingLanguage",
+      "acroform_name": "topmostSubform[0].page1[0].counselingLanguage[0]"
+    },
+    {
+      "id": "1.62",
+      "name": "counselingGoalDiabetes",
+      "label": "counselingGoalDiabetes",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/counselingGoalDiabetes",
+      "acroform_name": "topmostSubform[0].page1[0].counselingGoalDiabetes[0]"
+    },
+    {
+      "id": "1.63",
+      "name": "remarkDiabetes",
+      "label": "remarkDiabetes",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/remarkDiabetes",
+      "acroform_name": "topmostSubform[0].page1[0].remarkDiabetes[0]"
+    },
+    {
+      "id": "1.64",
+      "name": "counselingGoalNutrition",
+      "label": "counselingGoalNutrition",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/counselingGoalNutrition",
+      "acroform_name": "topmostSubform[0].page1[0].counselingGoalNutrition[0]"
+    },
+    {
+      "id": "1.65",
+      "name": "remarkNutrition",
+      "label": "remarkNutrition",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/remarkNutrition",
+      "acroform_name": "topmostSubform[0].page1[0].remarkNutrition[0]"
+    },
+    {
+      "id": "1.66",
+      "name": "appointmentData",
+      "label": "appointmentData",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/appointmentData",
+      "acroform_name": "topmostSubform[0].page1[0].appointmentData[0]"
+    },
+    {
+      "id": "1.67",
+      "name": "appointment",
+      "label": "appointment",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/appointment",
+      "acroform_name": "topmostSubform[0].page1[0].appointment[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.68",
+      "name": "creatinineNormal",
+      "label": "Créatinine normal:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/creatinineNormal",
+      "acroform_name": "topmostSubform[0].page1[0].creatinineNormal[0]"
+    },
+    {
+      "id": "1.69",
+      "name": "creatininePatho",
+      "label": "Créatinine patho.:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/creatininePatho",
+      "acroform_name": "topmostSubform[0].page1[0].creatininePatho[0]"
+    },
+    {
+      "id": "1.70",
+      "name": "otherIndications",
+      "label": "otherIndications",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/otherIndications",
+      "acroform_name": "topmostSubform[0].page1[0].otherIndications[0]"
+    },
+    {
+      "id": "1.71",
+      "name": "insuredID",
+      "label": "N°. d'assuré:",
+      "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/insuredID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
+    },
+    {
+      "id": "1.72",
+      "name": "type",
+      "label": "type",
+      "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "LAMal",
+        "LCA",
+        "LAA",
+        "LAI",
+        "LAM",
+        "ORG"
+      ]
+    },
+    {
+      "id": "1.73",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.74",
+      "name": "code",
+      "label": "CIM-10-Code:",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/diagnosis/code",
+      "acroform_name": "topmostSubform[0].page1[0].diagnosis[0].code[0]"
+    },
+    {
+      "id": "1.75",
+      "name": "name",
+      "label": "name",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/diagnosis/name",
+      "acroform_name": "topmostSubform[0].page1[0].diagnosis[0].name[0]"
+    },
+    {
+      "id": "1.76",
+      "name": "beratungsstelle",
+      "label": "beratungsstelle",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/beratungsstelle",
+      "acroform_name": "topmostSubform[0].page1[0].beratungsstelle[0]",
+      "type": "choice",
+      "options": [
+        "Aargau",
+        "Basel",
+        "Bern",
+        "Biel-Bienne",
+        "Fribourg",
+        "Genève",
+        "Jura bernois",
+        "Jura",
+        "Neuchâtel",
+        "Oberwallis",
+        "Ostschweiz",
+        "Schaffhausen",
+        "Solothurn",
+        "Ticino",
+        "Valais",
+        "Vaud",
+        "Zentral-Südost",
+        "Zug",
+        "Zürich"
+      ]
+    }
+  ]
+}

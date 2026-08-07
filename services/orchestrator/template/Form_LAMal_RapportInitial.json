@@ -1,0 +1,1051 @@
+{
+  "_generated_from": "medforms.40.20.40.5010_fr.pdf",
+  "_reviewed": false,
+  "fields": [
+    {
+      "comments": "Section 1 — page1"
+    },
+    {
+      "id": "1.1",
+      "name": "lastName",
+      "label": "lastName",
+      "question": "Quel est le nom de famille du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/lastName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].lastName[0]"
+    },
+    {
+      "id": "1.2",
+      "name": "firstName",
+      "label": "firstName",
+      "question": "Quel est le prénom du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/firstName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].firstName[0]"
+    },
+    {
+      "id": "1.3",
+      "name": "street",
+      "label": "street",
+      "question": "Quelle est la rue et le numéro de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/street",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].street[0]"
+    },
+    {
+      "id": "1.4",
+      "name": "zip",
+      "label": "zip",
+      "question": "Quel est le code postal (NPA) de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/zip",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].zip[0]"
+    },
+    {
+      "id": "1.5",
+      "name": "city",
+      "label": "city",
+      "question": "Quelle est la localité de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/city",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].city[0]"
+    },
+    {
+      "id": "1.6",
+      "name": "birthDate",
+      "label": "birthDate",
+      "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/birthDate",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].birthDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.7",
+      "name": "sex",
+      "label": "sex",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/sex",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].sex[0]",
+      "type": "sex",
+      "options": [
+        "M",
+        "F"
+      ]
+    },
+    {
+      "id": "1.8",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.9",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].email[0]"
+    },
+    {
+      "id": "1.10",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
+    },
+    {
+      "id": "1.11",
+      "name": "companyName",
+      "label": "companyName",
+      "question": "Quel est le nom de l'entreprise ou de l'institution de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/companyName",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].companyName[0]"
+    },
+    {
+      "id": "1.12",
+      "name": "departmentName",
+      "label": "departmentName",
+      "question": "Quel est le nom du service ou du département de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/departmentName",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].departmentName[0]"
+    },
+    {
+      "id": "1.13",
+      "name": "street",
+      "label": "street",
+      "question": "Quelle est la rue et le numéro de l'adresse de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/street",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].street[0]"
+    },
+    {
+      "id": "1.14",
+      "name": "zip",
+      "label": "zip",
+      "question": "Quel est le code postal (NPA) de l'adresse de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/zip",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].zip[0]"
+    },
+    {
+      "id": "1.15",
+      "name": "city",
+      "label": "city",
+      "question": "Quelle est la localité de l'adresse de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/city",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].city[0]"
+    },
+    {
+      "id": "1.16",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.17",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].email[0]"
+    },
+    {
+      "id": "1.18",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].input[0]"
+    },
+    {
+      "id": "1.19",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.20",
+      "name": "type",
+      "label": "type",
+      "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "LAMal",
+        "LCA"
+      ]
+    },
+    {
+      "id": "1.21",
+      "name": "caseID",
+      "label": "caseID",
+      "question": "Quel est le numéro de dossier ou de sinistre ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseID[0]"
+    },
+    {
+      "id": "1.22",
+      "name": "caseDate",
+      "label": "caseDate",
+      "question": "Quelle est la date de l'événement assuré (accident, sinistre) ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseDate",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.23",
+      "name": "insuredID",
+      "label": "insuredID",
+      "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/insuredID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
+    },
+    {
+      "id": "1.24",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.25",
+      "name": "firstTreatmentCity",
+      "label": "firstTreatmentCity",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/firstTreatmentCity",
+      "acroform_name": "topmostSubform[0].page1[0].firstTreatmentCity[0]"
+    },
+    {
+      "id": "1.26",
+      "name": "firstTreatmentTime",
+      "label": "firstTreatmentTime",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/firstTreatmentTime",
+      "acroform_name": "topmostSubform[0].page1[0].firstTreatmentTime[0]"
+    },
+    {
+      "id": "1.27",
+      "name": "firstTreatmentDate",
+      "label": "firstTreatmentDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/firstTreatmentDate",
+      "acroform_name": "topmostSubform[0].page1[0].firstTreatmentDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.28",
+      "name": "firstTreatmentDoctor",
+      "label": "firstTreatmentDoctor",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/firstTreatmentDoctor",
+      "acroform_name": "topmostSubform[0].page1[0].firstTreatmentDoctor[0]"
+    },
+    {
+      "id": "1.29",
+      "name": "firstTreatmentSpeciality",
+      "label": "firstTreatmentSpeciality",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/firstTreatmentSpeciality",
+      "acroform_name": "topmostSubform[0].page1[0].firstTreatmentSpeciality[0]"
+    },
+    {
+      "id": "1.30",
+      "name": "workHours",
+      "label": "workHours",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/workHours",
+      "acroform_name": "topmostSubform[0].page1[0].workHours[0]"
+    },
+    {
+      "id": "1.31",
+      "name": "profession",
+      "label": "profession",
+      "question": "Quelle est la profession exercée par le patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/profession",
+      "acroform_name": "topmostSubform[0].page1[0].profession[0]"
+    },
+    {
+      "id": "1.32",
+      "name": "reason",
+      "label": "reason",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/reason",
+      "acroform_name": "topmostSubform[0].page1[0].reason[0]"
+    },
+    {
+      "id": "1.33",
+      "name": "pregnancyDueDate",
+      "label": "pregnancyDueDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/pregnancyDueDate",
+      "acroform_name": "topmostSubform[0].page1[0].pregnancyDueDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.34",
+      "name": "firstIncidence",
+      "label": "firstIncidence",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/firstIncidence",
+      "acroform_name": "topmostSubform[0].page1[0].firstIncidence[0]"
+    },
+    {
+      "id": "1.35",
+      "name": "previousTreatments",
+      "label": "previousTreatments",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/previousTreatments",
+      "acroform_name": "topmostSubform[0].page1[0].previousTreatments[0]"
+    },
+    {
+      "id": "1.36",
+      "name": "hasPreviousTreatments",
+      "label": "hasPreviousTreatments",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/hasPreviousTreatments",
+      "acroform_name": "topmostSubform[0].page1[0].hasPreviousTreatments[0]"
+    },
+    {
+      "id": "1.37",
+      "name": "nationality",
+      "label": "nationality",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/nationality",
+      "acroform_name": "topmostSubform[0].page1[0].nationality[0]"
+    },
+    {
+      "id": "1.38",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète de l'assureur (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "1.39",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].email[0]"
+    },
+    {
+      "id": "1.40",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.41",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
+    },
+    {
+      "id": "1.42",
+      "name": "insuranceSelector",
+      "label": "insuranceSelector",
+      "question": "Quel est le nom de l'assureur qui prend en charge le cas ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceSelector",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceSelector[0]",
+      "type": "choice",
+      "options": [
+        "Sélectionner l'assureur...",
+        "0"
+      ]
+    },
+    {
+      "comments": "Section 2 — page2"
+    },
+    {
+      "id": "2.1",
+      "name": "previousTherapies",
+      "label": "previousTherapies",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/previousTherapies",
+      "acroform_name": "topmostSubform[0].page2[0].previousTherapies[0]"
+    },
+    {
+      "id": "2.2",
+      "name": "patientIndications",
+      "label": "patientIndications",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/patientIndications",
+      "acroform_name": "topmostSubform[0].page2[0].patientIndications[0]"
+    },
+    {
+      "id": "2.3",
+      "name": "previousDiseases",
+      "label": "previousDiseases",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/previousDiseases",
+      "acroform_name": "topmostSubform[0].page2[0].previousDiseases[0]"
+    },
+    {
+      "id": "2.4",
+      "name": "anamnesisOther",
+      "label": "anamnesisOther",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/anamnesisOther",
+      "acroform_name": "topmostSubform[0].page2[0].anamnesisOther[0]"
+    },
+    {
+      "id": "2.5",
+      "name": "morphologicalDamage",
+      "label": "morphologicalDamage",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/morphologicalDamage",
+      "acroform_name": "topmostSubform[0].page2[0].morphologicalDamage[0]"
+    },
+    {
+      "id": "2.6",
+      "name": "functionalDamage",
+      "label": "functionalDamage",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/functionalDamage",
+      "acroform_name": "topmostSubform[0].page2[0].functionalDamage[0]"
+    },
+    {
+      "id": "2.7",
+      "name": "exams",
+      "label": "exams",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/exams",
+      "acroform_name": "topmostSubform[0].page2[0].exams[0]"
+    },
+    {
+      "comments": "Section 3 — page3"
+    },
+    {
+      "id": "3.1",
+      "name": "DiagnosesUnemployabilityRelated",
+      "label": "DiagnosesUnemployabilityRelated",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/DiagnosesUnemployabilityRelated",
+      "acroform_name": "topmostSubform[0].page3[0].DiagnosesUnemployabilityRelated[0]"
+    },
+    {
+      "id": "3.2",
+      "name": "DiagnosesUnemployabilityUnrelated",
+      "label": "DiagnosesUnemployabilityUnrelated",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/DiagnosesUnemployabilityUnrelated",
+      "acroform_name": "topmostSubform[0].page3[0].DiagnosesUnemployabilityUnrelated[0]"
+    },
+    {
+      "id": "3.3",
+      "name": "objectiveLimitation",
+      "label": "objectiveLimitation",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/objectiveLimitation",
+      "acroform_name": "topmostSubform[0].page3[0].objectiveLimitation[0]"
+    },
+    {
+      "id": "3.4",
+      "name": "hasOtherFactors",
+      "label": "hasOtherFactors",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/hasOtherFactors",
+      "acroform_name": "topmostSubform[0].page3[0].hasOtherFactors[0]"
+    },
+    {
+      "id": "3.5",
+      "name": "otherFactors",
+      "label": "otherFactors",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/otherFactors",
+      "acroform_name": "topmostSubform[0].page3[0].otherFactors[0]"
+    },
+    {
+      "id": "3.6",
+      "name": "currentSituation",
+      "label": "currentSituation",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/currentSituation",
+      "acroform_name": "topmostSubform[0].page3[0].currentSituation[0]"
+    },
+    {
+      "id": "3.7",
+      "name": "procedure",
+      "label": "procedure",
+      "question": "Quelle procédure ou intervention a été réalisée ou est prévue ?",
+      "required": false,
+      "xml_path": "topmostSubform/page3/procedure",
+      "acroform_name": "topmostSubform[0].page3[0].procedure[0]"
+    },
+    {
+      "comments": "Section 4 — page4"
+    },
+    {
+      "id": "4.1",
+      "name": "hospitalisationList",
+      "label": "hospitalisationList",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/hospitalisationList",
+      "acroform_name": "topmostSubform[0].page4[0].hospitalisationList[0]"
+    },
+    {
+      "id": "4.2",
+      "name": "hospitalisationChoice",
+      "label": "hospitalisationChoice",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/hospitalisationChoice",
+      "acroform_name": "topmostSubform[0].page4[0].hospitalisationChoice[0]"
+    },
+    {
+      "id": "4.3",
+      "name": "otherInvolvedSpeciality",
+      "label": "otherInvolvedSpeciality",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/otherInvolvedSpeciality",
+      "acroform_name": "topmostSubform[0].page4[0].otherInvolvedSpeciality[0]"
+    },
+    {
+      "id": "4.4",
+      "name": "otherInvolvedDoctor",
+      "label": "otherInvolvedDoctor",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/otherInvolvedDoctor",
+      "acroform_name": "topmostSubform[0].page4[0].otherInvolvedDoctor[0]"
+    },
+    {
+      "id": "4.5",
+      "name": "otherInvolvedCity",
+      "label": "otherInvolvedCity",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/otherInvolvedCity",
+      "acroform_name": "topmostSubform[0].page4[0].otherInvolvedCity[0]"
+    },
+    {
+      "id": "4.6",
+      "name": "otherInvolvedDate",
+      "label": "otherInvolvedDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/otherInvolvedDate",
+      "acroform_name": "topmostSubform[0].page4[0].otherInvolvedDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.7",
+      "name": "date",
+      "label": "date",
+      "question": "Quelle est la date concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct/date",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[0].date[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.8",
+      "name": "percentWorkload",
+      "label": "percentWorkload",
+      "question": "Quel est le taux d'activité, en pourcentage ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct/percentWorkload",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[0].percentWorkload[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.9",
+      "name": "dailyWorktime",
+      "label": "dailyWorktime",
+      "question": "Quel est le temps de travail quotidien, en heures ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct/dailyWorktime",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[0].dailyWorktime[0]",
+      "type": "int"
+    },
+    {
+      "id": "4.10",
+      "name": "percentageNum",
+      "label": "percentageNum",
+      "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct/percentageNum",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[0].percentageNum[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.11",
+      "name": "beginDate",
+      "label": "beginDate",
+      "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct/beginDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[0].beginDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.12",
+      "name": "endDate",
+      "label": "endDate",
+      "question": "Quelle est la date de fin de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct/endDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[0].endDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.13",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct/input",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[0].input[0]"
+    },
+    {
+      "id": "4.14",
+      "name": "date",
+      "label": "date",
+      "question": "Quelle est la date concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[1]/date",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[1].date[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.15",
+      "name": "percentWorkload",
+      "label": "percentWorkload",
+      "question": "Quel est le taux d'activité, en pourcentage ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[1]/percentWorkload",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[1].percentWorkload[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.16",
+      "name": "dailyWorktime",
+      "label": "dailyWorktime",
+      "question": "Quel est le temps de travail quotidien, en heures ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[1]/dailyWorktime",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[1].dailyWorktime[0]",
+      "type": "int"
+    },
+    {
+      "id": "4.17",
+      "name": "percentageNum",
+      "label": "percentageNum",
+      "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[1]/percentageNum",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[1].percentageNum[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.18",
+      "name": "beginDate",
+      "label": "beginDate",
+      "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[1]/beginDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[1].beginDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.19",
+      "name": "endDate",
+      "label": "endDate",
+      "question": "Quelle est la date de fin de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[1]/endDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[1].endDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.20",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[1]/input",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[1].input[0]"
+    },
+    {
+      "id": "4.21",
+      "name": "date",
+      "label": "date",
+      "question": "Quelle est la date concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[2]/date",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[2].date[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.22",
+      "name": "percentWorkload",
+      "label": "percentWorkload",
+      "question": "Quel est le taux d'activité, en pourcentage ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[2]/percentWorkload",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[2].percentWorkload[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.23",
+      "name": "dailyWorktime",
+      "label": "dailyWorktime",
+      "question": "Quel est le temps de travail quotidien, en heures ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[2]/dailyWorktime",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[2].dailyWorktime[0]",
+      "type": "int"
+    },
+    {
+      "id": "4.24",
+      "name": "percentageNum",
+      "label": "percentageNum",
+      "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[2]/percentageNum",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[2].percentageNum[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.25",
+      "name": "beginDate",
+      "label": "beginDate",
+      "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[2]/beginDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[2].beginDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.26",
+      "name": "endDate",
+      "label": "endDate",
+      "question": "Quelle est la date de fin de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[2]/endDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[2].endDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.27",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[2]/input",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[2].input[0]"
+    },
+    {
+      "id": "4.28",
+      "name": "date",
+      "label": "date",
+      "question": "Quelle est la date concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[3]/date",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[3].date[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.29",
+      "name": "percentWorkload",
+      "label": "percentWorkload",
+      "question": "Quel est le taux d'activité, en pourcentage ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[3]/percentWorkload",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[3].percentWorkload[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.30",
+      "name": "dailyWorktime",
+      "label": "dailyWorktime",
+      "question": "Quel est le temps de travail quotidien, en heures ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[3]/dailyWorktime",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[3].dailyWorktime[0]",
+      "type": "int"
+    },
+    {
+      "id": "4.31",
+      "name": "percentageNum",
+      "label": "percentageNum",
+      "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[3]/percentageNum",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[3].percentageNum[0]",
+      "type": "percent"
+    },
+    {
+      "id": "4.32",
+      "name": "beginDate",
+      "label": "beginDate",
+      "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[3]/beginDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[3].beginDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.33",
+      "name": "endDate",
+      "label": "endDate",
+      "question": "Quelle est la date de fin de la période concernée ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[3]/endDate",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[3].endDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.34",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/unemployabilityS1Struct[3]/input",
+      "acroform_name": "topmostSubform[0].page4[0].unemployabilityS1Struct[3].input[0]"
+    },
+    {
+      "id": "4.35",
+      "name": "returnToWorkFrom",
+      "label": "returnToWorkFrom",
+      "question": "À partir de quelle date le patient peut-il reprendre le travail ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/returnToWorkFrom",
+      "acroform_name": "topmostSubform[0].page4[0].returnToWorkFrom[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.36",
+      "name": "returnToWorkInWeeks",
+      "label": "returnToWorkInWeeks",
+      "question": "Dans combien de semaines une reprise du travail est-elle envisageable ? Répondre par le nombre seul.",
+      "required": false,
+      "xml_path": "topmostSubform/page4/returnToWorkInWeeks",
+      "acroform_name": "topmostSubform[0].page4[0].returnToWorkInWeeks[0]",
+      "type": "int"
+    },
+    {
+      "id": "4.37",
+      "name": "hoursPerDayPlanned",
+      "label": "hoursPerDayPlanned",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/hoursPerDayPlanned",
+      "acroform_name": "topmostSubform[0].page4[0].hoursPerDayPlanned[0]"
+    },
+    {
+      "id": "4.38",
+      "name": "hoursPerDayFixed",
+      "label": "hoursPerDayFixed",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/hoursPerDayFixed",
+      "acroform_name": "topmostSubform[0].page4[0].hoursPerDayFixed[0]"
+    },
+    {
+      "id": "4.39",
+      "name": "returnBeforeWeekend",
+      "label": "returnBeforeWeekend",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/returnBeforeWeekend",
+      "acroform_name": "topmostSubform[0].page4[0].returnBeforeWeekend[0]"
+    },
+    {
+      "id": "4.40",
+      "name": "treatmentDateList",
+      "label": "treatmentDateList",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/treatmentDateList",
+      "acroform_name": "topmostSubform[0].page4[0].treatmentDateList[0]"
+    },
+    {
+      "id": "4.41",
+      "name": "nextTreatmentDate",
+      "label": "nextTreatmentDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/nextTreatmentDate",
+      "acroform_name": "topmostSubform[0].page4[0].nextTreatmentDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.42",
+      "name": "hasOtherInsurer",
+      "label": "hasOtherInsurer",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/hasOtherInsurer",
+      "acroform_name": "topmostSubform[0].page4[0].hasOtherInsurer[0]"
+    },
+    {
+      "id": "4.43",
+      "name": "otherInsurerList",
+      "label": "otherInsurerList",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page4/otherInsurerList",
+      "acroform_name": "topmostSubform[0].page4[0].otherInsurerList[0]"
+    },
+    {
+      "comments": "Section 5 — page5"
+    },
+    {
+      "id": "5.1",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète du médecin traitant (fournisseur de prestations) (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/providerS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page5[0].providerS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "5.2",
+      "name": "fax",
+      "label": "fax",
+      "question": "Quel est le numéro de fax du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/providerS1Address/fax",
+      "acroform_name": "topmostSubform[0].page5[0].providerS1Address[0].fax[0]"
+    },
+    {
+      "id": "5.3",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/providerS1Address/phone",
+      "acroform_name": "topmostSubform[0].page5[0].providerS1Address[0].phone[0]"
+    },
+    {
+      "id": "5.4",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/providerS1Address/email",
+      "acroform_name": "topmostSubform[0].page5[0].providerS1Address[0].email[0]"
+    },
+    {
+      "id": "5.5",
+      "name": "zsr",
+      "label": "zsr",
+      "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/providerS1Address/zsr",
+      "acroform_name": "topmostSubform[0].page5[0].providerS1Address[0].zsr[0]"
+    },
+    {
+      "id": "5.6",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/providerS1Address/ean",
+      "acroform_name": "topmostSubform[0].page5[0].providerS1Address[0].ean[0]"
+    },
+    {
+      "id": "5.7",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/providerS1Address/input",
+      "acroform_name": "topmostSubform[0].page5[0].providerS1Address[0].input[0]"
+    },
+    {
+      "id": "5.8",
+      "name": "modificationDate",
+      "label": "modificationDate",
+      "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page5/formS1Struct/modificationDate",
+      "acroform_name": "topmostSubform[0].page5[0].formS1Struct[0].modificationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "5.9",
+      "name": "creationDate",
+      "label": "creationDate",
+      "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page5/formS1Struct/creationDate",
+      "acroform_name": "topmostSubform[0].page5[0].formS1Struct[0].creationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "5.10",
+      "name": "comment",
+      "label": "comment",
+      "question": "Y a-t-il un commentaire à ajouter ?",
+      "required": false,
+      "xml_path": "topmostSubform/page5/comment",
+      "acroform_name": "topmostSubform[0].page5[0].comment[0]"
+    }
+  ]
+}

@@ -1,0 +1,661 @@
+{
+  "_generated_from": "medforms.40.40.40.5030_fr.pdf",
+  "_reviewed": false,
+  "fields": [
+    {
+      "comments": "Section 1 — page1"
+    },
+    {
+      "id": "1.1",
+      "name": "lastName",
+      "label": "lastName",
+      "question": "Quel est le nom de famille du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/lastName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].lastName[0]"
+    },
+    {
+      "id": "1.2",
+      "name": "firstName",
+      "label": "firstName",
+      "question": "Quel est le prénom du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/firstName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].firstName[0]"
+    },
+    {
+      "id": "1.3",
+      "name": "street",
+      "label": "street",
+      "question": "Quelle est la rue et le numéro de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/street",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].street[0]"
+    },
+    {
+      "id": "1.4",
+      "name": "zip",
+      "label": "zip",
+      "question": "Quel est le code postal (NPA) de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/zip",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].zip[0]"
+    },
+    {
+      "id": "1.5",
+      "name": "city",
+      "label": "city",
+      "question": "Quelle est la localité de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/city",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].city[0]"
+    },
+    {
+      "id": "1.6",
+      "name": "birthDate",
+      "label": "birthDate",
+      "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/birthDate",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].birthDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.7",
+      "name": "sex",
+      "label": "sex",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/sex",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].sex[0]",
+      "type": "sex",
+      "options": [
+        "M",
+        "F"
+      ]
+    },
+    {
+      "id": "1.8",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.9",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].email[0]"
+    },
+    {
+      "id": "1.10",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
+    },
+    {
+      "id": "1.11",
+      "name": "patientLessThan60",
+      "label": "patientLessThan60",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientLessThan60",
+      "acroform_name": "topmostSubform[0].page1[0].patientLessThan60[0]"
+    },
+    {
+      "id": "1.12",
+      "name": "patientMoreThan60",
+      "label": "patientMoreThan60",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientMoreThan60",
+      "acroform_name": "topmostSubform[0].page1[0].patientMoreThan60[0]"
+    },
+    {
+      "id": "1.13",
+      "name": "accidentTime",
+      "label": "accidentTime",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/accidentTime",
+      "acroform_name": "topmostSubform[0].page1[0].accidentTime[0]"
+    },
+    {
+      "id": "1.14",
+      "name": "caseDate",
+      "label": "caseDate",
+      "question": "Quelle est la date de l'événement assuré (accident, sinistre) ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseDate",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.15",
+      "name": "type",
+      "label": "type",
+      "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "KVG",
+        "VVG",
+        "UVG"
+      ]
+    },
+    {
+      "id": "1.16",
+      "name": "insuredID",
+      "label": "insuredID",
+      "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/insuredID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
+    },
+    {
+      "id": "1.17",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.18",
+      "name": "originator",
+      "label": "originator",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/originator",
+      "acroform_name": "topmostSubform[0].page1[0].originator[0]"
+    },
+    {
+      "id": "1.19",
+      "name": "asPassenger",
+      "label": "Occupant d’un véhicule automobile",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/asPassenger",
+      "acroform_name": "topmostSubform[0].page1[0].asPassenger[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.20",
+      "name": "asCyclist",
+      "label": "Cycliste",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/asCyclist",
+      "acroform_name": "topmostSubform[0].page1[0].asCyclist[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.21",
+      "name": "asBiker",
+      "label": "Motocycliste",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/asBiker",
+      "acroform_name": "topmostSubform[0].page1[0].asBiker[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.22",
+      "name": "asPedestrian",
+      "label": "Piéton",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/asPedestrian",
+      "acroform_name": "topmostSubform[0].page1[0].asPedestrian[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.23",
+      "name": "asUnknown",
+      "label": "Indéfini",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/asUnknown",
+      "acroform_name": "topmostSubform[0].page1[0].asUnknown[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.24",
+      "name": "asFall",
+      "label": "Chute",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/asFall",
+      "acroform_name": "topmostSubform[0].page1[0].asFall[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.25",
+      "name": "asOtherAccident",
+      "label": "Autre accident",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/asOtherAccident",
+      "acroform_name": "topmostSubform[0].page1[0].asOtherAccident[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.26",
+      "name": "courseOfAccident",
+      "label": "courseOfAccident",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/courseOfAccident",
+      "acroform_name": "topmostSubform[0].page1[0].courseOfAccident[0]"
+    },
+    {
+      "id": "1.27",
+      "name": "criticalAccident",
+      "label": "criticalAccident",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/criticalAccident",
+      "acroform_name": "topmostSubform[0].page1[0].criticalAccident[0]"
+    },
+    {
+      "id": "1.28",
+      "name": "coagulationDisorder",
+      "label": "coagulationDisorder",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/coagulationDisorder",
+      "acroform_name": "topmostSubform[0].page1[0].coagulationDisorder[0]"
+    },
+    {
+      "id": "1.29",
+      "name": "unconsciousness",
+      "label": "unconsciousness",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unconsciousness",
+      "acroform_name": "topmostSubform[0].page1[0].unconsciousness[0]"
+    },
+    {
+      "id": "1.30",
+      "name": "unconsciousnessDuration",
+      "label": "unconsciousnessDuration",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unconsciousnessDuration",
+      "acroform_name": "topmostSubform[0].page1[0].unconsciousnessDuration[0]"
+    },
+    {
+      "id": "1.31",
+      "name": "anterogradeAnmnesia",
+      "label": "anterogradeAnmnesia",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/anterogradeAnmnesia",
+      "acroform_name": "topmostSubform[0].page1[0].anterogradeAnmnesia[0]"
+    },
+    {
+      "id": "1.32",
+      "name": "posttraumaticAnmnesia",
+      "label": "posttraumaticAnmnesia",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/posttraumaticAnmnesia",
+      "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesia[0]"
+    },
+    {
+      "id": "1.33",
+      "name": "posttraumaticAnmnesiaDuration1",
+      "label": "Durée: 2-4 h (= Minor RF)",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/posttraumaticAnmnesiaDuration1",
+      "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesiaDuration1[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.34",
+      "name": "posttraumaticAnmnesiaDuration2",
+      "label": "Durée: > 4 h (= Major RF)",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/posttraumaticAnmnesiaDuration2",
+      "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesiaDuration2[0]",
+      "type": "bool",
+      "options": [
+        "On",
+        "Off"
+      ]
+    },
+    {
+      "id": "1.35",
+      "name": "epilepsy",
+      "label": "epilepsy",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/epilepsy",
+      "acroform_name": "topmostSubform[0].page1[0].epilepsy[0]"
+    },
+    {
+      "id": "1.36",
+      "name": "epilepsyDetails",
+      "label": "epilepsyDetails",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/epilepsyDetails",
+      "acroform_name": "topmostSubform[0].page1[0].epilepsyDetails[0]"
+    },
+    {
+      "id": "1.37",
+      "name": "vomiting",
+      "label": "vomiting",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/vomiting",
+      "acroform_name": "topmostSubform[0].page1[0].vomiting[0]"
+    },
+    {
+      "id": "1.38",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète de l'assureur (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "1.39",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].email[0]"
+    },
+    {
+      "id": "1.40",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.41",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
+    },
+    {
+      "id": "1.42",
+      "name": "insuranceSelector",
+      "label": "insuranceSelector",
+      "question": "Quel est le nom de l'assureur qui prend en charge le cas ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceSelector",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceSelector[0]",
+      "type": "choice",
+      "options": [
+        "Sélectionner l'assureur...",
+        "0"
+      ]
+    },
+    {
+      "id": "1.43",
+      "name": "examinationDate",
+      "label": "examinationDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/examinationDate",
+      "acroform_name": "topmostSubform[0].page1[0].examinationDate[0]",
+      "type": "date"
+    },
+    {
+      "comments": "Section 2 — page2"
+    },
+    {
+      "id": "2.1",
+      "name": "glasgowEyes",
+      "label": "glasgowEyes",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/glasgowEyes",
+      "acroform_name": "topmostSubform[0].page2[0].glasgowEyes[0]"
+    },
+    {
+      "id": "2.2",
+      "name": "glasgowVerbal",
+      "label": "glasgowVerbal",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/glasgowVerbal",
+      "acroform_name": "topmostSubform[0].page2[0].glasgowVerbal[0]"
+    },
+    {
+      "id": "2.3",
+      "name": "glasgowMovement",
+      "label": "glasgowMovement",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/glasgowMovement",
+      "acroform_name": "topmostSubform[0].page2[0].glasgowMovement[0]"
+    },
+    {
+      "id": "2.4",
+      "name": "focalDeficit",
+      "label": "focalDeficit",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/focalDeficit",
+      "acroform_name": "topmostSubform[0].page2[0].focalDeficit[0]"
+    },
+    {
+      "id": "2.5",
+      "name": "cranialContusion",
+      "label": "cranialContusion",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/cranialContusion",
+      "acroform_name": "topmostSubform[0].page2[0].cranialContusion[0]"
+    },
+    {
+      "id": "2.6",
+      "name": "cranialFracture",
+      "label": "cranialFracture",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/cranialFracture",
+      "acroform_name": "topmostSubform[0].page2[0].cranialFracture[0]"
+    },
+    {
+      "id": "2.7",
+      "name": "classification",
+      "label": "classification",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/classification",
+      "acroform_name": "topmostSubform[0].page2[0].classification[0]"
+    },
+    {
+      "id": "2.8",
+      "name": "focalDeficits",
+      "label": "focalDeficits",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page2/focalDeficits",
+      "acroform_name": "topmostSubform[0].page2[0].focalDeficits[0]"
+    },
+    {
+      "comments": "Section 3 — page3"
+    },
+    {
+      "id": "3.1",
+      "name": "sectionEChoice",
+      "label": "sectionEChoice",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/sectionEChoice",
+      "acroform_name": "topmostSubform[0].page3[0].sectionEChoice[0]"
+    },
+    {
+      "id": "3.2",
+      "name": "sectionEDate",
+      "label": "sectionEDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/sectionEDate",
+      "acroform_name": "topmostSubform[0].page3[0].sectionEDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "3.3",
+      "name": "sectionELocation",
+      "label": "sectionELocation",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page3/sectionELocation",
+      "acroform_name": "topmostSubform[0].page3[0].sectionELocation[0]"
+    },
+    {
+      "comments": "Section 4 — page4"
+    },
+    {
+      "id": "4.1",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète du médecin traitant (fournisseur de prestations) (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/providerS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page4[0].providerS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "4.2",
+      "name": "fax",
+      "label": "fax",
+      "question": "Quel est le numéro de fax du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/providerS1Address/fax",
+      "acroform_name": "topmostSubform[0].page4[0].providerS1Address[0].fax[0]"
+    },
+    {
+      "id": "4.3",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/providerS1Address/phone",
+      "acroform_name": "topmostSubform[0].page4[0].providerS1Address[0].phone[0]"
+    },
+    {
+      "id": "4.4",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/providerS1Address/email",
+      "acroform_name": "topmostSubform[0].page4[0].providerS1Address[0].email[0]"
+    },
+    {
+      "id": "4.5",
+      "name": "zsr",
+      "label": "zsr",
+      "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/providerS1Address/zsr",
+      "acroform_name": "topmostSubform[0].page4[0].providerS1Address[0].zsr[0]"
+    },
+    {
+      "id": "4.6",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/providerS1Address/ean",
+      "acroform_name": "topmostSubform[0].page4[0].providerS1Address[0].ean[0]"
+    },
+    {
+      "id": "4.7",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/providerS1Address/input",
+      "acroform_name": "topmostSubform[0].page4[0].providerS1Address[0].input[0]"
+    },
+    {
+      "id": "4.8",
+      "name": "modificationDate",
+      "label": "modificationDate",
+      "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/formS1Struct/modificationDate",
+      "acroform_name": "topmostSubform[0].page4[0].formS1Struct[0].modificationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.9",
+      "name": "creationDate",
+      "label": "creationDate",
+      "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page4/formS1Struct/creationDate",
+      "acroform_name": "topmostSubform[0].page4[0].formS1Struct[0].creationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.10",
+      "name": "comment",
+      "label": "comment",
+      "question": "Y a-t-il un commentaire à ajouter ?",
+      "required": false,
+      "xml_path": "topmostSubform/page4/comment",
+      "acroform_name": "topmostSubform[0].page4[0].comment[0]"
+    }
+  ]
+}

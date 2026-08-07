@@ -1,0 +1,655 @@
+{
+  "_generated_from": "medforms.40.40.5210_fr.pdf",
+  "_reviewed": false,
+  "fields": [
+    {
+      "comments": "Section 1 — page1"
+    },
+    {
+      "id": "1.1",
+      "name": "lastName",
+      "label": "lastName",
+      "question": "Quel est le nom de famille du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/lastName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].lastName[0]"
+    },
+    {
+      "id": "1.2",
+      "name": "firstName",
+      "label": "firstName",
+      "question": "Quel est le prénom du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/firstName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].firstName[0]"
+    },
+    {
+      "id": "1.3",
+      "name": "birthDate",
+      "label": "birthDate",
+      "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/birthDate",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].birthDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.4",
+      "name": "sex",
+      "label": "sex",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/sex",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].sex[0]",
+      "type": "sex",
+      "options": [
+        "M",
+        "F"
+      ]
+    },
+    {
+      "id": "1.5",
+      "name": "street",
+      "label": "street",
+      "question": "Quelle est la rue et le numéro de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/street",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].street[0]"
+    },
+    {
+      "id": "1.6",
+      "name": "zip",
+      "label": "zip",
+      "question": "Quel est le code postal (NPA) de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/zip",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].zip[0]"
+    },
+    {
+      "id": "1.7",
+      "name": "city",
+      "label": "city",
+      "question": "Quelle est la localité de l'adresse du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/city",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].city[0]"
+    },
+    {
+      "id": "1.8",
+      "name": "ssn",
+      "label": "ssn",
+      "question": "Quel est le numéro AVS du patient ? [format : 756.XXXX.XXXX.XX]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/ssn",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].ssn[0]"
+    },
+    {
+      "id": "1.9",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.10",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
+    },
+    {
+      "id": "1.11",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].email[0]"
+    },
+    {
+      "id": "1.12",
+      "name": "type",
+      "label": "type",
+      "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "LCA",
+        "LAA",
+        "LAI",
+        "LAM"
+      ]
+    },
+    {
+      "id": "1.13",
+      "name": "insuredID",
+      "label": "insuredID",
+      "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/insuredID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
+    },
+    {
+      "id": "1.14",
+      "name": "caseID",
+      "label": "caseID",
+      "question": "Quel est le numéro de dossier ou de sinistre ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseID[0]"
+    },
+    {
+      "id": "1.15",
+      "name": "caseDate",
+      "label": "caseDate",
+      "question": "Quelle est la date de l'événement assuré (accident, sinistre) ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseDate",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.16",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.17",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète de l'assureur (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "1.18",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].email[0]"
+    },
+    {
+      "id": "1.19",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.20",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
+    },
+    {
+      "id": "1.21",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète du médecin traitant (fournisseur de prestations) (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "1.22",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.23",
+      "name": "zsr",
+      "label": "zsr",
+      "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/zsr",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].zsr[0]"
+    },
+    {
+      "id": "1.24",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].email[0]"
+    },
+    {
+      "id": "1.25",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.26",
+      "name": "fax",
+      "label": "fax",
+      "question": "Quel est le numéro de fax du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/fax",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].fax[0]"
+    },
+    {
+      "id": "1.27",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/providerS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].input[0]"
+    },
+    {
+      "id": "1.28",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/surgeonS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "1.29",
+      "name": "phone",
+      "label": "phone",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/surgeonS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.30",
+      "name": "fax",
+      "label": "fax",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/surgeonS1Address/fax",
+      "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].fax[0]"
+    },
+    {
+      "id": "1.31",
+      "name": "email",
+      "label": "email",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/surgeonS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].email[0]"
+    },
+    {
+      "id": "1.32",
+      "name": "ean",
+      "label": "ean",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/surgeonS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.33",
+      "name": "zsr",
+      "label": "zsr",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/surgeonS1Address/zsr",
+      "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].zsr[0]"
+    },
+    {
+      "id": "1.34",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/surgeonS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].input[0]"
+    },
+    {
+      "id": "1.35",
+      "name": "modificationDate",
+      "label": "modificationDate",
+      "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/formS1Struct/modificationDate",
+      "acroform_name": "topmostSubform[0].page1[0].formS1Struct[0].modificationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.36",
+      "name": "creationDate",
+      "label": "creationDate",
+      "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/formS1Struct/creationDate",
+      "acroform_name": "topmostSubform[0].page1[0].formS1Struct[0].creationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.37",
+      "name": "condensedName",
+      "label": "condensedName",
+      "question": "Quel est le nom complet de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/condensedName",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].condensedName[0]"
+    },
+    {
+      "id": "1.38",
+      "name": "condensedAddress",
+      "label": "condensedAddress",
+      "question": "Quelle est l'adresse complète de l'employeur (rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/condensedAddress",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].condensedAddress[0]"
+    },
+    {
+      "id": "1.39",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'employeur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employerS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].input[0]"
+    },
+    {
+      "id": "1.40",
+      "name": "treatmentStartDate",
+      "label": "treatmentStartDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/treatmentStartDate",
+      "acroform_name": "topmostSubform[0].page1[0].treatmentStartDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.41",
+      "name": "treatmentEndDate",
+      "label": "treatmentEndDate",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/treatmentEndDate",
+      "acroform_name": "topmostSubform[0].page1[0].treatmentEndDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.42",
+      "name": "name",
+      "label": "name",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/adiagnosisS1Struct/name",
+      "acroform_name": "topmostSubform[0].page1[0].adiagnosisS1Struct[0].name[0]"
+    },
+    {
+      "id": "1.43",
+      "name": "code",
+      "label": "code",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/adiagnosisS1Struct/code",
+      "acroform_name": "topmostSubform[0].page1[0].adiagnosisS1Struct[0].code[0]"
+    },
+    {
+      "id": "1.44",
+      "name": "type",
+      "label": "type",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/adiagnosisS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].adiagnosisS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "ICD",
+        "FreeText"
+      ]
+    },
+    {
+      "id": "1.45",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/adiagnosisS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].adiagnosisS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.46",
+      "name": "name",
+      "label": "name",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/bdiagnosisS1Struct/name",
+      "acroform_name": "topmostSubform[0].page1[0].bdiagnosisS1Struct[0].name[0]"
+    },
+    {
+      "id": "1.47",
+      "name": "code",
+      "label": "code",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/bdiagnosisS1Struct/code",
+      "acroform_name": "topmostSubform[0].page1[0].bdiagnosisS1Struct[0].code[0]"
+    },
+    {
+      "id": "1.48",
+      "name": "type",
+      "label": "type",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/bdiagnosisS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].bdiagnosisS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "ICD",
+        "FreeText"
+      ]
+    },
+    {
+      "id": "1.49",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/bdiagnosisS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].bdiagnosisS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.50",
+      "name": "name",
+      "label": "name",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/name",
+      "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].name[0]"
+    },
+    {
+      "id": "1.51",
+      "name": "code",
+      "label": "code",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/code",
+      "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].code[0]"
+    },
+    {
+      "id": "1.52",
+      "name": "type",
+      "label": "type",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "CHOP",
+        "FreeText"
+      ]
+    },
+    {
+      "id": "1.53",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.54",
+      "name": "name",
+      "label": "name",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ediagnosisS1Struct/name",
+      "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].name[0]"
+    },
+    {
+      "id": "1.55",
+      "name": "code",
+      "label": "code",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ediagnosisS1Struct/code",
+      "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].code[0]"
+    },
+    {
+      "id": "1.56",
+      "name": "type",
+      "label": "type",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ediagnosisS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "CHOP",
+        "FreeText"
+      ]
+    },
+    {
+      "id": "1.57",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/ediagnosisS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.58",
+      "name": "measures",
+      "label": "measures",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/measures",
+      "acroform_name": "topmostSubform[0].page1[0].measures[0]"
+    },
+    {
+      "id": "1.59",
+      "name": "insuranceSelector",
+      "label": "insuranceSelector",
+      "question": "Quel est le nom de l'assureur qui prend en charge le cas ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceSelector",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceSelector[0]",
+      "type": "choice",
+      "options": [
+        "Choisir une assurance...",
+        "Aargauische Gebäudeversicherung AGV",
+        "Agrisano Krankenkasse AG",
+        "Allianz Suisse",
+        "AXA Gesundheitsvorsorge",
+        "AXA Versicherung (UVG / LAA / LAINF)",
+        "Basler Versicherung / Baloise",
+        "Branchen Versicherung Schweiz",
+        "Elips Versicherungen AG",
+        "Generali",
+        "HDI Global SE",
+        "Helsana Versicherungen AG",
+        "Helvetia Versicherungen",
+        "HOTELA Assurances SA",
+        "Invalidenversicherung IV",
+        "Militärversicherung MV",
+        "Groupe Mutuel Assurances GMA SA",
+        "ÖKK Unfallversicherungen AG (UVG)",
+        "Schweizerische Mobiliar AG",
+        "Société d'assurance dommages FRV SA",
+        "SOLIDA Versicherungen AG",
+        "Suva",
+        "SWICA Versicherungen AG (UVG)",
+        "Sympany Versicherungen AG (UVG)",
+        "Unfallversicherung Stadt Zürich",
+        "Vaudoise Générale",
+        "Visana Services AG (UVG)",
+        "Zürich Versicherungsgesellschaft AG",
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27"
+      ]
+    },
+    {
+      "id": "1.60",
+      "name": "helpICD10",
+      "label": "Codes ICD-10 fréquents",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/helpICD10",
+      "acroform_name": "topmostSubform[0].page1[0].helpICD10[0]"
+    },
+    {
+      "id": "1.61",
+      "name": "helpCHOP9",
+      "label": "Codes CHOP-9 fréquents",
+      "question": "",
+      "required": false,
+      "xml_path": "topmostSubform/page1/helpCHOP9",
+      "acroform_name": "topmostSubform[0].page1[0].helpCHOP9[0]"
+    }
+  ]
+}

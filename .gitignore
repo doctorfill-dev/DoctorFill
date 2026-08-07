@@ -29,3 +29,11 @@ services/orchestrator/results/
 # ── eval & logs
 eval
 services/logs/*.md
+
+# ── Formulaires medForms récupérés par tools/gen_catalog.py ──
+# Les PDF vierges appartiennent à medForms et pèsent ~2 Mo pièce : on versionne
+# la liste (tools/catalog_fr.txt) et les templates dérivés, pas les binaires.
+# Les récupérer avec :
+#   cd services/orchestrator && python -m tools.gen_catalog --list tools/catalog_fr.txt --write
+services/orchestrator/forms/*.pdf
+services/orchestrator/.medforms_cache/

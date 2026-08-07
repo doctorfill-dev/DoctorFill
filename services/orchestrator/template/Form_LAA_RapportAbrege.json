@@ -1,0 +1,393 @@
+{
+  "_generated_from": "medforms.40.40.40.5020_fr.pdf",
+  "_reviewed": true,
+  "fields": [
+    {
+      "comments": "Section 1 — page1"
+    },
+    {
+      "id": "1.1",
+      "name": "lastName",
+      "label": "lastName",
+      "question": "Quel est le nom de famille du patient (et non celui du médecin traitant) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/lastName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].lastName[0]"
+    },
+    {
+      "id": "1.2",
+      "name": "firstName",
+      "label": "firstName",
+      "question": "Quel est le prénom du patient (et non celui du médecin traitant) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/firstName",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].firstName[0]"
+    },
+    {
+      "id": "1.3",
+      "name": "street",
+      "label": "street",
+      "question": "Quelle est l'adresse (rue et numéro) du domicile du patient (et non l'adresse du cabinet médical) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/street",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].street[0]"
+    },
+    {
+      "id": "1.4",
+      "name": "zip",
+      "label": "zip",
+      "question": "Quel est le code postal (NPA, numéro postal d'acheminement à 4 chiffres) du domicile du patient (et non celui du cabinet médical) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/zip",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].zip[0]"
+    },
+    {
+      "id": "1.5",
+      "name": "city",
+      "label": "city",
+      "question": "Quelle est la localité (ville ou commune) du domicile du patient (et non celle du cabinet médical) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/city",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].city[0]"
+    },
+    {
+      "id": "1.6",
+      "name": "birthDate",
+      "label": "birthDate",
+      "question": "Quelle est la date de naissance du patient au format jj.mm.aaaa ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/birthDate",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].birthDate[0]",
+      "type": "date"
+    },
+    {
+      "comments": "Section 6 — page1"
+    },
+    {
+      "id": "6.1",
+      "name": "sex",
+      "label": "sex",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/sex",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].sex[0]",
+      "type": "sex",
+      "options": [
+        "M",
+        "F"
+      ]
+    },
+    {
+      "id": "1.7",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du patient (et non celui du cabinet médical) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/phone",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[0]"
+    },
+    {
+      "id": "1.8",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du patient (et non celle du médecin traitant) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].email[0]"
+    },
+    {
+      "id": "6.2",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/patientS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
+    },
+    {
+      "id": "6.3",
+      "name": "type",
+      "label": "type",
+      "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base) ou LCA (assurance complémentaire).",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/type",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].type[0]",
+      "type": "choice",
+      "options": [
+        "LaMal",
+        "LCA",
+        "LAA"
+      ]
+    },
+    {
+      "id": "1.9",
+      "name": "caseID",
+      "label": "caseID",
+      "question": "Quel est le numéro de sinistre (numéro de dossier accident/LAA) attribué par l'assureur au cas du patient ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseID[0]"
+    },
+    {
+      "id": "6.4",
+      "name": "caseDate",
+      "label": "caseDate",
+      "question": "Quelle est la date de l'événement assuré (accident, sinistre) ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/caseDate",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "6.5",
+      "name": "insuredID",
+      "label": "insuredID",
+      "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/insuredID",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
+    },
+    {
+      "id": "6.6",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une précision à apporter sur la couverture d'assurance (régime applicable, réserve, prise en charge particulière) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/lawS1Struct/input",
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.10",
+      "name": "treatmentDate",
+      "label": "treatmentDate",
+      "question": "Quelle est la date du premier traitement médical du patient suite à l'accident, au format jj.mm.aaaa ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/treatmentDate",
+      "acroform_name": "topmostSubform[0].page1[0].treatmentDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "1.11",
+      "name": "workingHours",
+      "label": "workingHours",
+      "question": "Quel est le temps de travail habituel du patient, exprimé en heures par jour (h/j), avant l'accident ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/workingHours",
+      "acroform_name": "topmostSubform[0].page1[0].workingHours[0]"
+    },
+    {
+      "comments": "Section 2 — page1"
+    },
+    {
+      "id": "2.1",
+      "name": "diag4Unemployability",
+      "label": "diag4Unemployability",
+      "question": "Quels sont TOUS les diagnostics médicaux posés pour le patient en lien avec l'accident (lésions, fractures, contusions, atteintes) ? Lister chaque diagnostic avec son code CIM-10 si disponible.",
+      "required": false,
+      "xml_path": "topmostSubform/page1/diag4Unemployability",
+      "acroform_name": "topmostSubform[0].page1[0].diag4Unemployability[0]"
+    },
+    {
+      "id": "6.7",
+      "name": "employmentType",
+      "label": "employmentType",
+      "question": "Quel est le type d'activité professionnelle exercée par le patient (salarié, indépendant, sans emploi, en formation) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/employmentType",
+      "acroform_name": "topmostSubform[0].page1[0].employmentType[0]"
+    },
+    {
+      "comments": "Section 3 — page1"
+    },
+    {
+      "id": "3.1",
+      "name": "unemployabilityStartDate",
+      "label": "unemployabilityStartDate",
+      "question": "Quelle est la date de début de l'incapacité de travail du patient suite à l'accident, au format jj.mm.aaaa ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unemployabilityStartDate",
+      "acroform_name": "topmostSubform[0].page1[0].unemployabilityStartDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "3.2",
+      "name": "unemployabilityDegree",
+      "label": "unemployabilityDegree",
+      "question": "Quel est le degré d'incapacité de travail du patient, exprimé en pourcentage (%) ? Répondre par un chiffre seul (ex. : 50 ou 100). Ne pas confondre avec des valeurs de tests médicaux.",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unemployabilityDegree",
+      "acroform_name": "topmostSubform[0].page1[0].unemployabilityDegree[0]",
+      "type": "percent"
+    },
+    {
+      "comments": "Section 4 — page1"
+    },
+    {
+      "id": "4.1",
+      "name": "remarks4EmployabilityStart",
+      "label": "remarks4EmployabilityStart",
+      "question": "Y a-t-il une remarque concernant la reprise de travail prévue du patient ? Si oui, indiquer la date ou les conditions de reprise envisagées par le médecin.",
+      "required": false,
+      "xml_path": "topmostSubform/page1/remarks4EmployabilityStart",
+      "acroform_name": "topmostSubform[0].page1[0].remarks4EmployabilityStart[0]"
+    },
+    {
+      "id": "6.8",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelle est l'adresse postale complète de l'assureur (nom, rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "6.9",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/email",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].email[0]"
+    },
+    {
+      "id": "6.10",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/ean",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
+    },
+    {
+      "id": "6.11",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceS1Address/input",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
+    },
+    {
+      "id": "6.12",
+      "name": "insuranceSelector",
+      "label": "insuranceSelector",
+      "question": "Quel est le nom de l'assureur qui prend en charge le cas ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/insuranceSelector",
+      "acroform_name": "topmostSubform[0].page1[0].insuranceSelector[0]",
+      "type": "choice",
+      "options": [
+        "Sélectionner l'assureur...",
+        "0"
+      ]
+    },
+    {
+      "id": "4.2",
+      "name": "unemployabilityEndDate",
+      "label": "unemployabilityEndDate",
+      "question": "Quelle est la date de fin prévue de l'incapacité de travail du patient, au format jj.mm.aaaa, si elle est connue ou estimée par le médecin ?",
+      "required": false,
+      "xml_path": "topmostSubform/page1/unemployabilityEndDate",
+      "acroform_name": "topmostSubform[0].page1[0].unemployabilityEndDate[0]",
+      "type": "date"
+    },
+    {
+      "comments": "Section 5 — page2"
+    },
+    {
+      "id": "5.1",
+      "name": "blockAddress",
+      "label": "blockAddress",
+      "question": "Quelles sont les coordonnées complètes du médecin traitant (et non celles du patient) : nom, prénom, adresse du cabinet, NPA et localité ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/blockAddress",
+      "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].blockAddress[0]"
+    },
+    {
+      "id": "5.2",
+      "name": "fax",
+      "label": "fax",
+      "question": "Quel est le numéro de fax du cabinet du médecin traitant ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/fax",
+      "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].fax[0]"
+    },
+    {
+      "id": "5.3",
+      "name": "phone",
+      "label": "phone",
+      "question": "Quel est le numéro de téléphone du cabinet du médecin traitant (et non celui du patient) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/phone",
+      "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].phone[0]"
+    },
+    {
+      "id": "5.4",
+      "name": "email",
+      "label": "email",
+      "question": "Quelle est l'adresse e-mail du médecin traitant (et non celle du patient) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/email",
+      "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].email[0]"
+    },
+    {
+      "id": "5.5",
+      "name": "zsr",
+      "label": "zsr",
+      "question": "Quel est le numéro RCC (aussi appelé ZSR, Zahlstellenregister) du médecin traitant ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/zsr",
+      "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].zsr[0]"
+    },
+    {
+      "id": "5.6",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (Global Location Number, identifiant à 13 chiffres) du médecin traitant ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/ean",
+      "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].ean[0]"
+    },
+    {
+      "comments": "Section 7 — page2"
+    },
+    {
+      "id": "7.1",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/providerS1Address/input",
+      "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].input[0]"
+    },
+    {
+      "id": "5.7",
+      "name": "modificationDate",
+      "label": "modificationDate",
+      "question": "Quelle est la date de rédaction du rapport ou du certificat médical, au format jj.mm.aaaa ?",
+      "required": false,
+      "xml_path": "topmostSubform/page2/formS1Struct/modificationDate",
+      "acroform_name": "topmostSubform[0].page2[0].formS1Struct[0].modificationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "7.2",
+      "name": "creationDate",
+      "label": "creationDate",
+      "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "topmostSubform/page2/formS1Struct/creationDate",
+      "acroform_name": "topmostSubform[0].page2[0].formS1Struct[0].creationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "4.3",
+      "name": "comment",
+      "label": "comment",
+      "question": "Y a-t-il des commentaires supplémentaires du médecin concernant l'évolution clinique, le pronostic ou le traitement du patient ? Résumer les observations médicales complémentaires.",
+      "required": false,
+      "xml_path": "topmostSubform/page2/comment",
+      "acroform_name": "topmostSubform[0].page2[0].comment[0]"
+    }
+  ]
+}

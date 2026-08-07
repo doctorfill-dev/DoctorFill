@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Valeurs de référence pour évaluer la précision du pipeline RAG DoctorFill",
-    "form_id": "AVS",
+    "form_id": "AI_ReadaptationRente",
     "patient": "Patient fictif suisse pour tests"
   },
   "fields": {

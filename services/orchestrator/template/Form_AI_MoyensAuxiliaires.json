@@ -1,0 +1,287 @@
+{
+  "_generated_from": "medforms.40.10.5030_fr.pdf",
+  "_reviewed": false,
+  "fields": [
+    {
+      "comments": "Section 1 — Seite1"
+    },
+    {
+      "id": "1.1",
+      "name": "treatmentCanton",
+      "label": "treatmentCanton",
+      "question": "Dans quel canton suisse le patient est-il traité ? Répondre par le sigle du canton (VD, GE, VS, FR…).",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/treatmentS1Struct/treatmentCanton",
+      "acroform_name": "mutter_dok[0].Seite1[0].treatmentS1Struct[0].treatmentCanton[0]",
+      "type": "choice",
+      "options": [
+        "AG",
+        "AI",
+        "AR",
+        "BE",
+        "BL",
+        "BS",
+        "FR",
+        "GE",
+        "GL",
+        "GR",
+        "JU",
+        "LU",
+        "NE",
+        "NW",
+        "OW",
+        "SG",
+        "SH",
+        "SO",
+        "SZ",
+        "TG",
+        "TI",
+        "UR",
+        "VD",
+        "VS",
+        "ZG",
+        "ZH",
+        "LI"
+      ]
+    },
+    {
+      "id": "1.2",
+      "name": "input",
+      "label": "input",
+      "question": "",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/treatmentS1Struct/input",
+      "acroform_name": "mutter_dok[0].Seite1[0].treatmentS1Struct[0].input[0]"
+    },
+    {
+      "id": "1.3",
+      "name": "recipientBlockAddressRight",
+      "label": "recipientBlockAddressRight",
+      "question": "",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/recipientBlockAddressRight",
+      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressRight[0]"
+    },
+    {
+      "id": "1.4",
+      "name": "recipientBlockAddressLeft",
+      "label": "recipientBlockAddressLeft",
+      "question": "",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/recipientBlockAddressLeft",
+      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressLeft[0]"
+    },
+    {
+      "id": "1.5",
+      "name": "companyName",
+      "label": "companyName",
+      "question": "Quel est le nom de l'entreprise ou de l'institution de l'assureur ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/insuranceS1Address/companyName",
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].companyName[0]"
+    },
+    {
+      "id": "1.6",
+      "name": "departmentName",
+      "label": "departmentName",
+      "question": "Quel est le nom du service ou du département de l'assureur ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/insuranceS1Address/departmentName",
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].departmentName[0]"
+    },
+    {
+      "id": "1.7",
+      "name": "street",
+      "label": "street",
+      "question": "Quelle est la rue et le numéro de l'adresse de l'assureur ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/insuranceS1Address/street",
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].street[0]"
+    },
+    {
+      "id": "1.8",
+      "name": "zip",
+      "label": "zip",
+      "question": "Quel est le code postal (NPA) de l'adresse de l'assureur ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/insuranceS1Address/zip",
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].zip[0]"
+    },
+    {
+      "id": "1.9",
+      "name": "city",
+      "label": "city",
+      "question": "Quelle est la localité de l'adresse de l'assureur ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/insuranceS1Address/city",
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].city[0]"
+    },
+    {
+      "id": "1.10",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/insuranceS1Address/ean",
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].ean[0]"
+    },
+    {
+      "id": "1.11",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite1/insuranceS1Address/input",
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].input[0]"
+    },
+    {
+      "comments": "Section 2 — Seite2"
+    },
+    {
+      "id": "2.1",
+      "name": "evaluation",
+      "label": "evaluation",
+      "question": "",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/Block_1_Arztbericht/evaluation",
+      "acroform_name": "mutter_dok[0].Seite2[0].Block_1_Arztbericht[0].evaluation[0]"
+    },
+    {
+      "id": "2.2",
+      "name": "request",
+      "label": "request",
+      "question": "",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/Block_2_Arztbericht/request",
+      "acroform_name": "mutter_dok[0].Seite2[0].Block_2_Arztbericht[0].request[0]"
+    },
+    {
+      "id": "2.3",
+      "name": "firstName",
+      "label": "firstName",
+      "question": "Quel est le prénom du patient ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/patientS1Address/firstName",
+      "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].firstName[0]"
+    },
+    {
+      "id": "2.4",
+      "name": "lastName",
+      "label": "lastName",
+      "question": "Quel est le nom de famille du patient ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/patientS1Address/lastName",
+      "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].lastName[0]"
+    },
+    {
+      "id": "2.5",
+      "name": "ssn",
+      "label": "ssn",
+      "question": "Quel est le numéro AVS du patient ? [format : 756.XXXX.XXXX.XX]",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/patientS1Address/ssn",
+      "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].ssn[0]"
+    },
+    {
+      "id": "2.6",
+      "name": "birthDate",
+      "label": "birthDate",
+      "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/patientS1Address/birthDate",
+      "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].birthDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "2.7",
+      "name": "sex",
+      "label": "sex",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/patientS1Address/sex",
+      "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].sex[0]",
+      "type": "sex",
+      "options": [
+        "M",
+        "F"
+      ]
+    },
+    {
+      "id": "2.8",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/patientS1Address/input",
+      "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].input[0]"
+    },
+    {
+      "comments": "Section 3 — Seite3"
+    },
+    {
+      "id": "3.1",
+      "name": "condensedName",
+      "label": "condensedName",
+      "question": "Quel est le nom complet du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/providerS1Address/condensedName",
+      "acroform_name": "mutter_dok[0].Seite3[0].providerS1Address[0].condensedName[0]"
+    },
+    {
+      "id": "3.2",
+      "name": "condensedAddress",
+      "label": "condensedAddress",
+      "question": "Quelle est l'adresse complète du médecin traitant (fournisseur de prestations) (rue, NPA et localité) ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/providerS1Address/condensedAddress",
+      "acroform_name": "mutter_dok[0].Seite3[0].providerS1Address[0].condensedAddress[0]"
+    },
+    {
+      "id": "3.3",
+      "name": "ean",
+      "label": "ean",
+      "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/providerS1Address/ean",
+      "acroform_name": "mutter_dok[0].Seite3[0].providerS1Address[0].ean[0]"
+    },
+    {
+      "id": "3.4",
+      "name": "input",
+      "label": "input",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/providerS1Address/input",
+      "acroform_name": "mutter_dok[0].Seite3[0].providerS1Address[0].input[0]"
+    },
+    {
+      "id": "3.5",
+      "name": "modificationDate",
+      "label": "modificationDate",
+      "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/formS1Struct/modificationDate",
+      "acroform_name": "mutter_dok[0].Seite3[0].formS1Struct[0].modificationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "3.6",
+      "name": "creationDate",
+      "label": "creationDate",
+      "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/formS1Struct/creationDate",
+      "acroform_name": "mutter_dok[0].Seite3[0].formS1Struct[0].creationDate[0]",
+      "type": "date"
+    },
+    {
+      "id": "3.7",
+      "name": "attachment",
+      "label": "attachment",
+      "question": "",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/Block_5_Beilagen/attachment",
+      "acroform_name": "mutter_dok[0].Seite3[0].Block_5_Beilagen[0].attachment[0]"
+    }
+  ]
+}
