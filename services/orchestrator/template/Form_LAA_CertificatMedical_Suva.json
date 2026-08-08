@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.40.10.5010_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — page1"
@@ -356,10 +356,13 @@
       "type": "date"
     },
     {
-      "id": "10.2",
+      "comments": "Section 12 — page1"
+    },
+    {
+      "id": "12.1",
       "name": "where",
       "label": "où:",
-      "question": "",
+      "question": "Où le premier traitement a-t-il été dispensé ? Répondre en reprenant l'un des lieux proposés par le formulaire (cabinet du médecin, lieu de l'accident, domicile du patient, hôpital).",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentS1Struct/where",
       "acroform_name": "topmostSubform[0].page1[0].treatmentS1Struct[0].where[0]",
@@ -372,10 +375,10 @@
       ]
     },
     {
-      "id": "10.3",
+      "id": "12.2",
       "name": "when",
       "label": "quand:",
-      "question": "",
+      "question": "Le premier traitement a-t-il eu lieu pendant ou en dehors des heures d'ouverture du cabinet ? Répondre en reprenant l'une des deux formulations.",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentS1Struct/when",
       "acroform_name": "topmostSubform[0].page1[0].treatmentS1Struct[0].when[0]",
@@ -463,10 +466,13 @@
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].code[0]"
     },
     {
-      "id": "10.4",
+      "comments": "Section 11 — page1"
+    },
+    {
+      "id": "11.1",
       "name": "type",
       "label": "Type:",
-      "question": "",
+      "question": "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).",
       "required": false,
       "xml_path": "topmostSubform/page1/diagnosisS1Struct/type",
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].type[0]",
@@ -504,13 +510,13 @@
       "type": "date"
     },
     {
-      "comments": "Section 11 — page2"
+      "comments": "Section 13 — page2"
     },
     {
-      "id": "11.1",
+      "id": "13.1",
       "name": "numWeeks",
       "label": "semaines",
-      "question": "",
+      "question": "Pendant combien de semaines le traitement est-il prévu ? Répondre par le nombre seul.",
       "required": false,
       "xml_path": "topmostSubform/page2/numWeeks",
       "acroform_name": "topmostSubform[0].page2[0].numWeeks[0]",
@@ -881,10 +887,10 @@
       "acroform_name": "topmostSubform[0].page2[0].fillerName[0]"
     },
     {
-      "id": "11.2",
+      "id": "13.2",
       "name": "ask4Plausibility",
       "label": "ask4Plausibility",
-      "question": "",
+      "question": "Les constatations médicales sont-elles compatibles avec le déroulement de l'accident décrit ? Répondre UNIQUEMENT par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/ask4Plausibility",
       "acroform_name": "topmostSubform[0].page2[0].ask4Plausibility[0]",

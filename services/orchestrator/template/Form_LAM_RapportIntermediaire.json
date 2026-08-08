@@ -1,15 +1,15 @@
 {
   "_generated_from": "medforms.40.30.5030_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
-      "comments": "Section 7 — page1"
+      "comments": "Section 8 — page1"
     },
     {
-      "id": "7.1",
+      "id": "8.1",
       "name": "course",
       "label": "course",
-      "question": "",
+      "question": "Quelle a été l'évolution du cas depuis le dernier rapport ?",
       "required": false,
       "xml_path": "topmostSubform/page1/anamnesisStruct/course",
       "acroform_name": "topmostSubform[0].page1[0].anamnesisStruct[0].course[0]"
@@ -27,10 +27,10 @@
       "acroform_name": "topmostSubform[0].page1[0].anamnesisStruct[0].prognosis[0]"
     },
     {
-      "id": "7.2",
+      "id": "8.2",
       "name": "ask4FormerProlapses",
       "label": "ask4FormerProlapses",
-      "question": "",
+      "question": "Le patient a-t-il déjà présenté des rechutes de cette affection ? Répondre UNIQUEMENT par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/anamnesisStruct/ask4FormerProlapses",
       "acroform_name": "topmostSubform[0].page1[0].anamnesisStruct[0].ask4FormerProlapses[0]",
@@ -41,10 +41,10 @@
       ]
     },
     {
-      "id": "7.3",
+      "id": "8.3",
       "name": "formerProlapses",
       "label": "formerProlapses",
-      "question": "",
+      "question": "Quelles rechutes le patient a-t-il déjà présentées, et à quelles dates ?",
       "required": false,
       "xml_path": "topmostSubform/page1/anamnesisStruct/formerProlapses",
       "acroform_name": "topmostSubform[0].page1[0].anamnesisStruct[0].formerProlapses[0]"
@@ -183,10 +183,13 @@
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].code[0]"
     },
     {
-      "id": "7.4",
+      "comments": "Section 7 — page1"
+    },
+    {
+      "id": "7.1",
       "name": "type",
       "label": "type",
-      "question": "",
+      "question": "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).",
       "required": false,
       "xml_path": "topmostSubform/page1/diagnosisS1Struct/type",
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].type[0]",
@@ -229,10 +232,10 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].departmentName[0]"
     },
     {
-      "id": "7.5",
+      "id": "8.4",
       "name": "poBox",
       "label": "poBox",
-      "question": "",
+      "question": "Quelle est la case postale de l'adresse ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/poBox",
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].poBox[0]"
@@ -293,13 +296,14 @@
       "type": "date"
     },
     {
-      "id": "7.6",
+      "id": "8.5",
       "name": "geschlecht",
       "label": "geschlecht",
-      "question": "",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par la lettre M (masculin) ou F (féminin).",
       "required": false,
       "xml_path": "topmostSubform/page1/patientS1Address/geschlecht",
-      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].geschlecht[0]"
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].geschlecht[0]",
+      "type": "sex"
     },
     {
       "id": "1.18",
@@ -391,31 +395,31 @@
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].procedure[0]"
     },
     {
-      "comments": "Section 8 — page2"
+      "comments": "Section 9 — page2"
     },
     {
-      "id": "8.1",
+      "id": "9.1",
       "name": "recommendation",
       "label": "recommendation",
-      "question": "",
+      "question": "Quelle recommandation formulez-vous pour la suite de la prise en charge ?",
       "required": false,
       "xml_path": "topmostSubform/page2/therapyStruct/recommendation",
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].recommendation[0]"
     },
     {
-      "id": "8.2",
+      "id": "9.2",
       "name": "consultationInterval",
       "label": "consultationInterval",
-      "question": "",
+      "question": "À quel intervalle les consultations de suivi sont-elles prévues ?",
       "required": false,
       "xml_path": "topmostSubform/page2/therapyStruct/consultationInterval",
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].consultationInterval[0]"
     },
     {
-      "id": "8.3",
+      "id": "9.3",
       "name": "therapyLength",
       "label": "therapyLength",
-      "question": "",
+      "question": "Quelle est la durée prévue de la thérapie ?",
       "required": false,
       "xml_path": "topmostSubform/page2/therapyStruct/therapyLength",
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].therapyLength[0]"
@@ -441,10 +445,10 @@
       "type": "date"
     },
     {
-      "id": "8.4",
+      "id": "9.4",
       "name": "ask4NewWorkplace",
       "label": "ask4NewWorkplace",
-      "question": "",
+      "question": "Une adaptation du poste de travail est-elle nécessaire ? Répondre UNIQUEMENT par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/employabilityStruct/ask4NewWorkplace",
       "acroform_name": "topmostSubform[0].page2[0].employabilityStruct[0].ask4NewWorkplace[0]",
@@ -457,10 +461,10 @@
       ]
     },
     {
-      "id": "8.5",
+      "id": "9.5",
       "name": "ask4LastingHandicap",
       "label": "ask4LastingHandicap",
-      "question": "",
+      "question": "Une atteinte durable à l'intégrité est-elle à prévoir ? Répondre UNIQUEMENT par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/employabilityStruct/ask4LastingHandicap",
       "acroform_name": "topmostSubform[0].page2[0].employabilityStruct[0].ask4LastingHandicap[0]",
@@ -473,28 +477,28 @@
       ]
     },
     {
-      "id": "8.6",
+      "id": "9.6",
       "name": "handicap",
       "label": "handicap",
-      "question": "",
+      "question": "Quelle atteinte durable à l'intégrité est à prévoir ?",
       "required": false,
       "xml_path": "topmostSubform/page2/employabilityStruct/handicap",
       "acroform_name": "topmostSubform[0].page2[0].employabilityStruct[0].handicap[0]"
     },
     {
-      "id": "8.7",
+      "id": "9.7",
       "name": "reason4PartialEmployability",
       "label": "reason4PartialEmployability",
-      "question": "",
+      "question": "Pour quels motifs la capacité de travail n'est-elle que partielle ?",
       "required": false,
       "xml_path": "topmostSubform/page2/employabilityStruct/reason4PartialEmployability",
       "acroform_name": "topmostSubform[0].page2[0].employabilityStruct[0].reason4PartialEmployability[0]"
     },
     {
-      "id": "8.8",
+      "id": "9.8",
       "name": "ask4PartialEmployability",
       "label": "ask4PartialEmployability",
-      "question": "",
+      "question": "Le patient présente-t-il une capacité de travail partielle ? Répondre UNIQUEMENT par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/employabilityStruct/ask4PartialEmployability",
       "acroform_name": "topmostSubform[0].page2[0].employabilityStruct[0].ask4PartialEmployability[0]",
@@ -629,10 +633,10 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].input[0]"
     },
     {
-      "id": "8.9",
+      "id": "9.9",
       "name": "calcLastSubmit",
       "label": "calcLastSubmit",
-      "question": "",
+      "question": "Quel est le numéro de la dernière transmission du formulaire ? Répondre par le nombre seul.",
       "required": false,
       "xml_path": "topmostSubform/page2/calcLastSubmit",
       "acroform_name": "topmostSubform[0].page2[0].calcLastSubmit[0]",

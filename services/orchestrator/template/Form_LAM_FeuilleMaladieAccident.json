@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.30.5020_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — page1"
@@ -130,13 +130,13 @@
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].input[0]"
     },
     {
-      "comments": "Section 4 — page1"
+      "comments": "Section 5 — page1"
     },
     {
-      "id": "4.1",
+      "id": "5.1",
       "name": "workingDegree",
       "label": "workingDegree",
-      "question": "",
+      "question": "Quel est le taux d'activité du patient, en pourcentage ? Répondre par le nombre seul.",
       "required": false,
       "xml_path": "topmostSubform/page1/employerS1Address/workingDegree",
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].workingDegree[0]",
@@ -161,10 +161,13 @@
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].code[0]"
     },
     {
-      "id": "4.2",
+      "comments": "Section 4 — page1"
+    },
+    {
+      "id": "4.1",
       "name": "type",
       "label": "type",
-      "question": "",
+      "question": "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).",
       "required": false,
       "xml_path": "topmostSubform/page1/diagnosisS1Struct/type",
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].type[0]",
@@ -285,10 +288,10 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].departmentName[0]"
     },
     {
-      "id": "4.3",
+      "id": "5.2",
       "name": "poBox",
       "label": "poBox",
-      "question": "",
+      "question": "Quelle est la case postale de l'adresse ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/poBox",
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].poBox[0]"
@@ -349,13 +352,14 @@
       "type": "date"
     },
     {
-      "id": "4.4",
+      "id": "5.3",
       "name": "geschlecht",
       "label": "geschlecht",
-      "question": "",
+      "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par la lettre M (masculin) ou F (féminin).",
       "required": false,
       "xml_path": "topmostSubform/page1/patientS1Address/geschlecht",
-      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].geschlecht[0]"
+      "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].geschlecht[0]",
+      "type": "sex"
     },
     {
       "id": "1.26",
@@ -455,10 +459,10 @@
       "type": "date"
     },
     {
-      "id": "4.5",
+      "id": "5.4",
       "name": "calcLastSubmit",
       "label": "calcLastSubmit",
-      "question": "",
+      "question": "Quel est le numéro de la dernière transmission du formulaire ? Répondre par le nombre seul.",
       "required": false,
       "xml_path": "topmostSubform/page1/calcLastSubmit",
       "acroform_name": "topmostSubform[0].page1[0].calcLastSubmit[0]",
@@ -546,28 +550,28 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].input[0]"
     },
     {
-      "id": "4.6",
+      "id": "5.5",
       "name": "impossibleActivities",
       "label": "impossibleActivities",
-      "question": "",
+      "question": "Quelles activités le patient ne peut-il plus exercer ?",
       "required": false,
       "xml_path": "topmostSubform/page1/impossibleActivities",
       "acroform_name": "topmostSubform[0].page1[0].impossibleActivities[0]"
     },
     {
-      "id": "4.7",
+      "id": "5.6",
       "name": "possibleActivities",
       "label": "possibleActivities",
-      "question": "",
+      "question": "Quelles activités le patient peut-il encore exercer ?",
       "required": false,
       "xml_path": "topmostSubform/page1/possibleActivities",
       "acroform_name": "topmostSubform[0].page1[0].possibleActivities[0]"
     },
     {
-      "id": "4.8",
+      "id": "5.7",
       "name": "reasons4PartialUnemployability",
       "label": "reasons4PartialUnemployability",
-      "question": "",
+      "question": "Pour quels motifs l'incapacité de travail n'est-elle que partielle ?",
       "required": false,
       "xml_path": "topmostSubform/page1/reasons4PartialUnemployability",
       "acroform_name": "topmostSubform[0].page1[0].reasons4PartialUnemployability[0]"
@@ -635,10 +639,10 @@
       "acroform_name": "topmostSubform[0].page1[0].treatmentS1Struct[0].input[0]"
     },
     {
-      "id": "4.9",
+      "id": "5.8",
       "name": "unemployabilityLength",
       "label": "unemployabilityLength",
-      "question": "",
+      "question": "Combien de temps l'incapacité de travail doit-elle durer ? Répondre par le nombre seul.",
       "required": false,
       "xml_path": "topmostSubform/page1/unemployabilityLength",
       "acroform_name": "topmostSubform[0].page1[0].unemployabilityLength[0]",

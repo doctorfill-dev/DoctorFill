@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.40.40.5030_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — page1"
@@ -102,28 +102,31 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
     },
     {
-      "comments": "Section 6 — page1"
+      "comments": "Section 8 — page1"
     },
     {
-      "id": "6.1",
+      "id": "8.1",
       "name": "patientLessThan60",
       "label": "patientLessThan60",
-      "question": "",
+      "question": "Le patient a-t-il moins de 60 ans ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/patientLessThan60",
       "acroform_name": "topmostSubform[0].page1[0].patientLessThan60[0]"
     },
     {
-      "id": "6.2",
+      "id": "8.2",
       "name": "patientMoreThan60",
       "label": "patientMoreThan60",
-      "question": "",
+      "question": "Le patient a-t-il 60 ans ou plus ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/patientMoreThan60",
       "acroform_name": "topmostSubform[0].page1[0].patientMoreThan60[0]"
     },
     {
-      "id": "6.3",
+      "comments": "Section 6 — page1"
+    },
+    {
+      "id": "6.1",
       "name": "accidentTime",
       "label": "accidentTime",
       "question": "À quelle heure l'accident est-il survenu ? [format : HH:MM]",
@@ -178,19 +181,19 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "id": "6.4",
+      "id": "8.3",
       "name": "originator",
       "label": "originator",
-      "question": "",
+      "question": "Qui a établi ce premier constat (nom et fonction) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/originator",
       "acroform_name": "topmostSubform[0].page1[0].originator[0]"
     },
     {
-      "id": "6.5",
+      "id": "8.4",
       "name": "asPassenger",
       "label": "Occupant d’un véhicule automobile",
-      "question": "",
+      "question": "L'accident est-il survenu alors que le patient était passager d'un véhicule ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/asPassenger",
       "acroform_name": "topmostSubform[0].page1[0].asPassenger[0]",
@@ -201,10 +204,10 @@
       ]
     },
     {
-      "id": "6.6",
+      "id": "8.5",
       "name": "asCyclist",
       "label": "Cycliste",
-      "question": "",
+      "question": "L'accident est-il survenu alors que le patient était à vélo ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/asCyclist",
       "acroform_name": "topmostSubform[0].page1[0].asCyclist[0]",
@@ -215,10 +218,10 @@
       ]
     },
     {
-      "id": "6.7",
+      "id": "8.6",
       "name": "asBiker",
       "label": "Motocycliste",
-      "question": "",
+      "question": "L'accident est-il survenu alors que le patient était à moto ou en scooter ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/asBiker",
       "acroform_name": "topmostSubform[0].page1[0].asBiker[0]",
@@ -229,10 +232,10 @@
       ]
     },
     {
-      "id": "6.8",
+      "id": "8.7",
       "name": "asPedestrian",
       "label": "Piéton",
-      "question": "",
+      "question": "L'accident est-il survenu alors que le patient était piéton ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/asPedestrian",
       "acroform_name": "topmostSubform[0].page1[0].asPedestrian[0]",
@@ -243,10 +246,10 @@
       ]
     },
     {
-      "id": "6.9",
+      "id": "8.8",
       "name": "asUnknown",
       "label": "Indéfini",
-      "question": "",
+      "question": "Le mécanisme de l'accident est-il inconnu ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/asUnknown",
       "acroform_name": "topmostSubform[0].page1[0].asUnknown[0]",
@@ -257,10 +260,10 @@
       ]
     },
     {
-      "id": "6.10",
+      "id": "8.9",
       "name": "asFall",
       "label": "Chute",
-      "question": "",
+      "question": "L'accident est-il une chute ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/asFall",
       "acroform_name": "topmostSubform[0].page1[0].asFall[0]",
@@ -271,10 +274,10 @@
       ]
     },
     {
-      "id": "6.11",
+      "id": "8.10",
       "name": "asOtherAccident",
       "label": "Autre accident",
-      "question": "",
+      "question": "L'accident relève-t-il d'un autre mécanisme que ceux proposés ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/asOtherAccident",
       "acroform_name": "topmostSubform[0].page1[0].asOtherAccident[0]",
@@ -285,7 +288,7 @@
       ]
     },
     {
-      "id": "6.12",
+      "id": "6.2",
       "name": "courseOfAccident",
       "label": "courseOfAccident",
       "question": "Comment l'accident s'est-il déroulé ?",
@@ -294,64 +297,64 @@
       "acroform_name": "topmostSubform[0].page1[0].courseOfAccident[0]"
     },
     {
-      "id": "6.13",
+      "id": "8.11",
       "name": "criticalAccident",
       "label": "criticalAccident",
-      "question": "",
+      "question": "L'accident présente-t-il des critères de gravité (haute cinétique, éjection, chute de grande hauteur) ? Répondre par oui ou non, en précisant si possible.",
       "required": false,
       "xml_path": "topmostSubform/page1/criticalAccident",
       "acroform_name": "topmostSubform[0].page1[0].criticalAccident[0]"
     },
     {
-      "id": "6.14",
+      "id": "8.12",
       "name": "coagulationDisorder",
       "label": "coagulationDisorder",
-      "question": "",
+      "question": "Le patient présente-t-il un trouble de la coagulation ou prend-il un traitement anticoagulant ? Si oui, préciser lequel.",
       "required": false,
       "xml_path": "topmostSubform/page1/coagulationDisorder",
       "acroform_name": "topmostSubform[0].page1[0].coagulationDisorder[0]"
     },
     {
-      "id": "6.15",
+      "id": "8.13",
       "name": "unconsciousness",
       "label": "unconsciousness",
-      "question": "",
+      "question": "Le patient a-t-il perdu connaissance ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/unconsciousness",
       "acroform_name": "topmostSubform[0].page1[0].unconsciousness[0]"
     },
     {
-      "id": "6.16",
+      "id": "8.14",
       "name": "unconsciousnessDuration",
       "label": "unconsciousnessDuration",
-      "question": "",
+      "question": "Combien de temps la perte de connaissance a-t-elle duré ?",
       "required": false,
       "xml_path": "topmostSubform/page1/unconsciousnessDuration",
       "acroform_name": "topmostSubform[0].page1[0].unconsciousnessDuration[0]"
     },
     {
-      "id": "6.17",
+      "id": "8.15",
       "name": "anterogradeAnmnesia",
       "label": "anterogradeAnmnesia",
-      "question": "",
+      "question": "Le patient présente-t-il une amnésie antérograde ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/anterogradeAnmnesia",
       "acroform_name": "topmostSubform[0].page1[0].anterogradeAnmnesia[0]"
     },
     {
-      "id": "6.18",
+      "id": "8.16",
       "name": "posttraumaticAnmnesia",
       "label": "posttraumaticAnmnesia",
-      "question": "",
+      "question": "Le patient présente-t-il une amnésie post-traumatique ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/posttraumaticAnmnesia",
       "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesia[0]"
     },
     {
-      "id": "6.19",
+      "id": "8.17",
       "name": "posttraumaticAnmnesiaDuration1",
       "label": "Durée: 2-4 h (= Minor RF)",
-      "question": "",
+      "question": "L'amnésie post-traumatique a-t-elle duré moins de 30 minutes ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/posttraumaticAnmnesiaDuration1",
       "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesiaDuration1[0]",
@@ -362,10 +365,10 @@
       ]
     },
     {
-      "id": "6.20",
+      "id": "8.18",
       "name": "posttraumaticAnmnesiaDuration2",
       "label": "Durée: > 4 h (= Major RF)",
-      "question": "",
+      "question": "L'amnésie post-traumatique a-t-elle duré plus de 30 minutes ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/posttraumaticAnmnesiaDuration2",
       "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesiaDuration2[0]",
@@ -376,28 +379,28 @@
       ]
     },
     {
-      "id": "6.21",
+      "id": "8.19",
       "name": "epilepsy",
       "label": "epilepsy",
-      "question": "",
+      "question": "Le patient a-t-il présenté une crise d'épilepsie ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/epilepsy",
       "acroform_name": "topmostSubform[0].page1[0].epilepsy[0]"
     },
     {
-      "id": "6.22",
+      "id": "8.20",
       "name": "epilepsyDetails",
       "label": "epilepsyDetails",
-      "question": "",
+      "question": "Quelles sont les caractéristiques de la crise d'épilepsie observée ?",
       "required": false,
       "xml_path": "topmostSubform/page1/epilepsyDetails",
       "acroform_name": "topmostSubform[0].page1[0].epilepsyDetails[0]"
     },
     {
-      "id": "6.23",
+      "id": "8.21",
       "name": "vomiting",
       "label": "vomiting",
-      "question": "",
+      "question": "Le patient a-t-il vomi après le traumatisme ? Répondre par oui ou non, en précisant le nombre d'épisodes si connu.",
       "required": false,
       "xml_path": "topmostSubform/page1/vomiting",
       "acroform_name": "topmostSubform[0].page1[0].vomiting[0]"
@@ -453,7 +456,7 @@
       ]
     },
     {
-      "id": "6.24",
+      "id": "6.3",
       "name": "examinationDate",
       "label": "examinationDate",
       "question": "À quelle date le patient a-t-il été examiné ? [format : JJ.MM.AAAA]",
@@ -463,64 +466,67 @@
       "type": "date"
     },
     {
-      "comments": "Section 7 — page2"
+      "comments": "Section 9 — page2"
     },
     {
-      "id": "7.1",
+      "id": "9.1",
       "name": "glasgowEyes",
       "label": "glasgowEyes",
-      "question": "",
+      "question": "Quel est le score d'ouverture des yeux sur l'échelle de Glasgow ? Répondre par le chiffre seul (1 à 4).",
       "required": false,
       "xml_path": "topmostSubform/page2/glasgowEyes",
       "acroform_name": "topmostSubform[0].page2[0].glasgowEyes[0]"
     },
     {
-      "id": "7.2",
+      "id": "9.2",
       "name": "glasgowVerbal",
       "label": "glasgowVerbal",
-      "question": "",
+      "question": "Quel est le score de réponse verbale sur l'échelle de Glasgow ? Répondre par le chiffre seul (1 à 5).",
       "required": false,
       "xml_path": "topmostSubform/page2/glasgowVerbal",
       "acroform_name": "topmostSubform[0].page2[0].glasgowVerbal[0]"
     },
     {
-      "id": "7.3",
+      "id": "9.3",
       "name": "glasgowMovement",
       "label": "glasgowMovement",
-      "question": "",
+      "question": "Quel est le score de réponse motrice sur l'échelle de Glasgow ? Répondre par le chiffre seul (1 à 6).",
       "required": false,
       "xml_path": "topmostSubform/page2/glasgowMovement",
       "acroform_name": "topmostSubform[0].page2[0].glasgowMovement[0]"
     },
     {
-      "id": "7.4",
+      "id": "9.4",
       "name": "focalDeficit",
       "label": "focalDeficit",
-      "question": "",
+      "question": "Le patient présente-t-il un déficit neurologique focal ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/focalDeficit",
       "acroform_name": "topmostSubform[0].page2[0].focalDeficit[0]"
     },
     {
-      "id": "7.5",
+      "id": "9.5",
       "name": "cranialContusion",
       "label": "cranialContusion",
-      "question": "",
+      "question": "Le patient présente-t-il une contusion crânienne ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/cranialContusion",
       "acroform_name": "topmostSubform[0].page2[0].cranialContusion[0]"
     },
     {
-      "id": "7.6",
+      "id": "9.6",
       "name": "cranialFracture",
       "label": "cranialFracture",
-      "question": "",
+      "question": "Une fracture du crâne est-elle constatée ou suspectée ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/cranialFracture",
       "acroform_name": "topmostSubform[0].page2[0].cranialFracture[0]"
     },
     {
-      "id": "7.7",
+      "comments": "Section 7 — page2"
+    },
+    {
+      "id": "7.1",
       "name": "classification",
       "label": "classification",
       "question": "Quelle est la classification retenue pour cette atteinte ?",
@@ -529,41 +535,41 @@
       "acroform_name": "topmostSubform[0].page2[0].classification[0]"
     },
     {
-      "id": "7.8",
+      "id": "9.7",
       "name": "focalDeficits",
       "label": "focalDeficits",
-      "question": "",
+      "question": "Quels déficits neurologiques focaux sont constatés ?",
       "required": false,
       "xml_path": "topmostSubform/page2/focalDeficits",
       "acroform_name": "topmostSubform[0].page2[0].focalDeficits[0]"
     },
     {
-      "comments": "Section 8 — page3"
+      "comments": "Section 10 — page3"
     },
     {
-      "id": "8.1",
+      "id": "10.1",
       "name": "sectionEChoice",
       "label": "sectionEChoice",
-      "question": "",
+      "question": "Le patient a-t-il été adressé à un autre médecin ou établissement ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/sectionEChoice",
       "acroform_name": "topmostSubform[0].page3[0].sectionEChoice[0]"
     },
     {
-      "id": "8.2",
+      "id": "10.2",
       "name": "sectionEDate",
       "label": "sectionEDate",
-      "question": "",
+      "question": "À quelle date le patient a-t-il été adressé à cet autre médecin ou établissement ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page3/sectionEDate",
       "acroform_name": "topmostSubform[0].page3[0].sectionEDate[0]",
       "type": "date"
     },
     {
-      "id": "8.3",
+      "id": "10.3",
       "name": "sectionELocation",
       "label": "sectionELocation",
-      "question": "",
+      "question": "Vers quel médecin ou établissement le patient a-t-il été adressé ?",
       "required": false,
       "xml_path": "topmostSubform/page3/sectionELocation",
       "acroform_name": "topmostSubform[0].page3[0].sectionELocation[0]"

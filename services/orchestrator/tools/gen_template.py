@@ -57,7 +57,9 @@ TECHNICAL_NAMES = {
     "pageNumber", "oid", "guid", "serialNum", "version", "language",
     "supervisorData", "instructions", "formDescription", "formArea",
     "formTitle", "formType", "formOID", "submitDesc", "submitLog",
-    "submitCtrl", "dataSubmit", "copyright", "logo", "constraint",
+    "submitCtrl", "dataSubmit", "dataSubmitAlt", "copyright", "logo", "constraint",
+    # Aides contextuelles affichées au clinicien, pas des données à extraire.
+    "helpICD10", "helpCHOP9",
     # Plomberie de pièce jointe et d'affichage, sans contenu clinique.
     "file", "mimeType", "docOpenTime", "subaddressing", "recipientChoice",
     # Boutons et sondes du gabarit : aucune donnée à extraire.
@@ -152,6 +154,10 @@ ROLE_VOCAB = {
     "pharmacyS1Address": "de la pharmacie",
     "therapistS1Address": "du thérapeute",
     "guardianS1Address": "du représentant légal",
+    "surgeonS1Address": "du chirurgien",
+    "anesthetistS1Address": "de l'anesthésiste",
+    "specialistS1Address": "du médecin spécialiste",
+    "counselingS1Address": "du centre de conseil",
 }
 
 FIELD_VOCAB = {
@@ -306,6 +312,9 @@ FIELD_VOCAB = {
                      "(contexte professionnel, social, psychique) ?", None),
     "nationality": ("Quelle est la nationalité du patient ?", None),
     "workHours": ("Quel est l'horaire de travail habituel du patient ?", None),
+    "workingHours": ("Quel est l'horaire de travail habituel du patient ?", None),
+    "workingDays": ("Combien de jours par semaine le patient travaille-t-il "
+                    "habituellement ?", None),
     "reason": ("Quel est le motif de ce rapport ?", None),
     "pregnancyDueDate": ("Quelle est la date prévue de l'accouchement ? "
                          "[format : JJ.MM.AAAA]", "date"),
@@ -335,6 +344,38 @@ FIELD_VOCAB = {
     "physioGoals": ("Quels sont les objectifs de la physiothérapie ?", None),
     "physioMethods": ("Quelles méthodes de physiothérapie sont prescrites ?", None),
     "mdRecommendation": ("Quelle est la recommandation du médecin ?", None),
+    # Sixième rang : suivi et capacité de travail des rapports intermédiaires
+    # LAA / LAM, dont les libellés sont identiques d'un régime à l'autre.
+    "course": ("Quelle a été l'évolution du cas depuis le dernier rapport ?", None),
+    "ask4FormerProlapses": ("Le patient a-t-il déjà présenté des rechutes de cette "
+                            "affection ? Répondre UNIQUEMENT par oui ou non.", None),
+    "formerProlapses": ("Quelles rechutes le patient a-t-il déjà présentées, et à "
+                        "quelles dates ?", None),
+    "recommendation": ("Quelle recommandation formulez-vous pour la suite de la "
+                       "prise en charge ?", None),
+    "consultationInterval": ("À quel intervalle les consultations de suivi sont-elles "
+                             "prévues ?", None),
+    "therapyLength": ("Quelle est la durée prévue de la thérapie ?", None),
+    "ask4NewWorkplace": ("Une adaptation du poste de travail est-elle nécessaire ? "
+                         "Répondre UNIQUEMENT par oui ou non.", None),
+    "ask4LastingHandicap": ("Une atteinte durable à l'intégrité est-elle à prévoir ? "
+                            "Répondre UNIQUEMENT par oui ou non.", None),
+    "handicap": ("Quelle atteinte durable à l'intégrité est à prévoir ?", None),
+    "poBox": ("Quelle est la case postale de l'adresse ?", None),
+    "geschlecht": ("Quel est le sexe du patient ? Répondre UNIQUEMENT par la lettre "
+                   "M (masculin) ou F (féminin).", "sex"),
+    "hoursPerDayFixed": ("Combien d'heures par jour le patient peut-il travailler ?", None),
+    "hoursPerDayFix": ("Combien d'heures par jour le patient peut-il travailler ?", None),
+    "returnBeforeWeekend": ("Le patient peut-il reprendre le travail avant le week-end ? "
+                            "Répondre par oui ou non.", None),
+    "DiagnosesUnemployabilityRelated": ("Quels diagnostics justifient l'incapacité de "
+                                        "travail ?", None),
+    "DiagnosesUnemployabilityUnrelated": ("Quels diagnostics n'ont pas d'incidence sur "
+                                          "la capacité de travail ?", None),
+    "impossibleActivities": ("Quelles activités le patient ne peut-il plus exercer ?", None),
+    "possibleActivities": ("Quelles activités le patient peut-il encore exercer ?", None),
+    "generalCondition": ("Quel est l'état général du patient ?", None),
+    "proposedTherapy": ("Quelle thérapie proposez-vous ?", None),
     # Blocs destinataire de l'en-tête, communs aux formulaires d'assureur.
     "recipientBlockAddressLeft": (
         "Quelle est l'adresse complète de l'organisme destinataire du rapport "
@@ -381,6 +422,9 @@ CONTEXT_VOCAB = {
         "Y a-t-il une remarque à joindre au sujet des documents annexés ?", None),
     ("diagnosisS1Struct", "input"): (
         "Y a-t-il une précision à apporter sur le diagnostic ?", None),
+    ("diagnosisS1Struct", "type"): (
+        "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT "
+        "par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).", None),
     ("unemployabilityS1Struct", "input"): (
         "Y a-t-il une précision à apporter sur cette période d'incapacité de travail ?", None),
     ("cardS1Struct", "input"): (
@@ -421,6 +465,14 @@ STRUCT_SUFFIXES = (
     "generalConditionStruct", "cardS1Struct",
 )
 
+# Conteneurs nommés autrement mais de structure identique — certains formulaires
+# écrivent `diagnosis` là où d'autres écrivent `diagnosisS1Struct`.
+STRUCT_ALIASES = {
+    "diagnosis": "diagnosisS1Struct",
+    "anamnesis": "anamnesisStruct",
+    "therapy": "therapyStruct",
+}
+
 
 def _normalize_struct(ancestor: str) -> str:
     """
@@ -432,7 +484,7 @@ def _normalize_struct(ancestor: str) -> str:
     for known in STRUCT_SUFFIXES:
         if ancestor.endswith(known):
             return known
-    return ancestor
+    return STRUCT_ALIASES.get(ancestor, ancestor)
 
 
 def _describe(leaf: str, ancestors: list[str]) -> tuple[str, str | None]:

@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.20.10.90.5010_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — Page1"
@@ -147,7 +147,7 @@
       "id": "3.1",
       "name": "confirmedSonography",
       "label": "Terme confirmé par échographie",
-      "question": "",
+      "question": "La grossesse a-t-elle été confirmée par échographie ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/Page1/confirmedSonography",
       "acroform_name": "topmostSubform[0].Page1[0].confirmedSonography[0]",
@@ -161,7 +161,7 @@
       "id": "3.2",
       "name": "childBirthDate",
       "label": "childBirthDate",
-      "question": "",
+      "question": "Quelle est la date prévue de l'accouchement ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/Page1/childBirthDate",
       "acroform_name": "topmostSubform[0].Page1[0].childBirthDate[0]",
@@ -171,7 +171,7 @@
       "id": "3.3",
       "name": "dateWeek13Praepartal",
       "label": "dateWeek13Praepartal",
-      "question": "",
+      "question": "À quelle date la 13e semaine de grossesse est-elle atteinte ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/Page1/dateWeek13Praepartal",
       "acroform_name": "topmostSubform[0].Page1[0].dateWeek13Praepartal[0]",

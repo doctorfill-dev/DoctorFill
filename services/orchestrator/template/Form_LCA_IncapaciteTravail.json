@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.50.40.5060_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — page1"
@@ -169,22 +169,22 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "comments": "Section 17 — page1"
+      "comments": "Section 23 — page1"
     },
     {
-      "id": "17.1",
+      "id": "23.1",
       "name": "workingHours",
       "label": "workingHours",
-      "question": "",
+      "question": "Combien d'heures par semaine le patient travaille-t-il habituellement ?",
       "required": false,
       "xml_path": "topmostSubform/page1/workingHours",
       "acroform_name": "topmostSubform[0].page1[0].workingHours[0]"
     },
     {
-      "id": "17.2",
+      "id": "23.2",
       "name": "anteProviderAddress",
       "label": "anteProviderAddress",
-      "question": "",
+      "question": "Quelle est l'adresse complète du médecin qui traitait le patient avant la prise en charge actuelle ?",
       "required": false,
       "xml_path": "topmostSubform/page1/anteProviderAddress",
       "acroform_name": "topmostSubform[0].page1[0].anteProviderAddress[0]"
@@ -222,28 +222,28 @@
       "acroform_name": "topmostSubform[0].page1[0].profession[0]"
     },
     {
-      "id": "17.3",
+      "id": "23.3",
       "name": "workingDays",
       "label": "workingDays",
-      "question": "",
+      "question": "Combien de jours par semaine le patient travaille-t-il habituellement ?",
       "required": false,
       "xml_path": "topmostSubform/page1/workingDays",
       "acroform_name": "topmostSubform[0].page1[0].workingDays[0]"
     },
     {
-      "id": "17.4",
+      "id": "23.4",
       "name": "employmentState",
       "label": "employmentState",
-      "question": "",
+      "question": "Quel est le statut professionnel du patient (salarié, indépendant, sans emploi, en formation) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/employmentState",
       "acroform_name": "topmostSubform[0].page1[0].employmentState[0]"
     },
     {
-      "id": "17.5",
+      "id": "23.5",
       "name": "postProviderAddress",
       "label": "postProviderAddress",
-      "question": "",
+      "question": "Quelle est l'adresse complète du médecin qui poursuivra le suivi du patient ?",
       "required": false,
       "xml_path": "topmostSubform/page1/postProviderAddress",
       "acroform_name": "topmostSubform[0].page1[0].postProviderAddress[0]"
@@ -308,211 +308,211 @@
       ]
     },
     {
-      "comments": "Section 18 — page2"
+      "comments": "Section 24 — page2"
     },
     {
-      "id": "18.1",
+      "id": "24.1",
       "name": "anamnesisDescription",
       "label": "anamnesisDescription",
-      "question": "",
+      "question": "Quelle est l'anamnèse du patient : antécédents, évolution et circonstances de l'affection actuelle ?",
       "required": false,
       "xml_path": "topmostSubform/page2/anamnesisDescription",
       "acroform_name": "topmostSubform[0].page2[0].anamnesisDescription[0]"
     },
     {
-      "id": "18.2",
+      "id": "24.2",
       "name": "subjectiveDescription",
       "label": "subjectiveDescription",
-      "question": "",
+      "question": "Quelles plaintes le patient rapporte-t-il lui-même ?",
       "required": false,
       "xml_path": "topmostSubform/page2/subjectiveDescription",
       "acroform_name": "topmostSubform[0].page2[0].subjectiveDescription[0]"
     },
     {
-      "id": "18.3",
+      "id": "24.3",
       "name": "priorTreatmentChoice",
       "label": "priorTreatmentChoice",
-      "question": "",
+      "question": "Le patient a-t-il déjà été traité pour cette affection ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/priorTreatmentChoice",
       "acroform_name": "topmostSubform[0].page2[0].priorTreatmentChoice[0]"
     },
     {
-      "id": "18.4",
+      "id": "24.4",
       "name": "priorTreatment",
       "label": "priorTreatment",
-      "question": "",
+      "question": "Quels traitements antérieurs le patient a-t-il reçus pour cette affection ?",
       "required": false,
       "xml_path": "topmostSubform/page2/priorTreatment",
       "acroform_name": "topmostSubform[0].page2[0].priorTreatment[0]"
     },
     {
-      "id": "18.5",
+      "id": "24.5",
       "name": "priorTreatmentLocation",
       "label": "priorTreatmentLocation",
-      "question": "",
+      "question": "Où ces traitements antérieurs ont-ils été dispensés ?",
       "required": false,
       "xml_path": "topmostSubform/page2/priorTreatmentLocation",
       "acroform_name": "topmostSubform[0].page2[0].priorTreatmentLocation[0]"
     },
     {
-      "id": "18.6",
+      "id": "24.6",
       "name": "priorTreatmentDate",
       "label": "priorTreatmentDate",
-      "question": "",
+      "question": "À quelle date le traitement antérieur a-t-il eu lieu ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page2/priorTreatmentDate",
       "acroform_name": "topmostSubform[0].page2[0].priorTreatmentDate[0]",
       "type": "date"
     },
     {
-      "id": "18.7",
+      "id": "24.7",
       "name": "stationaryTreatmentAddress",
       "label": "stationaryTreatmentAddress",
-      "question": "",
+      "question": "Dans quel établissement le patient a-t-il été hospitalisé ?",
       "required": false,
       "xml_path": "topmostSubform/page2/stationaryTreatmentAddress",
       "acroform_name": "topmostSubform[0].page2[0].stationaryTreatmentAddress[0]"
     },
     {
-      "id": "18.8",
+      "id": "24.8",
       "name": "stationaryTreatmentStartDate",
       "label": "stationaryTreatmentStartDate",
-      "question": "",
+      "question": "À quelle date l'hospitalisation a-t-elle débuté ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page2/stationaryTreatmentStartDate",
       "acroform_name": "topmostSubform[0].page2[0].stationaryTreatmentStartDate[0]",
       "type": "date"
     },
     {
-      "id": "18.9",
+      "id": "24.9",
       "name": "stationaryTreatmentEndDate",
       "label": "stationaryTreatmentEndDate",
-      "question": "",
+      "question": "À quelle date l'hospitalisation s'est-elle terminée ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page2/stationaryTreatmentEndDate",
       "acroform_name": "topmostSubform[0].page2[0].stationaryTreatmentEndDate[0]",
       "type": "date"
     },
     {
-      "id": "18.10",
+      "id": "24.10",
       "name": "neededSurgery",
       "label": "neededSurgery",
-      "question": "",
+      "question": "Une intervention chirurgicale a-t-elle été nécessaire ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/neededSurgery",
       "acroform_name": "topmostSubform[0].page2[0].neededSurgery[0]"
     },
     {
-      "id": "18.11",
+      "id": "24.11",
       "name": "surgeryDate",
       "label": "surgeryDate",
-      "question": "",
+      "question": "À quelle date l'intervention chirurgicale a-t-elle eu lieu ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page2/surgeryDate",
       "acroform_name": "topmostSubform[0].page2[0].surgeryDate[0]",
       "type": "date"
     },
     {
-      "id": "18.12",
+      "id": "24.12",
       "name": "surgeryLocation",
       "label": "surgeryLocation",
-      "question": "",
+      "question": "Dans quel établissement l'intervention chirurgicale a-t-elle été réalisée ?",
       "required": false,
       "xml_path": "topmostSubform/page2/surgeryLocation",
       "acroform_name": "topmostSubform[0].page2[0].surgeryLocation[0]"
     },
     {
-      "comments": "Section 19 — page3"
+      "comments": "Section 25 — page3"
     },
     {
-      "id": "19.1",
+      "id": "25.1",
       "name": "priorAccident",
       "label": "priorAccident",
-      "question": "",
+      "question": "Quel accident antérieur le patient a-t-il subi ?",
       "required": false,
       "xml_path": "topmostSubform/page3/priorAccident",
       "acroform_name": "topmostSubform[0].page3[0].priorAccident[0]"
     },
     {
-      "id": "19.2",
+      "id": "25.2",
       "name": "priorAccidentChoice",
       "label": "priorAccidentChoice",
-      "question": "",
+      "question": "Le patient a-t-il déjà subi un accident antérieur ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/priorAccidentChoice",
       "acroform_name": "topmostSubform[0].page3[0].priorAccidentChoice[0]"
     },
     {
-      "id": "19.3",
+      "id": "25.3",
       "name": "priorAccidentDate",
       "label": "priorAccidentDate",
-      "question": "",
+      "question": "À quelle date cet accident antérieur est-il survenu ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page3/priorAccidentDate",
       "acroform_name": "topmostSubform[0].page3[0].priorAccidentDate[0]",
       "type": "date"
     },
     {
-      "id": "19.4",
+      "id": "25.4",
       "name": "priorAccidentLocation",
       "label": "priorAccidentLocation",
-      "question": "",
+      "question": "Où cet accident antérieur est-il survenu ?",
       "required": false,
       "xml_path": "topmostSubform/page3/priorAccidentLocation",
       "acroform_name": "topmostSubform[0].page3[0].priorAccidentLocation[0]"
     },
     {
-      "id": "19.5",
+      "id": "25.5",
       "name": "healingProcessChoice",
       "label": "healingProcessChoice",
-      "question": "",
+      "question": "Une affection préexistante influence-t-elle le processus de guérison ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/healingProcessChoice",
       "acroform_name": "topmostSubform[0].page3[0].healingProcessChoice[0]"
     },
     {
-      "id": "19.6",
+      "id": "25.6",
       "name": "healingProcessAffection",
       "label": "healingProcessAffection",
-      "question": "",
+      "question": "Quelle affection préexistante influence le processus de guérison ?",
       "required": false,
       "xml_path": "topmostSubform/page3/healingProcessAffection",
       "acroform_name": "topmostSubform[0].page3[0].healingProcessAffection[0]"
     },
     {
-      "id": "19.7",
+      "id": "25.7",
       "name": "medicalFindings",
       "label": "medicalFindings",
-      "question": "",
+      "question": "Quelles sont les constatations médicales objectives à l'examen ?",
       "required": false,
       "xml_path": "topmostSubform/page3/medicalFindings",
       "acroform_name": "topmostSubform[0].page3[0].medicalFindings[0]"
     },
     {
-      "id": "19.8",
+      "id": "25.8",
       "name": "medicalFindingsDate",
       "label": "medicalFindingsDate",
-      "question": "",
+      "question": "À quelle date ces constatations médicales ont-elles été faites ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page3/medicalFindingsDate",
       "acroform_name": "topmostSubform[0].page3[0].medicalFindingsDate[0]",
       "type": "date"
     },
     {
-      "id": "19.9",
+      "id": "25.9",
       "name": "diagnosisAffectingUnemployability",
       "label": "diagnosisAffectingUnemployability",
-      "question": "",
+      "question": "Quels diagnostics justifient l'incapacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page3/diagnosisAffectingUnemployability",
       "acroform_name": "topmostSubform[0].page3[0].diagnosisAffectingUnemployability[0]"
     },
     {
-      "id": "19.10",
+      "id": "25.10",
       "name": "diagnosisUnaffectingUnemployability",
       "label": "diagnosisUnaffectingUnemployability",
-      "question": "",
+      "question": "Quels diagnostics n'ont pas d'incidence sur la capacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page3/diagnosisUnaffectingUnemployability",
       "acroform_name": "topmostSubform[0].page3[0].diagnosisUnaffectingUnemployability[0]"
@@ -530,46 +530,49 @@
       "acroform_name": "topmostSubform[0].page4[0].otherFactors[0]"
     },
     {
-      "id": "20.2",
+      "comments": "Section 26 — page4"
+    },
+    {
+      "id": "26.1",
       "name": "otherFactorsChoice",
       "label": "otherFactorsChoice",
-      "question": "",
+      "question": "D'autres facteurs influencent-ils l'incapacité de travail ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page4/otherFactorsChoice",
       "acroform_name": "topmostSubform[0].page4[0].otherFactorsChoice[0]"
     },
     {
-      "id": "20.3",
+      "id": "26.2",
       "name": "treatmentAndMedication",
       "label": "treatmentAndMedication",
-      "question": "",
+      "question": "Quels traitements et médicaments le patient reçoit-il actuellement ?",
       "required": false,
       "xml_path": "topmostSubform/page4/treatmentAndMedication",
       "acroform_name": "topmostSubform[0].page4[0].treatmentAndMedication[0]"
     },
     {
-      "id": "20.4",
+      "id": "26.3",
       "name": "procedureAndProposals",
       "label": "procedureAndProposals",
-      "question": "",
+      "question": "Quelle est la suite prévue de la prise en charge et quelles mesures proposez-vous ?",
       "required": false,
       "xml_path": "topmostSubform/page4/procedureAndProposals",
       "acroform_name": "topmostSubform[0].page4[0].procedureAndProposals[0]"
     },
     {
-      "id": "20.5",
+      "id": "26.4",
       "name": "prognosisOfTreatment",
       "label": "prognosisOfTreatment",
-      "question": "",
+      "question": "Quel est le pronostic du traitement en cours ?",
       "required": false,
       "xml_path": "topmostSubform/page4/prognosisOfTreatment",
       "acroform_name": "topmostSubform[0].page4[0].prognosisOfTreatment[0]"
     },
     {
-      "id": "20.6",
+      "id": "26.5",
       "name": "restrictionsForActivity",
       "label": "restrictionsForActivity",
-      "question": "",
+      "question": "Quelles limitations le patient présente-t-il dans son activité professionnelle habituelle ?",
       "required": false,
       "xml_path": "topmostSubform/page4/restrictionsForActivity",
       "acroform_name": "topmostSubform[0].page4[0].restrictionsForActivity[0]"
@@ -889,85 +892,85 @@
       "acroform_name": "topmostSubform[0].page5[0].hoursPerDayPlanned[0]"
     },
     {
-      "comments": "Section 21 — page5"
+      "comments": "Section 27 — page5"
     },
     {
-      "id": "21.1",
+      "id": "27.1",
       "name": "hoursPerDayFix",
       "label": "hoursPerDayFix",
-      "question": "",
+      "question": "Combien d'heures par jour le patient peut-il travailler ?",
       "required": false,
       "xml_path": "topmostSubform/page5/hoursPerDayFix",
       "acroform_name": "topmostSubform[0].page5[0].hoursPerDayFix[0]"
     },
     {
-      "id": "21.2",
+      "id": "27.2",
       "name": "otherWork",
       "label": "otherWork",
-      "question": "",
+      "question": "Quelle autre activité professionnelle le patient pourrait-il exercer ?",
       "required": false,
       "xml_path": "topmostSubform/page5/otherWork",
       "acroform_name": "topmostSubform[0].page5[0].otherWork[0]"
     },
     {
-      "id": "21.3",
+      "id": "27.3",
       "name": "otherWorkChoice",
       "label": "otherWorkChoice",
-      "question": "",
+      "question": "Une autre activité professionnelle est-elle envisageable pour le patient ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/otherWorkChoice",
       "acroform_name": "topmostSubform[0].page5[0].otherWorkChoice[0]"
     },
     {
-      "id": "21.4",
+      "id": "27.4",
       "name": "alreadyOtherWork",
       "label": "alreadyOtherWork",
-      "question": "",
+      "question": "Quelle autre activité le patient exerce-t-il déjà ?",
       "required": false,
       "xml_path": "topmostSubform/page5/alreadyOtherWork",
       "acroform_name": "topmostSubform[0].page5[0].alreadyOtherWork[0]"
     },
     {
-      "id": "21.5",
+      "id": "27.5",
       "name": "alreadyOtherWorkChoice",
       "label": "alreadyOtherWorkChoice",
-      "question": "",
+      "question": "Le patient exerce-t-il déjà une autre activité professionnelle ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/alreadyOtherWorkChoice",
       "acroform_name": "topmostSubform[0].page5[0].alreadyOtherWorkChoice[0]"
     },
     {
-      "id": "21.6",
+      "id": "27.6",
       "name": "restrictionsNewWork",
       "label": "restrictionsNewWork",
-      "question": "",
+      "question": "Quelles limitations s'appliqueraient à cette nouvelle activité ?",
       "required": false,
       "xml_path": "topmostSubform/page5/restrictionsNewWork",
       "acroform_name": "topmostSubform[0].page5[0].restrictionsNewWork[0]"
     },
     {
-      "id": "21.7",
+      "id": "27.7",
       "name": "restrictionsNewWorkChoice",
       "label": "restrictionsNewWorkChoice",
-      "question": "",
+      "question": "Des limitations s'appliquent-elles à une nouvelle activité ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/restrictionsNewWorkChoice",
       "acroform_name": "topmostSubform[0].page5[0].restrictionsNewWorkChoice[0]"
     },
     {
-      "id": "21.8",
+      "id": "27.8",
       "name": "limitationForDriving",
       "label": "limitationForDriving",
-      "question": "",
+      "question": "Quelles limitations s'appliquent à la conduite de véhicules ?",
       "required": false,
       "xml_path": "topmostSubform/page5/limitationForDriving",
       "acroform_name": "topmostSubform[0].page5[0].limitationForDriving[0]"
     },
     {
-      "id": "21.9",
+      "id": "27.9",
       "name": "limitationForDrivingChoice",
       "label": "limitationForDrivingChoice",
-      "question": "",
+      "question": "L'aptitude à conduire du patient est-elle limitée ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/limitationForDrivingChoice",
       "acroform_name": "topmostSubform[0].page5[0].limitationForDrivingChoice[0]"
@@ -1068,20 +1071,23 @@
       "acroform_name": "topmostSubform[0].page6[0].comment[0]"
     },
     {
-      "comments": "Section 22 — page6"
+      "comments": "Section 28 — page6"
     },
     {
-      "id": "22.1",
+      "id": "28.1",
       "name": "lastTreatmentDate",
       "label": "lastTreatmentDate",
-      "question": "",
+      "question": "À quelle date le dernier traitement a-t-il eu lieu ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page6/lastTreatmentDate",
       "acroform_name": "topmostSubform[0].page6[0].lastTreatmentDate[0]",
       "type": "date"
     },
     {
-      "id": "22.2",
+      "comments": "Section 22 — page6"
+    },
+    {
+      "id": "22.1",
       "name": "nextTreatmentDate",
       "label": "nextTreatmentDate",
       "question": "Quelle est la date du prochain traitement prévu ? [format : JJ.MM.AAAA]",
@@ -1091,19 +1097,19 @@
       "type": "date"
     },
     {
-      "id": "22.3",
+      "id": "28.2",
       "name": "otherInsurances",
       "label": "otherInsurances",
-      "question": "",
+      "question": "Quels autres assureurs sont concernés par ce cas ?",
       "required": false,
       "xml_path": "topmostSubform/page6/otherInsurances",
       "acroform_name": "topmostSubform[0].page6[0].otherInsurances[0]"
     },
     {
-      "id": "22.4",
+      "id": "28.3",
       "name": "otherInsurancesChoice",
       "label": "otherInsurancesChoice",
-      "question": "",
+      "question": "Un autre assureur est-il concerné par ce cas ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page6/otherInsurancesChoice",
       "acroform_name": "topmostSubform[0].page6[0].otherInsurancesChoice[0]"

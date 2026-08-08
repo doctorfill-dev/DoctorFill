@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.20.40.5010_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — page1"
@@ -478,28 +478,31 @@
       "acroform_name": "topmostSubform[0].page2[0].exams[0]"
     },
     {
-      "comments": "Section 16 — page3"
+      "comments": "Section 18 — page3"
     },
     {
-      "id": "16.1",
+      "id": "18.1",
       "name": "DiagnosesUnemployabilityRelated",
       "label": "DiagnosesUnemployabilityRelated",
-      "question": "",
+      "question": "Quels diagnostics justifient l'incapacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page3/DiagnosesUnemployabilityRelated",
       "acroform_name": "topmostSubform[0].page3[0].DiagnosesUnemployabilityRelated[0]"
     },
     {
-      "id": "16.2",
+      "id": "18.2",
       "name": "DiagnosesUnemployabilityUnrelated",
       "label": "DiagnosesUnemployabilityUnrelated",
-      "question": "",
+      "question": "Quels diagnostics n'ont pas d'incidence sur la capacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page3/DiagnosesUnemployabilityUnrelated",
       "acroform_name": "topmostSubform[0].page3[0].DiagnosesUnemployabilityUnrelated[0]"
     },
     {
-      "id": "16.3",
+      "comments": "Section 16 — page3"
+    },
+    {
+      "id": "16.1",
       "name": "objectiveLimitation",
       "label": "objectiveLimitation",
       "question": "Quelles limitations objectives l'examen met-il en évidence ?",
@@ -508,7 +511,7 @@
       "acroform_name": "topmostSubform[0].page3[0].objectiveLimitation[0]"
     },
     {
-      "id": "16.4",
+      "id": "16.2",
       "name": "hasOtherFactors",
       "label": "hasOtherFactors",
       "question": "D'autres facteurs influencent-ils l'évolution ? Répondre par oui ou non.",
@@ -517,7 +520,7 @@
       "acroform_name": "topmostSubform[0].page3[0].hasOtherFactors[0]"
     },
     {
-      "id": "16.5",
+      "id": "16.3",
       "name": "otherFactors",
       "label": "otherFactors",
       "question": "Quels autres facteurs influencent l'évolution du cas (contexte professionnel, social, psychique) ?",
@@ -526,7 +529,7 @@
       "acroform_name": "topmostSubform[0].page3[0].otherFactors[0]"
     },
     {
-      "id": "16.6",
+      "id": "16.4",
       "name": "currentSituation",
       "label": "currentSituation",
       "question": "Quelle est la situation actuelle du patient ?",
@@ -919,25 +922,28 @@
       "acroform_name": "topmostSubform[0].page4[0].hoursPerDayPlanned[0]"
     },
     {
-      "id": "17.7",
+      "comments": "Section 19 — page4"
+    },
+    {
+      "id": "19.1",
       "name": "hoursPerDayFixed",
       "label": "hoursPerDayFixed",
-      "question": "",
+      "question": "Combien d'heures par jour le patient peut-il travailler ?",
       "required": false,
       "xml_path": "topmostSubform/page4/hoursPerDayFixed",
       "acroform_name": "topmostSubform[0].page4[0].hoursPerDayFixed[0]"
     },
     {
-      "id": "17.8",
+      "id": "19.2",
       "name": "returnBeforeWeekend",
       "label": "returnBeforeWeekend",
-      "question": "",
+      "question": "Le patient peut-il reprendre le travail avant le week-end ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page4/returnBeforeWeekend",
       "acroform_name": "topmostSubform[0].page4[0].returnBeforeWeekend[0]"
     },
     {
-      "id": "17.9",
+      "id": "17.7",
       "name": "treatmentDateList",
       "label": "treatmentDateList",
       "question": "Quelles sont les dates des traitements effectués ?",
@@ -946,7 +952,7 @@
       "acroform_name": "topmostSubform[0].page4[0].treatmentDateList[0]"
     },
     {
-      "id": "17.10",
+      "id": "17.8",
       "name": "nextTreatmentDate",
       "label": "nextTreatmentDate",
       "question": "Quelle est la date du prochain traitement prévu ? [format : JJ.MM.AAAA]",
@@ -956,7 +962,7 @@
       "type": "date"
     },
     {
-      "id": "17.11",
+      "id": "17.9",
       "name": "hasOtherInsurer",
       "label": "hasOtherInsurer",
       "question": "Un autre assureur est-il concerné par ce cas ? Répondre par oui ou non.",
@@ -965,7 +971,7 @@
       "acroform_name": "topmostSubform[0].page4[0].hasOtherInsurer[0]"
     },
     {
-      "id": "17.12",
+      "id": "17.10",
       "name": "otherInsurerList",
       "label": "otherInsurerList",
       "question": "Quels autres assureurs sont concernés par ce cas ?",

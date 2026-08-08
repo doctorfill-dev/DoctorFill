@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.40.5210_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — page1"
@@ -272,7 +272,7 @@
       "id": "4.1",
       "name": "blockAddress",
       "label": "blockAddress",
-      "question": "",
+      "question": "Quelle est l'adresse postale complète du chirurgien (nom, rue, NPA et localité) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/surgeonS1Address/blockAddress",
       "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].blockAddress[0]"
@@ -281,7 +281,7 @@
       "id": "4.2",
       "name": "phone",
       "label": "phone",
-      "question": "",
+      "question": "Quel est le numéro de téléphone du chirurgien ?",
       "required": false,
       "xml_path": "topmostSubform/page1/surgeonS1Address/phone",
       "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].phone[0]"
@@ -290,7 +290,7 @@
       "id": "4.3",
       "name": "fax",
       "label": "fax",
-      "question": "",
+      "question": "Quel est le numéro de fax du chirurgien ?",
       "required": false,
       "xml_path": "topmostSubform/page1/surgeonS1Address/fax",
       "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].fax[0]"
@@ -299,7 +299,7 @@
       "id": "4.4",
       "name": "email",
       "label": "email",
-      "question": "",
+      "question": "Quelle est l'adresse e-mail du chirurgien ?",
       "required": false,
       "xml_path": "topmostSubform/page1/surgeonS1Address/email",
       "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].email[0]"
@@ -308,7 +308,7 @@
       "id": "4.5",
       "name": "ean",
       "label": "ean",
-      "question": "",
+      "question": "Quel est le numéro GLN (anciennement EAN) du chirurgien ?",
       "required": false,
       "xml_path": "topmostSubform/page1/surgeonS1Address/ean",
       "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].ean[0]"
@@ -317,7 +317,7 @@
       "id": "4.6",
       "name": "zsr",
       "label": "zsr",
-      "question": "",
+      "question": "Quel est le numéro RCC (ZSR) du chirurgien ?",
       "required": false,
       "xml_path": "topmostSubform/page1/surgeonS1Address/zsr",
       "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].zsr[0]"
@@ -326,7 +326,7 @@
       "id": "4.7",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du chirurgien ?",
       "required": false,
       "xml_path": "topmostSubform/page1/surgeonS1Address/input",
       "acroform_name": "topmostSubform[0].page1[0].surgeonS1Address[0].input[0]"
@@ -423,7 +423,7 @@
       "id": "4.8",
       "name": "type",
       "label": "type",
-      "question": "",
+      "question": "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).",
       "required": false,
       "xml_path": "topmostSubform/page1/adiagnosisS1Struct/type",
       "acroform_name": "topmostSubform[0].page1[0].adiagnosisS1Struct[0].type[0]",
@@ -464,7 +464,7 @@
       "id": "4.9",
       "name": "type",
       "label": "type",
-      "question": "",
+      "question": "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).",
       "required": false,
       "xml_path": "topmostSubform/page1/bdiagnosisS1Struct/type",
       "acroform_name": "topmostSubform[0].page1[0].bdiagnosisS1Struct[0].type[0]",
@@ -505,7 +505,7 @@
       "id": "4.10",
       "name": "type",
       "label": "type",
-      "question": "",
+      "question": "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).",
       "required": false,
       "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/type",
       "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].type[0]",
@@ -546,7 +546,7 @@
       "id": "4.11",
       "name": "type",
       "label": "type",
-      "question": "",
+      "question": "Quel système de codage est employé pour cette entrée ? Répondre UNIQUEMENT par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).",
       "required": false,
       "xml_path": "topmostSubform/page1/ediagnosisS1Struct/type",
       "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].type[0]",
@@ -566,10 +566,13 @@
       "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].input[0]"
     },
     {
-      "id": "4.12",
+      "comments": "Section 5 — page1"
+    },
+    {
+      "id": "5.1",
       "name": "measures",
       "label": "measures",
-      "question": "",
+      "question": "Quelles mesures ou interventions sont prévues durant l'hospitalisation ?",
       "required": false,
       "xml_path": "topmostSubform/page1/measures",
       "acroform_name": "topmostSubform[0].page1[0].measures[0]"
@@ -641,24 +644,6 @@
         "26",
         "27"
       ]
-    },
-    {
-      "id": "4.13",
-      "name": "helpICD10",
-      "label": "Codes ICD-10 fréquents",
-      "question": "",
-      "required": false,
-      "xml_path": "topmostSubform/page1/helpICD10",
-      "acroform_name": "topmostSubform[0].page1[0].helpICD10[0]"
-    },
-    {
-      "id": "4.14",
-      "name": "helpCHOP9",
-      "label": "Codes CHOP-9 fréquents",
-      "question": "",
-      "required": false,
-      "xml_path": "topmostSubform/page1/helpCHOP9",
-      "acroform_name": "topmostSubform[0].page1[0].helpCHOP9[0]"
     }
   ]
 }

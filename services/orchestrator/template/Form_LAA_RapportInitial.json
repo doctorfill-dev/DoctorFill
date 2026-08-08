@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.40.40.5010_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — page1"
@@ -214,10 +214,13 @@
       "type": "date"
     },
     {
-      "id": "11.2",
+      "comments": "Section 14 — page1"
+    },
+    {
+      "id": "14.1",
       "name": "caseTime",
       "label": "caseTime",
-      "question": "",
+      "question": "À quelle heure l'accident est-il survenu ? [format : HH:MM]",
       "required": false,
       "xml_path": "topmostSubform/page1/lawS1Struct/caseTime",
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseTime[0]"
@@ -258,7 +261,7 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "id": "11.3",
+      "id": "11.2",
       "name": "firstTreatmentCity",
       "label": "firstTreatmentCity",
       "question": "Dans quelle localité le premier traitement a-t-il eu lieu ?",
@@ -280,7 +283,7 @@
       "type": "date"
     },
     {
-      "id": "11.4",
+      "id": "11.3",
       "name": "firstTreatmentTime",
       "label": "firstTreatmentTime",
       "question": "À quelle heure le premier traitement a-t-il eu lieu ? [format : HH:MM]",
@@ -289,7 +292,7 @@
       "acroform_name": "topmostSubform[0].page1[0].firstTreatmentTime[0]"
     },
     {
-      "id": "11.5",
+      "id": "11.4",
       "name": "firstTreatmentDoctor",
       "label": "firstTreatmentDoctor",
       "question": "Quel médecin a assuré le premier traitement ?",
@@ -298,7 +301,7 @@
       "acroform_name": "topmostSubform[0].page1[0].firstTreatmentDoctor[0]"
     },
     {
-      "id": "11.6",
+      "id": "11.5",
       "name": "firstTreatmentSpeciality",
       "label": "firstTreatmentSpeciality",
       "question": "Quelle est la spécialité du médecin ayant assuré le premier traitement ?",
@@ -307,10 +310,10 @@
       "acroform_name": "topmostSubform[0].page1[0].firstTreatmentSpeciality[0]"
     },
     {
-      "id": "11.7",
+      "id": "14.2",
       "name": "patientsReport",
       "label": "patientsReport",
-      "question": "",
+      "question": "Comment le patient décrit-il lui-même l'accident et ses suites ?",
       "required": false,
       "xml_path": "topmostSubform/page1/patientsReport",
       "acroform_name": "topmostSubform[0].page1[0].patientsReport[0]"
@@ -325,10 +328,13 @@
       "acroform_name": "topmostSubform[0].page1[0].profession[0]"
     },
     {
-      "id": "11.8",
+      "comments": "Section 17 — page1"
+    },
+    {
+      "id": "17.1",
       "name": "workingHours",
       "label": "workingHours",
-      "question": "",
+      "question": "Quel est l'horaire de travail habituel du patient ?",
       "required": false,
       "xml_path": "topmostSubform/page1/workingHours",
       "acroform_name": "topmostSubform[0].page1[0].workingHours[0]"
@@ -384,37 +390,40 @@
       ]
     },
     {
-      "comments": "Section 12 — page2"
+      "comments": "Section 15 — page2"
     },
     {
-      "id": "12.1",
+      "id": "15.1",
       "name": "circumstancesText",
       "label": "circumstancesText",
-      "question": "",
+      "question": "Dans quelles circonstances l'accident s'est-il produit ?",
       "required": false,
       "xml_path": "topmostSubform/page2/circumstancesText",
       "acroform_name": "topmostSubform[0].page2[0].circumstancesText[0]"
     },
     {
-      "id": "12.2",
+      "id": "15.2",
       "name": "specialCircumstances",
       "label": "specialCircumstances",
-      "question": "",
+      "question": "Y a-t-il des circonstances particulières à signaler (alcool, médicaments, tiers impliqué) ?",
       "required": false,
       "xml_path": "topmostSubform/page2/specialCircumstances",
       "acroform_name": "topmostSubform[0].page2[0].specialCircumstances[0]"
     },
     {
-      "id": "12.3",
+      "id": "15.3",
       "name": "generalCondition",
       "label": "generalCondition",
-      "question": "",
+      "question": "Quel est l'état général du patient ?",
       "required": false,
       "xml_path": "topmostSubform/page2/generalCondition",
       "acroform_name": "topmostSubform[0].page2[0].generalCondition[0]"
     },
     {
-      "id": "12.4",
+      "comments": "Section 12 — page2"
+    },
+    {
+      "id": "12.1",
       "name": "morphologicalDamage",
       "label": "morphologicalDamage",
       "question": "Quelles atteintes morphologiques sont constatées (lésions, déformations) ?",
@@ -423,7 +432,7 @@
       "acroform_name": "topmostSubform[0].page2[0].morphologicalDamage[0]"
     },
     {
-      "id": "12.5",
+      "id": "12.2",
       "name": "functionalDamage",
       "label": "functionalDamage",
       "question": "Quelles atteintes fonctionnelles sont constatées (limitations de mobilité, de force) ?",
@@ -432,7 +441,7 @@
       "acroform_name": "topmostSubform[0].page2[0].functionalDamage[0]"
     },
     {
-      "id": "12.6",
+      "id": "12.3",
       "name": "exams",
       "label": "exams",
       "question": "Quels examens complémentaires ont été réalisés et avec quels résultats ?",
@@ -453,37 +462,40 @@
       "acroform_name": "topmostSubform[0].page2[0].diagnosis[0]"
     },
     {
-      "comments": "Section 13 — page3"
+      "comments": "Section 16 — page3"
     },
     {
-      "id": "13.1",
+      "id": "16.1",
       "name": "plausibleAccident",
       "label": "plausibleAccident",
-      "question": "",
+      "question": "Les constatations médicales sont-elles compatibles avec le déroulement de l'accident décrit ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/plausibleAccident",
       "acroform_name": "topmostSubform[0].page3[0].plausibleAccident[0]"
     },
     {
-      "id": "13.2",
+      "id": "16.2",
       "name": "hospitalDetails",
       "label": "hospitalDetails",
-      "question": "",
+      "question": "Dans quel établissement le patient a-t-il été hospitalisé, et à quelles dates ?",
       "required": false,
       "xml_path": "topmostSubform/page3/hospitalDetails",
       "acroform_name": "topmostSubform[0].page3[0].hospitalDetails[0]"
     },
     {
-      "id": "13.3",
+      "id": "16.3",
       "name": "proposedTherapy",
       "label": "proposedTherapy",
-      "question": "",
+      "question": "Quelle thérapie proposez-vous ?",
       "required": false,
       "xml_path": "topmostSubform/page3/proposedTherapy",
       "acroform_name": "topmostSubform[0].page3[0].proposedTherapy[0]"
     },
     {
-      "id": "13.4",
+      "comments": "Section 13 — page3"
+    },
+    {
+      "id": "13.1",
       "name": "hospitalisationChoice",
       "label": "hospitalisationChoice",
       "question": "Le patient a-t-il été hospitalisé ? Répondre par oui ou non.",
@@ -527,47 +539,47 @@
       "acroform_name": "topmostSubform[0].page3[0].hoursPerDayPlanned[0]"
     },
     {
-      "id": "13.5",
+      "id": "16.4",
       "name": "hoursPerDayFixed",
       "label": "hoursPerDayFixed",
-      "question": "",
+      "question": "Combien d'heures par jour le patient peut-il travailler ?",
       "required": false,
       "xml_path": "topmostSubform/page3/hoursPerDayFixed",
       "acroform_name": "topmostSubform[0].page3[0].hoursPerDayFixed[0]"
     },
     {
-      "id": "13.6",
+      "id": "16.5",
       "name": "returnBeforeWeekend",
       "label": "returnBeforeWeekend",
-      "question": "",
+      "question": "Le patient peut-il reprendre le travail avant le week-end ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/returnBeforeWeekend",
       "acroform_name": "topmostSubform[0].page3[0].returnBeforeWeekend[0]"
     },
     {
-      "id": "13.7",
+      "id": "16.6",
       "name": "treatmentCompletion",
       "label": "treatmentCompletion",
-      "question": "",
+      "question": "Le traitement est-il terminé ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/treatmentCompletion",
       "acroform_name": "topmostSubform[0].page3[0].treatmentCompletion[0]"
     },
     {
-      "id": "13.8",
+      "id": "16.7",
       "name": "endOfTreatment",
       "label": "endOfTreatment",
-      "question": "",
+      "question": "À quelle date le traitement se termine-t-il ou s'est-il terminé ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page3/endOfTreatment",
       "acroform_name": "topmostSubform[0].page3[0].endOfTreatment[0]",
       "type": "date"
     },
     {
-      "id": "13.9",
+      "id": "16.8",
       "name": "endOfTreatmentInWeeks",
       "label": "endOfTreatmentInWeeks",
-      "question": "",
+      "question": "Dans combien de semaines le traitement doit-il se terminer ? Répondre par le nombre seul.",
       "required": false,
       "xml_path": "topmostSubform/page3/endOfTreatmentInWeeks",
       "acroform_name": "topmostSubform[0].page3[0].endOfTreatmentInWeeks[0]"
