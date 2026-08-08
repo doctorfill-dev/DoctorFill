@@ -30,7 +30,10 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      # nvidia-smi -L en préambule : un conteneur peut perdre l'accès à /dev/nvidia*
+      # (cgroups réinitialisés par un daemon-reload de l'hôte) sans que le process
+      # meure — il garde sa VRAM et répond /health alors que toute inférence échoue.
+      test: ["CMD-SHELL", "nvidia-smi -L >/dev/null 2>&1 && python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -56,7 +59,9 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8082/health')"]
+      # Voir le commentaire du healthcheck vllm : sans ce préambule GPU, marker
+      # reste "healthy" alors que surya échoue en "CUDA: operation not permitted".
+      test: ["CMD-SHELL", "nvidia-smi -L >/dev/null 2>&1 && python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8082/health')\""]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -81,7 +86,8 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
+      # Idem vllm/marker : le préambule GPU rend visible une perte de /dev/nvidia*.
+      test: ["CMD-SHELL", "nvidia-smi -L >/dev/null 2>&1 && python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8081/health')\""]
       interval: 30s
       timeout: 10s
       retries: 5
