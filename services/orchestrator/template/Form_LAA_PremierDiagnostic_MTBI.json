@@ -102,7 +102,10 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
     },
     {
-      "id": "1.11",
+      "comments": "Section 6 — page1"
+    },
+    {
+      "id": "6.1",
       "name": "patientLessThan60",
       "label": "patientLessThan60",
       "question": "",
@@ -111,7 +114,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientLessThan60[0]"
     },
     {
-      "id": "1.12",
+      "id": "6.2",
       "name": "patientMoreThan60",
       "label": "patientMoreThan60",
       "question": "",
@@ -120,16 +123,16 @@
       "acroform_name": "topmostSubform[0].page1[0].patientMoreThan60[0]"
     },
     {
-      "id": "1.13",
+      "id": "6.3",
       "name": "accidentTime",
       "label": "accidentTime",
-      "question": "",
+      "question": "À quelle heure l'accident est-il survenu ? [format : HH:MM]",
       "required": false,
       "xml_path": "topmostSubform/page1/accidentTime",
       "acroform_name": "topmostSubform[0].page1[0].accidentTime[0]"
     },
     {
-      "id": "1.14",
+      "id": "1.11",
       "name": "caseDate",
       "label": "caseDate",
       "question": "Quelle est la date de l'événement assuré (accident, sinistre) ? [format : JJ.MM.AAAA]",
@@ -139,7 +142,7 @@
       "type": "date"
     },
     {
-      "id": "1.15",
+      "id": "1.12",
       "name": "type",
       "label": "type",
       "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
@@ -154,7 +157,7 @@
       ]
     },
     {
-      "id": "1.16",
+      "id": "1.13",
       "name": "insuredID",
       "label": "insuredID",
       "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
@@ -163,16 +166,19 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
     },
     {
-      "id": "1.17",
+      "comments": "Section 5 — page1"
+    },
+    {
+      "id": "5.1",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur la couverture d'assurance (régime applicable, réserve, prise en charge particulière) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/lawS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "id": "1.18",
+      "id": "6.4",
       "name": "originator",
       "label": "originator",
       "question": "",
@@ -181,7 +187,7 @@
       "acroform_name": "topmostSubform[0].page1[0].originator[0]"
     },
     {
-      "id": "1.19",
+      "id": "6.5",
       "name": "asPassenger",
       "label": "Occupant d’un véhicule automobile",
       "question": "",
@@ -195,7 +201,7 @@
       ]
     },
     {
-      "id": "1.20",
+      "id": "6.6",
       "name": "asCyclist",
       "label": "Cycliste",
       "question": "",
@@ -209,7 +215,7 @@
       ]
     },
     {
-      "id": "1.21",
+      "id": "6.7",
       "name": "asBiker",
       "label": "Motocycliste",
       "question": "",
@@ -223,7 +229,7 @@
       ]
     },
     {
-      "id": "1.22",
+      "id": "6.8",
       "name": "asPedestrian",
       "label": "Piéton",
       "question": "",
@@ -237,7 +243,7 @@
       ]
     },
     {
-      "id": "1.23",
+      "id": "6.9",
       "name": "asUnknown",
       "label": "Indéfini",
       "question": "",
@@ -251,7 +257,7 @@
       ]
     },
     {
-      "id": "1.24",
+      "id": "6.10",
       "name": "asFall",
       "label": "Chute",
       "question": "",
@@ -265,7 +271,7 @@
       ]
     },
     {
-      "id": "1.25",
+      "id": "6.11",
       "name": "asOtherAccident",
       "label": "Autre accident",
       "question": "",
@@ -279,16 +285,16 @@
       ]
     },
     {
-      "id": "1.26",
+      "id": "6.12",
       "name": "courseOfAccident",
       "label": "courseOfAccident",
-      "question": "",
+      "question": "Comment l'accident s'est-il déroulé ?",
       "required": false,
       "xml_path": "topmostSubform/page1/courseOfAccident",
       "acroform_name": "topmostSubform[0].page1[0].courseOfAccident[0]"
     },
     {
-      "id": "1.27",
+      "id": "6.13",
       "name": "criticalAccident",
       "label": "criticalAccident",
       "question": "",
@@ -297,7 +303,7 @@
       "acroform_name": "topmostSubform[0].page1[0].criticalAccident[0]"
     },
     {
-      "id": "1.28",
+      "id": "6.14",
       "name": "coagulationDisorder",
       "label": "coagulationDisorder",
       "question": "",
@@ -306,7 +312,7 @@
       "acroform_name": "topmostSubform[0].page1[0].coagulationDisorder[0]"
     },
     {
-      "id": "1.29",
+      "id": "6.15",
       "name": "unconsciousness",
       "label": "unconsciousness",
       "question": "",
@@ -315,7 +321,7 @@
       "acroform_name": "topmostSubform[0].page1[0].unconsciousness[0]"
     },
     {
-      "id": "1.30",
+      "id": "6.16",
       "name": "unconsciousnessDuration",
       "label": "unconsciousnessDuration",
       "question": "",
@@ -324,7 +330,7 @@
       "acroform_name": "topmostSubform[0].page1[0].unconsciousnessDuration[0]"
     },
     {
-      "id": "1.31",
+      "id": "6.17",
       "name": "anterogradeAnmnesia",
       "label": "anterogradeAnmnesia",
       "question": "",
@@ -333,7 +339,7 @@
       "acroform_name": "topmostSubform[0].page1[0].anterogradeAnmnesia[0]"
     },
     {
-      "id": "1.32",
+      "id": "6.18",
       "name": "posttraumaticAnmnesia",
       "label": "posttraumaticAnmnesia",
       "question": "",
@@ -342,7 +348,7 @@
       "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesia[0]"
     },
     {
-      "id": "1.33",
+      "id": "6.19",
       "name": "posttraumaticAnmnesiaDuration1",
       "label": "Durée: 2-4 h (= Minor RF)",
       "question": "",
@@ -356,7 +362,7 @@
       ]
     },
     {
-      "id": "1.34",
+      "id": "6.20",
       "name": "posttraumaticAnmnesiaDuration2",
       "label": "Durée: > 4 h (= Major RF)",
       "question": "",
@@ -370,7 +376,7 @@
       ]
     },
     {
-      "id": "1.35",
+      "id": "6.21",
       "name": "epilepsy",
       "label": "epilepsy",
       "question": "",
@@ -379,7 +385,7 @@
       "acroform_name": "topmostSubform[0].page1[0].epilepsy[0]"
     },
     {
-      "id": "1.36",
+      "id": "6.22",
       "name": "epilepsyDetails",
       "label": "epilepsyDetails",
       "question": "",
@@ -388,7 +394,7 @@
       "acroform_name": "topmostSubform[0].page1[0].epilepsyDetails[0]"
     },
     {
-      "id": "1.37",
+      "id": "6.23",
       "name": "vomiting",
       "label": "vomiting",
       "question": "",
@@ -397,7 +403,7 @@
       "acroform_name": "topmostSubform[0].page1[0].vomiting[0]"
     },
     {
-      "id": "1.38",
+      "id": "1.14",
       "name": "blockAddress",
       "label": "blockAddress",
       "question": "Quelle est l'adresse postale complète de l'assureur (nom, rue, NPA et localité) ?",
@@ -406,7 +412,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].blockAddress[0]"
     },
     {
-      "id": "1.39",
+      "id": "1.15",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail de l'assureur ?",
@@ -415,7 +421,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].email[0]"
     },
     {
-      "id": "1.40",
+      "id": "1.16",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
@@ -424,7 +430,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
     },
     {
-      "id": "1.41",
+      "id": "1.17",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
@@ -433,7 +439,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
     },
     {
-      "id": "1.42",
+      "id": "1.18",
       "name": "insuranceSelector",
       "label": "insuranceSelector",
       "question": "Quel est le nom de l'assureur qui prend en charge le cas ?",
@@ -447,20 +453,20 @@
       ]
     },
     {
-      "id": "1.43",
+      "id": "6.24",
       "name": "examinationDate",
       "label": "examinationDate",
-      "question": "",
+      "question": "À quelle date le patient a-t-il été examiné ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page1/examinationDate",
       "acroform_name": "topmostSubform[0].page1[0].examinationDate[0]",
       "type": "date"
     },
     {
-      "comments": "Section 2 — page2"
+      "comments": "Section 7 — page2"
     },
     {
-      "id": "2.1",
+      "id": "7.1",
       "name": "glasgowEyes",
       "label": "glasgowEyes",
       "question": "",
@@ -469,7 +475,7 @@
       "acroform_name": "topmostSubform[0].page2[0].glasgowEyes[0]"
     },
     {
-      "id": "2.2",
+      "id": "7.2",
       "name": "glasgowVerbal",
       "label": "glasgowVerbal",
       "question": "",
@@ -478,7 +484,7 @@
       "acroform_name": "topmostSubform[0].page2[0].glasgowVerbal[0]"
     },
     {
-      "id": "2.3",
+      "id": "7.3",
       "name": "glasgowMovement",
       "label": "glasgowMovement",
       "question": "",
@@ -487,7 +493,7 @@
       "acroform_name": "topmostSubform[0].page2[0].glasgowMovement[0]"
     },
     {
-      "id": "2.4",
+      "id": "7.4",
       "name": "focalDeficit",
       "label": "focalDeficit",
       "question": "",
@@ -496,7 +502,7 @@
       "acroform_name": "topmostSubform[0].page2[0].focalDeficit[0]"
     },
     {
-      "id": "2.5",
+      "id": "7.5",
       "name": "cranialContusion",
       "label": "cranialContusion",
       "question": "",
@@ -505,7 +511,7 @@
       "acroform_name": "topmostSubform[0].page2[0].cranialContusion[0]"
     },
     {
-      "id": "2.6",
+      "id": "7.6",
       "name": "cranialFracture",
       "label": "cranialFracture",
       "question": "",
@@ -514,16 +520,16 @@
       "acroform_name": "topmostSubform[0].page2[0].cranialFracture[0]"
     },
     {
-      "id": "2.7",
+      "id": "7.7",
       "name": "classification",
       "label": "classification",
-      "question": "",
+      "question": "Quelle est la classification retenue pour cette atteinte ?",
       "required": false,
       "xml_path": "topmostSubform/page2/classification",
       "acroform_name": "topmostSubform[0].page2[0].classification[0]"
     },
     {
-      "id": "2.8",
+      "id": "7.8",
       "name": "focalDeficits",
       "label": "focalDeficits",
       "question": "",
@@ -532,10 +538,10 @@
       "acroform_name": "topmostSubform[0].page2[0].focalDeficits[0]"
     },
     {
-      "comments": "Section 3 — page3"
+      "comments": "Section 8 — page3"
     },
     {
-      "id": "3.1",
+      "id": "8.1",
       "name": "sectionEChoice",
       "label": "sectionEChoice",
       "question": "",
@@ -544,7 +550,7 @@
       "acroform_name": "topmostSubform[0].page3[0].sectionEChoice[0]"
     },
     {
-      "id": "3.2",
+      "id": "8.2",
       "name": "sectionEDate",
       "label": "sectionEDate",
       "question": "",
@@ -554,7 +560,7 @@
       "type": "date"
     },
     {
-      "id": "3.3",
+      "id": "8.3",
       "name": "sectionELocation",
       "label": "sectionELocation",
       "question": "",

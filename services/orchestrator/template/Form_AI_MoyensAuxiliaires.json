@@ -1,6 +1,6 @@
 {
   "_generated_from": "medforms.40.10.5030_fr.pdf",
-  "_reviewed": false,
+  "_reviewed": true,
   "fields": [
     {
       "comments": "Section 1 — Seite1"
@@ -45,34 +45,40 @@
       ]
     },
     {
-      "id": "1.2",
+      "comments": "Section 8 — Seite1"
+    },
+    {
+      "id": "8.1",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur le lieu ou le contexte du traitement (établissement, service, cadre ambulatoire ou hospitalier) ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/treatmentS1Struct/input",
       "acroform_name": "mutter_dok[0].Seite1[0].treatmentS1Struct[0].input[0]"
     },
     {
-      "id": "1.3",
+      "comments": "Section 7 — Seite1"
+    },
+    {
+      "id": "7.1",
       "name": "recipientBlockAddressRight",
       "label": "recipientBlockAddressRight",
-      "question": "",
+      "question": "Quelle est l'adresse complète du service ou de la personne destinataire du rapport, si elle diffère de l'organisme principal (nom, rue, NPA et localité) ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/recipientBlockAddressRight",
       "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressRight[0]"
     },
     {
-      "id": "1.4",
+      "id": "7.2",
       "name": "recipientBlockAddressLeft",
       "label": "recipientBlockAddressLeft",
-      "question": "",
+      "question": "Quelle est l'adresse complète de l'organisme destinataire du rapport (nom, rue, NPA et localité) ? Elle correspond au canton de traitement du patient.",
       "required": false,
       "xml_path": "mutter_dok/Seite1/recipientBlockAddressLeft",
       "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressLeft[0]"
     },
     {
-      "id": "1.5",
+      "id": "1.2",
       "name": "companyName",
       "label": "companyName",
       "question": "Quel est le nom de l'entreprise ou de l'institution de l'assureur ?",
@@ -81,7 +87,7 @@
       "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].companyName[0]"
     },
     {
-      "id": "1.6",
+      "id": "1.3",
       "name": "departmentName",
       "label": "departmentName",
       "question": "Quel est le nom du service ou du département de l'assureur ?",
@@ -90,7 +96,7 @@
       "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].departmentName[0]"
     },
     {
-      "id": "1.7",
+      "id": "1.4",
       "name": "street",
       "label": "street",
       "question": "Quelle est la rue et le numéro de l'adresse de l'assureur ?",
@@ -99,7 +105,7 @@
       "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].street[0]"
     },
     {
-      "id": "1.8",
+      "id": "1.5",
       "name": "zip",
       "label": "zip",
       "question": "Quel est le code postal (NPA) de l'adresse de l'assureur ?",
@@ -108,7 +114,7 @@
       "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].zip[0]"
     },
     {
-      "id": "1.9",
+      "id": "1.6",
       "name": "city",
       "label": "city",
       "question": "Quelle est la localité de l'adresse de l'assureur ?",
@@ -117,7 +123,7 @@
       "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].city[0]"
     },
     {
-      "id": "1.10",
+      "id": "1.7",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
@@ -126,7 +132,7 @@
       "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].ean[0]"
     },
     {
-      "id": "1.11",
+      "id": "1.8",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
@@ -135,28 +141,31 @@
       "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].input[0]"
     },
     {
-      "comments": "Section 2 — Seite2"
+      "comments": "Section 5 — Seite2"
     },
     {
-      "id": "2.1",
+      "id": "5.1",
       "name": "evaluation",
       "label": "evaluation",
-      "question": "",
+      "question": "Quelle est l'appréciation médicale de la situation du patient ?",
       "required": false,
       "xml_path": "mutter_dok/Seite2/Block_1_Arztbericht/evaluation",
       "acroform_name": "mutter_dok[0].Seite2[0].Block_1_Arztbericht[0].evaluation[0]"
     },
     {
-      "id": "2.2",
+      "id": "5.2",
       "name": "request",
       "label": "request",
-      "question": "",
+      "question": "Quelle est la demande adressée à l'assureur ou à l'office ?",
       "required": false,
       "xml_path": "mutter_dok/Seite2/Block_2_Arztbericht/request",
       "acroform_name": "mutter_dok[0].Seite2[0].Block_2_Arztbericht[0].request[0]"
     },
     {
-      "id": "2.3",
+      "comments": "Section 2 — Seite2"
+    },
+    {
+      "id": "2.1",
       "name": "firstName",
       "label": "firstName",
       "question": "Quel est le prénom du patient ?",
@@ -165,7 +174,7 @@
       "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].firstName[0]"
     },
     {
-      "id": "2.4",
+      "id": "2.2",
       "name": "lastName",
       "label": "lastName",
       "question": "Quel est le nom de famille du patient ?",
@@ -174,7 +183,7 @@
       "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].lastName[0]"
     },
     {
-      "id": "2.5",
+      "id": "2.3",
       "name": "ssn",
       "label": "ssn",
       "question": "Quel est le numéro AVS du patient ? [format : 756.XXXX.XXXX.XX]",
@@ -183,7 +192,7 @@
       "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].ssn[0]"
     },
     {
-      "id": "2.6",
+      "id": "2.4",
       "name": "birthDate",
       "label": "birthDate",
       "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
@@ -193,7 +202,7 @@
       "type": "date"
     },
     {
-      "id": "2.7",
+      "id": "2.5",
       "name": "sex",
       "label": "sex",
       "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
@@ -207,7 +216,7 @@
       ]
     },
     {
-      "id": "2.8",
+      "id": "2.6",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
@@ -275,10 +284,13 @@
       "type": "date"
     },
     {
-      "id": "3.7",
+      "comments": "Section 6 — Seite3"
+    },
+    {
+      "id": "6.1",
       "name": "attachment",
       "label": "attachment",
-      "question": "",
+      "question": "Quels documents sont joints au rapport ?",
       "required": false,
       "xml_path": "mutter_dok/Seite3/Block_5_Beilagen/attachment",
       "acroform_name": "mutter_dok[0].Seite3[0].Block_5_Beilagen[0].attachment[0]"

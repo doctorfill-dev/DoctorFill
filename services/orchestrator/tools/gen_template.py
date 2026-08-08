@@ -63,6 +63,9 @@ TECHNICAL_NAMES = {
     # Boutons et sondes du gabarit : aucune donnée à extraire.
     "deleteMe", "clearMe", "javascriptAvailability", "calcSubmitLog",
     "calcGPManagement", "calcAppointmentPendencyTask",
+    # Plomberie interne repérée en parcourant le catalogue.
+    "helpSystem", "openAttach", "production_modus", "pad_medforms_form_id",
+    "miscData", "subaddressingSelector",
 }
 
 
@@ -143,6 +146,12 @@ ROLE_VOCAB = {
     "employerS1Address": "de l'employeur",
     "recipientS1Address": "du destinataire",
     "supervisorS1Address": "du médecin superviseur",
+    "physiotherapistS1Address": "du physiothérapeute",
+    "hospitalS1Address": "de l'hôpital ou de la clinique",
+    "othertechnicianS1Address": "du technicien ou fournisseur de moyens auxiliaires",
+    "pharmacyS1Address": "de la pharmacie",
+    "therapistS1Address": "du thérapeute",
+    "guardianS1Address": "du représentant légal",
 }
 
 FIELD_VOCAB = {
@@ -205,6 +214,134 @@ FIELD_VOCAB = {
                         "peut-il assurer ?", None),
     "dailyResilience": ("Quelle est la capacité de résistance quotidienne du "
                         "patient, en heures ?", None),
+    # Quatrième rang : vocabulaire clinique partagé par plusieurs formulaires du
+    # catalogue (état de santé, évolution, traitement, capacité de travail).
+    "stateOfHealth": ("Quel est l'état de santé actuel du patient ?", None),
+    "changeOfDiagnosis": ("Le diagnostic a-t-il changé depuis le dernier rapport ? "
+                          "Si oui, préciser en quoi.", None),
+    "influenceOnChangedDiagnosis": ("Quelle influence ce changement de diagnostic a-t-il "
+                                    "sur la capacité de travail du patient ?", None),
+    "degreeOnChangedDiagnosis": ("Dans quelle mesure ce changement de diagnostic "
+                                 "modifie-t-il le pronostic ?", None),
+    "changedClinicalResults": ("Quels résultats cliniques ou d'examens ont évolué "
+                               "depuis le dernier rapport ?", None),
+    "therapeuticalMeasure": ("Quelles mesures thérapeutiques sont en cours ou prévues ?", None),
+    "lastExaminationDate": ("À quelle date le patient a-t-il été examiné pour la "
+                            "dernière fois ? [format : JJ.MM.AAAA]", "date"),
+    "progressUpdateStartDate": ("À partir de quelle date porte cette actualisation "
+                                "du dossier ? [format : JJ.MM.AAAA]", "date"),
+    "needChangeInProfession": ("Une reconversion ou un changement d'activité "
+                               "professionnelle est-il nécessaire ? Si oui, préciser.", None),
+    "needThirdPartyHelp": ("Le patient a-t-il besoin de l'aide d'un tiers ? "
+                           "Si oui, préciser pour quels actes.", None),
+    "thirdPartyHelpBeginDate": ("À partir de quelle date l'aide d'un tiers est-elle "
+                                "nécessaire ? [format : JJ.MM.AAAA]", "date"),
+    "needAdditionalClarification": ("Des investigations complémentaires sont-elles "
+                                    "nécessaires ? Si oui, lesquelles ?", None),
+    "treatmentStartDate": ("À quelle date le traitement a-t-il débuté ? "
+                           "[format : JJ.MM.AAAA]", "date"),
+    "treatmentEndDate": ("À quelle date le traitement s'est-il terminé ou doit-il "
+                         "se terminer ? [format : JJ.MM.AAAA]", "date"),
+    "treatmentTypes": ("Quels types de traitement sont prescrits ou en cours ?", None),
+    "treatmentGoals": ("Quels sont les objectifs thérapeutiques visés ?", None),
+    "numSessions": ("Combien de séances sont prescrites ? Répondre par le nombre seul.", "int"),
+    "atHomeTreatment": ("Le traitement doit-il être effectué au domicile du patient ? "
+                        "Répondre par oui ou non.", None),
+    "weekendTreatment": ("Le traitement doit-il être poursuivi le week-end ? "
+                         "Répondre par oui ou non.", None),
+    "splintTreatment": ("Un traitement par attelle ou orthèse est-il prescrit ? "
+                        "Si oui, préciser.", None),
+    "hoursPerDayPlanned": ("Combien d'heures par jour le traitement est-il prévu ?", None),
+    "evaluation": ("Quelle est l'appréciation médicale de la situation du patient ?", None),
+    "request": ("Quelle est la demande adressée à l'assureur ou à l'office ?", None),
+    "attachment": ("Quels documents sont joints au rapport ?", None),
+    "fillerName": ("Qui a rempli ce formulaire ? Indiquer le nom de la personne.", None),
+    "accidentDate": ("À quelle date l'accident est-il survenu ? [format : JJ.MM.AAAA]", "date"),
+    "accidentDescription": ("Comment l'accident s'est-il produit ? Décrire les "
+                            "circonstances.", None),
+    "firstTreatmentDate": ("À quelle date le patient a-t-il été traité pour la "
+                           "première fois ? [format : JJ.MM.AAAA]", "date"),
+    "prognosis": ("Quel est le pronostic pour ce patient ?", None),
+    "findings": ("Quelles sont les constatations cliniques ?", None),
+    "diagnosis": ("Quel est le diagnostic posé ?", None),
+    "therapy": ("Quelle thérapie est mise en place ?", None),
+    "medication": ("Quels médicaments le patient prend-il ?", None),
+    "hospitalisationFrom": ("À partir de quelle date le patient est-il hospitalisé ? "
+                            "[format : JJ.MM.AAAA]", "date"),
+    "hospitalisationTo": ("Jusqu'à quelle date le patient est-il hospitalisé ? "
+                          "[format : JJ.MM.AAAA]", "date"),
+    "workIncapacityFrom": ("À partir de quelle date le patient est-il en incapacité de "
+                           "travail ? [format : JJ.MM.AAAA]", "date"),
+    "workIncapacityTo": ("Jusqu'à quelle date l'incapacité de travail est-elle "
+                         "attestée ? [format : JJ.MM.AAAA]", "date"),
+    "workIncapacityDegree": ("Quel est le taux d'incapacité de travail, en pourcentage ? "
+                             "Répondre par le nombre seul.", "percent"),
+    # Cinquième rang : anamnèse, premiers soins et suivi, présents dans les
+    # rapports initiaux LAA / LaMal / LAM sous des noms identiques.
+    "firstTreatmentCity": ("Dans quelle localité le premier traitement a-t-il eu lieu ?", None),
+    "firstTreatmentTime": ("À quelle heure le premier traitement a-t-il eu lieu ? "
+                           "[format : HH:MM]", None),
+    "firstTreatmentDoctor": ("Quel médecin a assuré le premier traitement ?", None),
+    "firstTreatmentSpeciality": ("Quelle est la spécialité du médecin ayant assuré le "
+                                 "premier traitement ?", None),
+    "firstIncidence": ("Quand les premiers symptômes sont-ils apparus ?", None),
+    "previousTreatments": ("Quels traitements le patient a-t-il déjà reçus pour cette "
+                           "affection ?", None),
+    "hasPreviousTreatments": ("Le patient a-t-il déjà été traité pour cette affection ? "
+                              "Répondre par oui ou non.", None),
+    "previousTherapies": ("Quelles thérapies ont déjà été tentées ?", None),
+    "previousDiseases": ("Quels antécédents médicaux le patient présente-t-il ?", None),
+    "patientIndications": ("Quelles plaintes le patient rapporte-t-il lui-même ?", None),
+    "anamnesisOther": ("Y a-t-il d'autres éléments d'anamnèse à signaler ?", None),
+    "morphologicalDamage": ("Quelles atteintes morphologiques sont constatées "
+                            "(lésions, déformations) ?", None),
+    "functionalDamage": ("Quelles atteintes fonctionnelles sont constatées "
+                         "(limitations de mobilité, de force) ?", None),
+    "exams": ("Quels examens complémentaires ont été réalisés et avec quels résultats ?", None),
+    "objectiveLimitation": ("Quelles limitations objectives l'examen met-il en évidence ?", None),
+    "currentSituation": ("Quelle est la situation actuelle du patient ?", None),
+    "hasOtherFactors": ("D'autres facteurs influencent-ils l'évolution ? "
+                        "Répondre par oui ou non.", None),
+    "otherFactors": ("Quels autres facteurs influencent l'évolution du cas "
+                     "(contexte professionnel, social, psychique) ?", None),
+    "nationality": ("Quelle est la nationalité du patient ?", None),
+    "workHours": ("Quel est l'horaire de travail habituel du patient ?", None),
+    "reason": ("Quel est le motif de ce rapport ?", None),
+    "pregnancyDueDate": ("Quelle est la date prévue de l'accouchement ? "
+                         "[format : JJ.MM.AAAA]", "date"),
+    "hospitalisationList": ("Dans quels établissements le patient a-t-il été hospitalisé, "
+                            "et à quelles dates ?", None),
+    "hospitalisationChoice": ("Le patient a-t-il été hospitalisé ? Répondre par oui ou non.", None),
+    "otherInvolvedDoctor": ("Quel autre médecin est intervenu dans la prise en charge ?", None),
+    "otherInvolvedSpeciality": ("Quelle est la spécialité de cet autre médecin intervenant ?", None),
+    "otherInvolvedCity": ("Dans quelle localité cet autre médecin exerce-t-il ?", None),
+    "otherInvolvedDate": ("À quelle date cet autre médecin est-il intervenu ? "
+                          "[format : JJ.MM.AAAA]", "date"),
+    "hasOtherInsurer": ("Un autre assureur est-il concerné par ce cas ? "
+                        "Répondre par oui ou non.", None),
+    "otherInsurerList": ("Quels autres assureurs sont concernés par ce cas ?", None),
+    "nextTreatmentDate": ("Quelle est la date du prochain traitement prévu ? "
+                          "[format : JJ.MM.AAAA]", "date"),
+    "treatmentDateList": ("Quelles sont les dates des traitements effectués ?", None),
+    "treatmentDuration": ("Quelle est la durée prévue du traitement ?", None),
+    "treatmentProblem": ("Quel problème le traitement doit-il résoudre ?", None),
+    "examinationDate": ("À quelle date le patient a-t-il été examiné ? "
+                        "[format : JJ.MM.AAAA]", "date"),
+    "accidentDetails": ("Quelles sont les circonstances détaillées de l'accident ?", None),
+    "accidentTime": ("À quelle heure l'accident est-il survenu ? [format : HH:MM]", None),
+    "courseOfAccident": ("Comment l'accident s'est-il déroulé ?", None),
+    "classification": ("Quelle est la classification retenue pour cette atteinte ?", None),
+    "aidsDescription": ("Quels moyens auxiliaires sont demandés ? Les décrire précisément.", None),
+    "physioGoals": ("Quels sont les objectifs de la physiothérapie ?", None),
+    "physioMethods": ("Quelles méthodes de physiothérapie sont prescrites ?", None),
+    "mdRecommendation": ("Quelle est la recommandation du médecin ?", None),
+    # Blocs destinataire de l'en-tête, communs aux formulaires d'assureur.
+    "recipientBlockAddressLeft": (
+        "Quelle est l'adresse complète de l'organisme destinataire du rapport "
+        "(nom, rue, NPA et localité) ? Elle correspond au canton de traitement du patient.", None),
+    "recipientBlockAddressRight": (
+        "Quelle est l'adresse complète du service ou de la personne destinataire du "
+        "rapport, si elle diffère de l'organisme principal (nom, rue, NPA et localité) ?", None),
 }
 
 # Champs dont le sens dépend du sous-formulaire qui les porte. Consultés avant
@@ -217,7 +354,85 @@ CONTEXT_VOCAB = {
         "ou LAM (assurance militaire).", None),
     ("documentS1Struct", "title"): ("Quel est l'intitulé du document annexé au rapport ?", None),
     ("documentS1Struct", "type"): ("De quel type de document s'agit-il ?", None),
+    # Diagnostics : le contenu clinique le plus important du formulaire.
+    ("diagnosisS1Struct", "code"): (
+        "Quel est le code CIM-10 du diagnostic ? Reprendre le code exactement tel "
+        "qu'il figure dans les documents, sans le reformuler.", None),
+    ("diagnosisS1Struct", "name"): (
+        "Quel est le libellé du diagnostic posé ?", None),
+    ("diagnosisS1Struct", "date"): (
+        "À quelle date ce diagnostic a-t-il été posé ? [format : JJ.MM.AAAA]", "date"),
+    ("diagnosisS1Struct", "remark"): (
+        "Y a-t-il une précision à apporter sur ce diagnostic ?", None),
+    ("employerS1Address", "nif"): (
+        "Quel est le numéro d'identification de l'entreprise (IDE/NIF) de l'employeur ?", None),
+    ("consumerS1Address", "title"): (
+        "Quel est le titre ou la civilité du destinataire du formulaire "
+        "(Dr, Prof., Madame, Monsieur) ?", None),
+    # Champs `input` : remarque libre attachée à une structure. Le contexte change
+    # complètement le sens, d'où une entrée par conteneur.
+    ("lawS1Struct", "input"): (
+        "Y a-t-il une précision à apporter sur la couverture d'assurance "
+        "(régime applicable, réserve, prise en charge particulière) ?", None),
+    ("treatmentS1Struct", "input"): (
+        "Y a-t-il une précision à apporter sur le lieu ou le contexte du traitement "
+        "(établissement, service, cadre ambulatoire ou hospitalier) ?", None),
+    ("documentS1Struct", "input"): (
+        "Y a-t-il une remarque à joindre au sujet des documents annexés ?", None),
+    ("diagnosisS1Struct", "input"): (
+        "Y a-t-il une précision à apporter sur le diagnostic ?", None),
+    ("unemployabilityS1Struct", "input"): (
+        "Y a-t-il une précision à apporter sur cette période d'incapacité de travail ?", None),
+    ("cardS1Struct", "input"): (
+        "Y a-t-il une remarque concernant la carte d'assuré ?", None),
+    ("cardS1Struct", "cardID"): (
+        "Quel est le numéro de la carte d'assuré du patient ?", None),
+    ("anamnesisStruct", "input"): (
+        "Y a-t-il une précision à apporter sur l'anamnèse ?", None),
+    ("therapyStruct", "input"): (
+        "Y a-t-il une précision à apporter sur la thérapie ?", None),
+    # Anamnèse et constatations du certificat médical LAA.
+    ("anamnesisStruct", "morphologicalFinding"): (
+        "Quelles sont les constatations morphologiques à l'examen "
+        "(lésions, tuméfactions, déformations) ?", None),
+    ("anamnesisStruct", "functionalFinding"): (
+        "Quelles sont les constatations fonctionnelles à l'examen "
+        "(mobilité, force, limitations) ?", None),
+    ("anamnesisStruct", "xray"): (
+        "Quels sont les résultats des examens radiologiques ?", None),
+    ("generalConditionStruct", "ask4specialPerception"): (
+        "L'état général du patient présente-t-il une particularité à signaler ? "
+        "Répondre UNIQUEMENT par oui ou non.", None),
+    ("generalConditionStruct", "specialPerception"): (
+        "Quelle est la particularité constatée dans l'état général du patient ?", None),
+    ("therapyStruct", "ask4Hospitalization"): (
+        "Le patient a-t-il été hospitalisé ? Répondre UNIQUEMENT par oui ou non.", None),
 }
+
+# Conteneurs medForms reconnus par suffixe : les diagnostics successifs portent un
+# préfixe d'ordre (`adiagnosisS1Struct`, `bdiagnosisS1Struct`…) pour une structure
+# identique.
+STRUCT_SUFFIXES = (
+    "diagnosisS1Struct", "lawS1Struct", "documentS1Struct", "treatmentS1Struct",
+    "formS1Struct", "employerS1Address", "consumerS1Address", "patientS1Address",
+    "providerS1Address", "insuranceS1Address", "gpS1Address",
+    "physiotherapistS1Address", "hospitalS1Address", "othertechnicianS1Address",
+    "unemployabilityS1Struct", "anamnesisStruct", "therapyStruct",
+    "generalConditionStruct", "cardS1Struct",
+)
+
+
+def _normalize_struct(ancestor: str) -> str:
+    """
+    Ramène un conteneur medForms à son nom canonique.
+
+    Les diagnostics successifs d'un formulaire sont portés par `diagnosisS1Struct`,
+    `adiagnosisS1Struct`, `bdiagnosisS1Struct`… : même structure, préfixe d'ordre.
+    """
+    for known in STRUCT_SUFFIXES:
+        if ancestor.endswith(known):
+            return known
+    return ancestor
 
 
 def _describe(leaf: str, ancestors: list[str]) -> tuple[str, str | None]:
@@ -227,8 +442,9 @@ def _describe(leaf: str, ancestors: list[str]) -> tuple[str, str | None]:
     Returns:
         (question, type) — question vide si le champ n'est pas dans le vocabulaire.
     """
-    entry = next((CONTEXT_VOCAB[(a, leaf)] for a in reversed(ancestors)
-                  if (a, leaf) in CONTEXT_VOCAB), None) or FIELD_VOCAB.get(leaf)
+    contexts = [_normalize_struct(a) for a in reversed(ancestors)]
+    entry = next((CONTEXT_VOCAB[(c, leaf)] for c in contexts
+                  if (c, leaf) in CONTEXT_VOCAB), None) or FIELD_VOCAB.get(leaf)
     if entry is None:
         return "", None
     template, field_type = entry

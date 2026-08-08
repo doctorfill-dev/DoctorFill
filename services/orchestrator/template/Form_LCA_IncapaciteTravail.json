@@ -157,16 +157,22 @@
       ]
     },
     {
-      "id": "1.16",
+      "comments": "Section 12 — page1"
+    },
+    {
+      "id": "12.1",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur la couverture d'assurance (régime applicable, réserve, prise en charge particulière) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/lawS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "id": "1.17",
+      "comments": "Section 17 — page1"
+    },
+    {
+      "id": "17.1",
       "name": "workingHours",
       "label": "workingHours",
       "question": "",
@@ -175,7 +181,7 @@
       "acroform_name": "topmostSubform[0].page1[0].workingHours[0]"
     },
     {
-      "id": "1.18",
+      "id": "17.2",
       "name": "anteProviderAddress",
       "label": "anteProviderAddress",
       "question": "",
@@ -184,27 +190,30 @@
       "acroform_name": "topmostSubform[0].page1[0].anteProviderAddress[0]"
     },
     {
-      "id": "1.19",
+      "comments": "Section 7 — page1"
+    },
+    {
+      "id": "7.1",
       "name": "treatmentStartDate",
       "label": "treatmentStartDate",
-      "question": "",
+      "question": "À quelle date le traitement a-t-il débuté ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentStartDate",
       "acroform_name": "topmostSubform[0].page1[0].treatmentStartDate[0]",
       "type": "date"
     },
     {
-      "id": "1.20",
+      "id": "7.2",
       "name": "treatmentEndDate",
       "label": "treatmentEndDate",
-      "question": "",
+      "question": "À quelle date le traitement s'est-il terminé ou doit-il se terminer ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentEndDate",
       "acroform_name": "topmostSubform[0].page1[0].treatmentEndDate[0]",
       "type": "date"
     },
     {
-      "id": "1.21",
+      "id": "1.16",
       "name": "profession",
       "label": "profession",
       "question": "Quelle est la profession exercée par le patient ?",
@@ -213,7 +222,7 @@
       "acroform_name": "topmostSubform[0].page1[0].profession[0]"
     },
     {
-      "id": "1.22",
+      "id": "17.3",
       "name": "workingDays",
       "label": "workingDays",
       "question": "",
@@ -222,7 +231,7 @@
       "acroform_name": "topmostSubform[0].page1[0].workingDays[0]"
     },
     {
-      "id": "1.23",
+      "id": "17.4",
       "name": "employmentState",
       "label": "employmentState",
       "question": "",
@@ -231,7 +240,7 @@
       "acroform_name": "topmostSubform[0].page1[0].employmentState[0]"
     },
     {
-      "id": "1.24",
+      "id": "17.5",
       "name": "postProviderAddress",
       "label": "postProviderAddress",
       "question": "",
@@ -240,7 +249,7 @@
       "acroform_name": "topmostSubform[0].page1[0].postProviderAddress[0]"
     },
     {
-      "id": "1.25",
+      "id": "1.17",
       "name": "treatmentReason",
       "label": "treatmentReason",
       "question": "Quel est le motif du traitement ou de la consultation ?",
@@ -249,7 +258,7 @@
       "acroform_name": "topmostSubform[0].page1[0].treatmentReason[0]"
     },
     {
-      "id": "1.26",
+      "id": "1.18",
       "name": "blockAddress",
       "label": "blockAddress",
       "question": "Quelle est l'adresse postale complète de l'assureur (nom, rue, NPA et localité) ?",
@@ -258,7 +267,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].blockAddress[0]"
     },
     {
-      "id": "1.27",
+      "id": "1.19",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail de l'assureur ?",
@@ -267,7 +276,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].email[0]"
     },
     {
-      "id": "1.28",
+      "id": "1.20",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
@@ -276,7 +285,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
     },
     {
-      "id": "1.29",
+      "id": "1.21",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
@@ -285,7 +294,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
     },
     {
-      "id": "1.30",
+      "id": "1.22",
       "name": "insuranceSelector",
       "label": "insuranceSelector",
       "question": "Quel est le nom de l'assureur qui prend en charge le cas ?",
@@ -299,10 +308,10 @@
       ]
     },
     {
-      "comments": "Section 2 — page2"
+      "comments": "Section 18 — page2"
     },
     {
-      "id": "2.1",
+      "id": "18.1",
       "name": "anamnesisDescription",
       "label": "anamnesisDescription",
       "question": "",
@@ -311,7 +320,7 @@
       "acroform_name": "topmostSubform[0].page2[0].anamnesisDescription[0]"
     },
     {
-      "id": "2.2",
+      "id": "18.2",
       "name": "subjectiveDescription",
       "label": "subjectiveDescription",
       "question": "",
@@ -320,7 +329,7 @@
       "acroform_name": "topmostSubform[0].page2[0].subjectiveDescription[0]"
     },
     {
-      "id": "2.3",
+      "id": "18.3",
       "name": "priorTreatmentChoice",
       "label": "priorTreatmentChoice",
       "question": "",
@@ -329,7 +338,7 @@
       "acroform_name": "topmostSubform[0].page2[0].priorTreatmentChoice[0]"
     },
     {
-      "id": "2.4",
+      "id": "18.4",
       "name": "priorTreatment",
       "label": "priorTreatment",
       "question": "",
@@ -338,7 +347,7 @@
       "acroform_name": "topmostSubform[0].page2[0].priorTreatment[0]"
     },
     {
-      "id": "2.5",
+      "id": "18.5",
       "name": "priorTreatmentLocation",
       "label": "priorTreatmentLocation",
       "question": "",
@@ -347,7 +356,7 @@
       "acroform_name": "topmostSubform[0].page2[0].priorTreatmentLocation[0]"
     },
     {
-      "id": "2.6",
+      "id": "18.6",
       "name": "priorTreatmentDate",
       "label": "priorTreatmentDate",
       "question": "",
@@ -357,7 +366,7 @@
       "type": "date"
     },
     {
-      "id": "2.7",
+      "id": "18.7",
       "name": "stationaryTreatmentAddress",
       "label": "stationaryTreatmentAddress",
       "question": "",
@@ -366,7 +375,7 @@
       "acroform_name": "topmostSubform[0].page2[0].stationaryTreatmentAddress[0]"
     },
     {
-      "id": "2.8",
+      "id": "18.8",
       "name": "stationaryTreatmentStartDate",
       "label": "stationaryTreatmentStartDate",
       "question": "",
@@ -376,7 +385,7 @@
       "type": "date"
     },
     {
-      "id": "2.9",
+      "id": "18.9",
       "name": "stationaryTreatmentEndDate",
       "label": "stationaryTreatmentEndDate",
       "question": "",
@@ -386,7 +395,7 @@
       "type": "date"
     },
     {
-      "id": "2.10",
+      "id": "18.10",
       "name": "neededSurgery",
       "label": "neededSurgery",
       "question": "",
@@ -395,7 +404,7 @@
       "acroform_name": "topmostSubform[0].page2[0].neededSurgery[0]"
     },
     {
-      "id": "2.11",
+      "id": "18.11",
       "name": "surgeryDate",
       "label": "surgeryDate",
       "question": "",
@@ -405,7 +414,7 @@
       "type": "date"
     },
     {
-      "id": "2.12",
+      "id": "18.12",
       "name": "surgeryLocation",
       "label": "surgeryLocation",
       "question": "",
@@ -414,10 +423,10 @@
       "acroform_name": "topmostSubform[0].page2[0].surgeryLocation[0]"
     },
     {
-      "comments": "Section 3 — page3"
+      "comments": "Section 19 — page3"
     },
     {
-      "id": "3.1",
+      "id": "19.1",
       "name": "priorAccident",
       "label": "priorAccident",
       "question": "",
@@ -426,7 +435,7 @@
       "acroform_name": "topmostSubform[0].page3[0].priorAccident[0]"
     },
     {
-      "id": "3.2",
+      "id": "19.2",
       "name": "priorAccidentChoice",
       "label": "priorAccidentChoice",
       "question": "",
@@ -435,7 +444,7 @@
       "acroform_name": "topmostSubform[0].page3[0].priorAccidentChoice[0]"
     },
     {
-      "id": "3.3",
+      "id": "19.3",
       "name": "priorAccidentDate",
       "label": "priorAccidentDate",
       "question": "",
@@ -445,7 +454,7 @@
       "type": "date"
     },
     {
-      "id": "3.4",
+      "id": "19.4",
       "name": "priorAccidentLocation",
       "label": "priorAccidentLocation",
       "question": "",
@@ -454,7 +463,7 @@
       "acroform_name": "topmostSubform[0].page3[0].priorAccidentLocation[0]"
     },
     {
-      "id": "3.5",
+      "id": "19.5",
       "name": "healingProcessChoice",
       "label": "healingProcessChoice",
       "question": "",
@@ -463,7 +472,7 @@
       "acroform_name": "topmostSubform[0].page3[0].healingProcessChoice[0]"
     },
     {
-      "id": "3.6",
+      "id": "19.6",
       "name": "healingProcessAffection",
       "label": "healingProcessAffection",
       "question": "",
@@ -472,7 +481,7 @@
       "acroform_name": "topmostSubform[0].page3[0].healingProcessAffection[0]"
     },
     {
-      "id": "3.7",
+      "id": "19.7",
       "name": "medicalFindings",
       "label": "medicalFindings",
       "question": "",
@@ -481,7 +490,7 @@
       "acroform_name": "topmostSubform[0].page3[0].medicalFindings[0]"
     },
     {
-      "id": "3.8",
+      "id": "19.8",
       "name": "medicalFindingsDate",
       "label": "medicalFindingsDate",
       "question": "",
@@ -491,7 +500,7 @@
       "type": "date"
     },
     {
-      "id": "3.9",
+      "id": "19.9",
       "name": "diagnosisAffectingUnemployability",
       "label": "diagnosisAffectingUnemployability",
       "question": "",
@@ -500,7 +509,7 @@
       "acroform_name": "topmostSubform[0].page3[0].diagnosisAffectingUnemployability[0]"
     },
     {
-      "id": "3.10",
+      "id": "19.10",
       "name": "diagnosisUnaffectingUnemployability",
       "label": "diagnosisUnaffectingUnemployability",
       "question": "",
@@ -509,19 +518,19 @@
       "acroform_name": "topmostSubform[0].page3[0].diagnosisUnaffectingUnemployability[0]"
     },
     {
-      "comments": "Section 4 — page4"
+      "comments": "Section 20 — page4"
     },
     {
-      "id": "4.1",
+      "id": "20.1",
       "name": "otherFactors",
       "label": "otherFactors",
-      "question": "",
+      "question": "Quels autres facteurs influencent l'évolution du cas (contexte professionnel, social, psychique) ?",
       "required": false,
       "xml_path": "topmostSubform/page4/otherFactors",
       "acroform_name": "topmostSubform[0].page4[0].otherFactors[0]"
     },
     {
-      "id": "4.2",
+      "id": "20.2",
       "name": "otherFactorsChoice",
       "label": "otherFactorsChoice",
       "question": "",
@@ -530,7 +539,7 @@
       "acroform_name": "topmostSubform[0].page4[0].otherFactorsChoice[0]"
     },
     {
-      "id": "4.3",
+      "id": "20.3",
       "name": "treatmentAndMedication",
       "label": "treatmentAndMedication",
       "question": "",
@@ -539,7 +548,7 @@
       "acroform_name": "topmostSubform[0].page4[0].treatmentAndMedication[0]"
     },
     {
-      "id": "4.4",
+      "id": "20.4",
       "name": "procedureAndProposals",
       "label": "procedureAndProposals",
       "question": "",
@@ -548,7 +557,7 @@
       "acroform_name": "topmostSubform[0].page4[0].procedureAndProposals[0]"
     },
     {
-      "id": "4.5",
+      "id": "20.5",
       "name": "prognosisOfTreatment",
       "label": "prognosisOfTreatment",
       "question": "",
@@ -557,7 +566,7 @@
       "acroform_name": "topmostSubform[0].page4[0].prognosisOfTreatment[0]"
     },
     {
-      "id": "4.6",
+      "id": "20.6",
       "name": "restrictionsForActivity",
       "label": "restrictionsForActivity",
       "question": "",
@@ -629,16 +638,19 @@
       "type": "date"
     },
     {
-      "id": "5.7",
+      "comments": "Section 16 — page5"
+    },
+    {
+      "id": "16.1",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur cette période d'incapacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page5/unemployabilityS1Struct/input",
       "acroform_name": "topmostSubform[0].page5[0].unemployabilityS1Struct[0].input[0]"
     },
     {
-      "id": "5.8",
+      "id": "5.7",
       "name": "date",
       "label": "date",
       "question": "Quelle est la date concernée ? [format : JJ.MM.AAAA]",
@@ -648,7 +660,7 @@
       "type": "date"
     },
     {
-      "id": "5.9",
+      "id": "5.8",
       "name": "percentWorkload",
       "label": "percentWorkload",
       "question": "Quel est le taux d'activité, en pourcentage ? Répondre par le nombre seul.",
@@ -658,7 +670,7 @@
       "type": "percent"
     },
     {
-      "id": "5.10",
+      "id": "5.9",
       "name": "dailyWorktime",
       "label": "dailyWorktime",
       "question": "Quel est le temps de travail quotidien, en heures ?",
@@ -668,7 +680,7 @@
       "type": "int"
     },
     {
-      "id": "5.11",
+      "id": "5.10",
       "name": "percentageNum",
       "label": "percentageNum",
       "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
@@ -678,7 +690,7 @@
       "type": "percent"
     },
     {
-      "id": "5.12",
+      "id": "5.11",
       "name": "beginDate",
       "label": "beginDate",
       "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
@@ -688,7 +700,7 @@
       "type": "date"
     },
     {
-      "id": "5.13",
+      "id": "5.12",
       "name": "endDate",
       "label": "endDate",
       "question": "Quelle est la date de fin de la période concernée ? [format : JJ.MM.AAAA]",
@@ -698,16 +710,16 @@
       "type": "date"
     },
     {
-      "id": "5.14",
+      "id": "16.2",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur cette période d'incapacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page5/unemployabilityS1Struct[1]/input",
       "acroform_name": "topmostSubform[0].page5[0].unemployabilityS1Struct[1].input[0]"
     },
     {
-      "id": "5.15",
+      "id": "5.13",
       "name": "date",
       "label": "date",
       "question": "Quelle est la date concernée ? [format : JJ.MM.AAAA]",
@@ -717,7 +729,7 @@
       "type": "date"
     },
     {
-      "id": "5.16",
+      "id": "5.14",
       "name": "percentWorkload",
       "label": "percentWorkload",
       "question": "Quel est le taux d'activité, en pourcentage ? Répondre par le nombre seul.",
@@ -727,7 +739,7 @@
       "type": "percent"
     },
     {
-      "id": "5.17",
+      "id": "5.15",
       "name": "dailyWorktime",
       "label": "dailyWorktime",
       "question": "Quel est le temps de travail quotidien, en heures ?",
@@ -737,7 +749,7 @@
       "type": "int"
     },
     {
-      "id": "5.18",
+      "id": "5.16",
       "name": "percentageNum",
       "label": "percentageNum",
       "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
@@ -747,7 +759,7 @@
       "type": "percent"
     },
     {
-      "id": "5.19",
+      "id": "5.17",
       "name": "beginDate",
       "label": "beginDate",
       "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
@@ -757,7 +769,7 @@
       "type": "date"
     },
     {
-      "id": "5.20",
+      "id": "5.18",
       "name": "endDate",
       "label": "endDate",
       "question": "Quelle est la date de fin de la période concernée ? [format : JJ.MM.AAAA]",
@@ -767,16 +779,16 @@
       "type": "date"
     },
     {
-      "id": "5.21",
+      "id": "16.3",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur cette période d'incapacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page5/unemployabilityS1Struct[2]/input",
       "acroform_name": "topmostSubform[0].page5[0].unemployabilityS1Struct[2].input[0]"
     },
     {
-      "id": "5.22",
+      "id": "5.19",
       "name": "date",
       "label": "date",
       "question": "Quelle est la date concernée ? [format : JJ.MM.AAAA]",
@@ -786,7 +798,7 @@
       "type": "date"
     },
     {
-      "id": "5.23",
+      "id": "5.20",
       "name": "percentWorkload",
       "label": "percentWorkload",
       "question": "Quel est le taux d'activité, en pourcentage ? Répondre par le nombre seul.",
@@ -796,7 +808,7 @@
       "type": "percent"
     },
     {
-      "id": "5.24",
+      "id": "5.21",
       "name": "dailyWorktime",
       "label": "dailyWorktime",
       "question": "Quel est le temps de travail quotidien, en heures ?",
@@ -806,7 +818,7 @@
       "type": "int"
     },
     {
-      "id": "5.25",
+      "id": "5.22",
       "name": "percentageNum",
       "label": "percentageNum",
       "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
@@ -816,7 +828,7 @@
       "type": "percent"
     },
     {
-      "id": "5.26",
+      "id": "5.23",
       "name": "beginDate",
       "label": "beginDate",
       "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
@@ -826,7 +838,7 @@
       "type": "date"
     },
     {
-      "id": "5.27",
+      "id": "5.24",
       "name": "endDate",
       "label": "endDate",
       "question": "Quelle est la date de fin de la période concernée ? [format : JJ.MM.AAAA]",
@@ -836,16 +848,16 @@
       "type": "date"
     },
     {
-      "id": "5.28",
+      "id": "16.4",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur cette période d'incapacité de travail ?",
       "required": false,
       "xml_path": "topmostSubform/page5/unemployabilityS1Struct[3]/input",
       "acroform_name": "topmostSubform[0].page5[0].unemployabilityS1Struct[3].input[0]"
     },
     {
-      "id": "5.29",
+      "id": "5.25",
       "name": "returnToWorkFrom",
       "label": "returnToWorkFrom",
       "question": "À partir de quelle date le patient peut-il reprendre le travail ? [format : JJ.MM.AAAA]",
@@ -855,7 +867,7 @@
       "type": "date"
     },
     {
-      "id": "5.30",
+      "id": "5.26",
       "name": "returnToWorkInWeeks",
       "label": "returnToWorkInWeeks",
       "question": "Dans combien de semaines une reprise du travail est-elle envisageable ? Répondre par le nombre seul.",
@@ -865,16 +877,22 @@
       "type": "int"
     },
     {
-      "id": "5.31",
+      "comments": "Section 11 — page5"
+    },
+    {
+      "id": "11.1",
       "name": "hoursPerDayPlanned",
       "label": "hoursPerDayPlanned",
-      "question": "",
+      "question": "Combien d'heures par jour le traitement est-il prévu ?",
       "required": false,
       "xml_path": "topmostSubform/page5/hoursPerDayPlanned",
       "acroform_name": "topmostSubform[0].page5[0].hoursPerDayPlanned[0]"
     },
     {
-      "id": "5.32",
+      "comments": "Section 21 — page5"
+    },
+    {
+      "id": "21.1",
       "name": "hoursPerDayFix",
       "label": "hoursPerDayFix",
       "question": "",
@@ -883,7 +901,7 @@
       "acroform_name": "topmostSubform[0].page5[0].hoursPerDayFix[0]"
     },
     {
-      "id": "5.33",
+      "id": "21.2",
       "name": "otherWork",
       "label": "otherWork",
       "question": "",
@@ -892,7 +910,7 @@
       "acroform_name": "topmostSubform[0].page5[0].otherWork[0]"
     },
     {
-      "id": "5.34",
+      "id": "21.3",
       "name": "otherWorkChoice",
       "label": "otherWorkChoice",
       "question": "",
@@ -901,7 +919,7 @@
       "acroform_name": "topmostSubform[0].page5[0].otherWorkChoice[0]"
     },
     {
-      "id": "5.35",
+      "id": "21.4",
       "name": "alreadyOtherWork",
       "label": "alreadyOtherWork",
       "question": "",
@@ -910,7 +928,7 @@
       "acroform_name": "topmostSubform[0].page5[0].alreadyOtherWork[0]"
     },
     {
-      "id": "5.36",
+      "id": "21.5",
       "name": "alreadyOtherWorkChoice",
       "label": "alreadyOtherWorkChoice",
       "question": "",
@@ -919,7 +937,7 @@
       "acroform_name": "topmostSubform[0].page5[0].alreadyOtherWorkChoice[0]"
     },
     {
-      "id": "5.37",
+      "id": "21.6",
       "name": "restrictionsNewWork",
       "label": "restrictionsNewWork",
       "question": "",
@@ -928,7 +946,7 @@
       "acroform_name": "topmostSubform[0].page5[0].restrictionsNewWork[0]"
     },
     {
-      "id": "5.38",
+      "id": "21.7",
       "name": "restrictionsNewWorkChoice",
       "label": "restrictionsNewWorkChoice",
       "question": "",
@@ -937,7 +955,7 @@
       "acroform_name": "topmostSubform[0].page5[0].restrictionsNewWorkChoice[0]"
     },
     {
-      "id": "5.39",
+      "id": "21.8",
       "name": "limitationForDriving",
       "label": "limitationForDriving",
       "question": "",
@@ -946,7 +964,7 @@
       "acroform_name": "topmostSubform[0].page5[0].limitationForDriving[0]"
     },
     {
-      "id": "5.40",
+      "id": "21.9",
       "name": "limitationForDrivingChoice",
       "label": "limitationForDrivingChoice",
       "question": "",
@@ -1050,7 +1068,10 @@
       "acroform_name": "topmostSubform[0].page6[0].comment[0]"
     },
     {
-      "id": "6.11",
+      "comments": "Section 22 — page6"
+    },
+    {
+      "id": "22.1",
       "name": "lastTreatmentDate",
       "label": "lastTreatmentDate",
       "question": "",
@@ -1060,17 +1081,17 @@
       "type": "date"
     },
     {
-      "id": "6.12",
+      "id": "22.2",
       "name": "nextTreatmentDate",
       "label": "nextTreatmentDate",
-      "question": "",
+      "question": "Quelle est la date du prochain traitement prévu ? [format : JJ.MM.AAAA]",
       "required": false,
       "xml_path": "topmostSubform/page6/nextTreatmentDate",
       "acroform_name": "topmostSubform[0].page6[0].nextTreatmentDate[0]",
       "type": "date"
     },
     {
-      "id": "6.13",
+      "id": "22.3",
       "name": "otherInsurances",
       "label": "otherInsurances",
       "question": "",
@@ -1079,7 +1100,7 @@
       "acroform_name": "topmostSubform[0].page6[0].otherInsurances[0]"
     },
     {
-      "id": "6.14",
+      "id": "22.4",
       "name": "otherInsurancesChoice",
       "label": "otherInsurancesChoice",
       "question": "",

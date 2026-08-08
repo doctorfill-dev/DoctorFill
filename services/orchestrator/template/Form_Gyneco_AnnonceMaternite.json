@@ -111,25 +111,28 @@
       "acroform_name": "topmostSubform[0].Page1[0].insuranceS1Address[0].input[0]"
     },
     {
-      "id": "1.12",
+      "comments": "Section 2 — Page1"
+    },
+    {
+      "id": "2.1",
       "name": "cardID",
       "label": "cardID",
-      "question": "",
+      "question": "Quel est le numéro de la carte d'assuré du patient ?",
       "required": false,
       "xml_path": "topmostSubform/Page1/cardS1Struct/cardID",
       "acroform_name": "topmostSubform[0].Page1[0].cardS1Struct[0].cardID[0]"
     },
     {
-      "id": "1.13",
+      "id": "2.2",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une remarque concernant la carte d'assuré ?",
       "required": false,
       "xml_path": "topmostSubform/Page1/cardS1Struct/input",
       "acroform_name": "topmostSubform[0].Page1[0].cardS1Struct[0].input[0]"
     },
     {
-      "id": "1.14",
+      "id": "1.12",
       "name": "remark",
       "label": "remark",
       "question": "Y a-t-il une remarque particulière à signaler ?",
@@ -138,7 +141,10 @@
       "acroform_name": "topmostSubform[0].Page1[0].remark[0]"
     },
     {
-      "id": "1.15",
+      "comments": "Section 3 — Page1"
+    },
+    {
+      "id": "3.1",
       "name": "confirmedSonography",
       "label": "Terme confirmé par échographie",
       "question": "",
@@ -152,7 +158,7 @@
       ]
     },
     {
-      "id": "1.16",
+      "id": "3.2",
       "name": "childBirthDate",
       "label": "childBirthDate",
       "question": "",
@@ -162,7 +168,7 @@
       "type": "date"
     },
     {
-      "id": "1.17",
+      "id": "3.3",
       "name": "dateWeek13Praepartal",
       "label": "dateWeek13Praepartal",
       "question": "",
@@ -172,7 +178,7 @@
       "type": "date"
     },
     {
-      "id": "1.18",
+      "id": "1.13",
       "name": "modificationDate",
       "label": "modificationDate",
       "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
@@ -182,7 +188,7 @@
       "type": "date"
     },
     {
-      "id": "1.19",
+      "id": "1.14",
       "name": "creationDate",
       "label": "creationDate",
       "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
@@ -192,7 +198,7 @@
       "type": "date"
     },
     {
-      "id": "1.20",
+      "id": "1.15",
       "name": "blockAddress",
       "label": "blockAddress",
       "question": "Quelle est l'adresse postale complète du médecin traitant (fournisseur de prestations) (nom, rue, NPA et localité) ?",
@@ -201,7 +207,7 @@
       "acroform_name": "topmostSubform[0].Page1[0].providerS1Address[0].blockAddress[0]"
     },
     {
-      "id": "1.21",
+      "id": "1.16",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
@@ -210,7 +216,7 @@
       "acroform_name": "topmostSubform[0].Page1[0].providerS1Address[0].ean[0]"
     },
     {
-      "id": "1.22",
+      "id": "1.17",
       "name": "zsr",
       "label": "zsr",
       "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
@@ -219,7 +225,7 @@
       "acroform_name": "topmostSubform[0].Page1[0].providerS1Address[0].zsr[0]"
     },
     {
-      "id": "1.23",
+      "id": "1.18",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",

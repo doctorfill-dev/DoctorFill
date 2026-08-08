@@ -3,10 +3,10 @@
   "_reviewed": false,
   "fields": [
     {
-      "comments": "Section 1 — page1"
+      "comments": "Section 4 — page1"
     },
     {
-      "id": "1.1",
+      "id": "4.1",
       "name": "appointmentUrgency",
       "label": "urgente",
       "question": "",
@@ -20,7 +20,7 @@
       ]
     },
     {
-      "id": "1.2",
+      "id": "4.2",
       "name": "appointmentPendencyTask",
       "label": "appointmentPendencyTask",
       "question": "",
@@ -29,7 +29,10 @@
       "acroform_name": "topmostSubform[0].page1[0].appointmentPendencyTask[0]"
     },
     {
-      "id": "1.3",
+      "comments": "Section 1 — page1"
+    },
+    {
+      "id": "1.1",
       "name": "blockAddress",
       "label": "blockAddress",
       "question": "Quelle est l'adresse postale complète du destinataire du formulaire (nom, rue, NPA et localité) ?",
@@ -38,7 +41,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].blockAddress[0]"
     },
     {
-      "id": "1.4",
+      "id": "1.2",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) du destinataire du formulaire ?",
@@ -47,7 +50,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].ean[0]"
     },
     {
-      "id": "1.5",
+      "id": "1.3",
       "name": "zsr",
       "label": "zsr",
       "question": "Quel est le numéro RCC (ZSR) du destinataire du formulaire ?",
@@ -56,7 +59,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].zsr[0]"
     },
     {
-      "id": "1.6",
+      "id": "1.4",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail du destinataire du formulaire ?",
@@ -65,7 +68,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].email[0]"
     },
     {
-      "id": "1.7",
+      "id": "1.5",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du destinataire du formulaire ?",
@@ -74,7 +77,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].phone[0]"
     },
     {
-      "id": "1.8",
+      "id": "1.6",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du destinataire du formulaire ?",
@@ -83,7 +86,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].input[0]"
     },
     {
-      "id": "1.9",
+      "id": "1.7",
       "name": "lastName",
       "label": "lastName",
       "question": "Quel est le nom de famille du patient ?",
@@ -92,7 +95,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].lastName[0]"
     },
     {
-      "id": "1.10",
+      "id": "1.8",
       "name": "firstName",
       "label": "firstName",
       "question": "Quel est le prénom du patient ?",
@@ -101,7 +104,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].firstName[0]"
     },
     {
-      "id": "1.11",
+      "id": "1.9",
       "name": "birthDate",
       "label": "birthDate",
       "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
@@ -111,7 +114,7 @@
       "type": "date"
     },
     {
-      "id": "1.12",
+      "id": "1.10",
       "name": "street",
       "label": "street",
       "question": "Quelle est la rue et le numéro de l'adresse du patient ?",
@@ -120,7 +123,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].street[0]"
     },
     {
-      "id": "1.13",
+      "id": "1.11",
       "name": "city",
       "label": "city",
       "question": "Quelle est la localité de l'adresse du patient ?",
@@ -129,7 +132,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].city[0]"
     },
     {
-      "id": "1.14",
+      "id": "1.12",
       "name": "zip",
       "label": "zip",
       "question": "Quel est le code postal (NPA) de l'adresse du patient ?",
@@ -138,7 +141,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].zip[0]"
     },
     {
-      "id": "1.15",
+      "id": "1.13",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du patient ?",
@@ -147,7 +150,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[0]"
     },
     {
-      "id": "1.16",
+      "id": "1.14",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du patient ?",
@@ -156,7 +159,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].phone[1]"
     },
     {
-      "id": "1.17",
+      "id": "1.15",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail du patient ?",
@@ -165,7 +168,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].email[0]"
     },
     {
-      "id": "1.18",
+      "id": "1.16",
       "name": "ssn",
       "label": "ssn",
       "question": "Quel est le numéro AVS du patient ? [format : 756.XXXX.XXXX.XX]",
@@ -174,7 +177,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].ssn[0]"
     },
     {
-      "id": "1.19",
+      "id": "1.17",
       "name": "sex",
       "label": "sex",
       "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
@@ -188,7 +191,7 @@
       ]
     },
     {
-      "id": "1.20",
+      "id": "1.18",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
@@ -197,7 +200,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
     },
     {
-      "id": "1.21",
+      "id": "1.19",
       "name": "blockAddress",
       "label": "blockAddress",
       "question": "Quelle est l'adresse postale complète de l'assureur (nom, rue, NPA et localité) ?",
@@ -206,7 +209,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].blockAddress[0]"
     },
     {
-      "id": "1.22",
+      "id": "1.20",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
@@ -215,7 +218,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
     },
     {
-      "id": "1.23",
+      "id": "1.21",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
@@ -224,7 +227,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
     },
     {
-      "id": "1.24",
+      "id": "1.22",
       "name": "blockAddress",
       "label": "blockAddress",
       "question": "Quelle est l'adresse postale complète du médecin traitant (fournisseur de prestations) (nom, rue, NPA et localité) ?",
@@ -233,7 +236,7 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].blockAddress[0]"
     },
     {
-      "id": "1.25",
+      "id": "1.23",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
@@ -242,7 +245,7 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].ean[0]"
     },
     {
-      "id": "1.26",
+      "id": "1.24",
       "name": "zsr",
       "label": "zsr",
       "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
@@ -251,7 +254,7 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].zsr[0]"
     },
     {
-      "id": "1.27",
+      "id": "1.25",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
@@ -260,7 +263,7 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].phone[0]"
     },
     {
-      "id": "1.28",
+      "id": "1.26",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
@@ -269,7 +272,7 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].phone[1]"
     },
     {
-      "id": "1.29",
+      "id": "1.27",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail du médecin traitant (fournisseur de prestations) ?",
@@ -278,7 +281,7 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].email[0]"
     },
     {
-      "id": "1.30",
+      "id": "1.28",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
@@ -287,7 +290,7 @@
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].input[0]"
     },
     {
-      "id": "1.31",
+      "id": "4.3",
       "name": "consultationDescription",
       "label": "consultationDescription",
       "question": "",
@@ -296,7 +299,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consultationDescription[0]"
     },
     {
-      "id": "1.32",
+      "id": "1.29",
       "name": "anamnesis",
       "label": "anamnesis",
       "question": "Quelle est l'anamnèse du patient : antécédents, évolution et circonstances ayant conduit à la situation actuelle ?",
@@ -305,7 +308,7 @@
       "acroform_name": "topmostSubform[0].page1[0].anamnesis[0]"
     },
     {
-      "id": "1.33",
+      "id": "1.30",
       "name": "modificationDate",
       "label": "modificationDate",
       "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
@@ -315,7 +318,7 @@
       "type": "date"
     },
     {
-      "id": "1.34",
+      "id": "1.31",
       "name": "creationDate",
       "label": "creationDate",
       "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
@@ -325,7 +328,7 @@
       "type": "date"
     },
     {
-      "id": "1.35",
+      "id": "1.32",
       "name": "type",
       "label": "type",
       "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
@@ -342,7 +345,7 @@
       ]
     },
     {
-      "id": "1.36",
+      "id": "1.33",
       "name": "insuredID",
       "label": "insuredID",
       "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
@@ -351,7 +354,7 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
     },
     {
-      "id": "1.37",
+      "id": "1.34",
       "name": "caseID",
       "label": "caseID",
       "question": "Quel est le numéro de dossier ou de sinistre ?",
@@ -360,7 +363,7 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseID[0]"
     },
     {
-      "id": "1.38",
+      "id": "1.35",
       "name": "caseDate",
       "label": "caseDate",
       "question": "Quelle est la date de l'événement assuré (accident, sinistre) ? [format : JJ.MM.AAAA]",
@@ -370,16 +373,19 @@
       "type": "date"
     },
     {
-      "id": "1.39",
+      "comments": "Section 3 — page1"
+    },
+    {
+      "id": "3.1",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur la couverture d'assurance (régime applicable, réserve, prise en charge particulière) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/lawS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "id": "1.40",
+      "id": "4.4",
       "name": "copyForGP",
       "label": "copyForGP",
       "question": "",
@@ -393,7 +399,7 @@
       ]
     },
     {
-      "id": "1.41",
+      "id": "1.36",
       "name": "blockAddress",
       "label": "blockAddress",
       "question": "Quelle est l'adresse postale complète du médecin de famille (nom, rue, NPA et localité) ?",
@@ -402,7 +408,7 @@
       "acroform_name": "topmostSubform[0].page1[0].gpS1Address[0].blockAddress[0]"
     },
     {
-      "id": "1.42",
+      "id": "1.37",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) du médecin de famille ?",
@@ -411,7 +417,7 @@
       "acroform_name": "topmostSubform[0].page1[0].gpS1Address[0].ean[0]"
     },
     {
-      "id": "1.43",
+      "id": "1.38",
       "name": "zsr",
       "label": "zsr",
       "question": "Quel est le numéro RCC (ZSR) du médecin de famille ?",
@@ -420,7 +426,7 @@
       "acroform_name": "topmostSubform[0].page1[0].gpS1Address[0].zsr[0]"
     },
     {
-      "id": "1.44",
+      "id": "1.39",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du médecin de famille ?",
@@ -429,7 +435,7 @@
       "acroform_name": "topmostSubform[0].page1[0].gpS1Address[0].phone[0]"
     },
     {
-      "id": "1.45",
+      "id": "1.40",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du médecin de famille ?",
@@ -438,7 +444,7 @@
       "acroform_name": "topmostSubform[0].page1[0].gpS1Address[0].phone[1]"
     },
     {
-      "id": "1.46",
+      "id": "1.41",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail du médecin de famille ?",
@@ -447,7 +453,7 @@
       "acroform_name": "topmostSubform[0].page1[0].gpS1Address[0].email[0]"
     },
     {
-      "id": "1.47",
+      "id": "1.42",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin de famille ?",
@@ -456,7 +462,7 @@
       "acroform_name": "topmostSubform[0].page1[0].gpS1Address[0].input[0]"
     },
     {
-      "id": "1.48",
+      "id": "4.5",
       "name": "appointmentType",
       "label": "appointmentType",
       "question": "",
@@ -465,7 +471,7 @@
       "acroform_name": "topmostSubform[0].page1[0].appointmentType[0]"
     },
     {
-      "id": "1.49",
+      "id": "4.6",
       "name": "appointmentAfterDate",
       "label": "appointmentAfterDate",
       "question": "",
@@ -475,7 +481,7 @@
       "type": "date"
     },
     {
-      "id": "1.50",
+      "id": "4.7",
       "name": "appointmentFixedDate",
       "label": "appointmentFixedDate",
       "question": "",
@@ -485,7 +491,7 @@
       "type": "date"
     },
     {
-      "id": "1.51",
+      "id": "4.8",
       "name": "appointmentFixedTime",
       "label": "appointmentFixedTime",
       "question": "",
@@ -494,7 +500,7 @@
       "acroform_name": "topmostSubform[0].page1[0].appointmentFixedTime[0]"
     },
     {
-      "id": "1.52",
+      "id": "1.43",
       "name": "treatmentReason",
       "label": "treatmentReason",
       "question": "Quel est le motif du traitement ou de la consultation ?",
@@ -512,7 +518,7 @@
       ]
     },
     {
-      "id": "1.53",
+      "id": "4.9",
       "name": "otherConsultation",
       "label": "Autre (veuillez préciser)",
       "question": "",
@@ -526,16 +532,16 @@
       ]
     },
     {
-      "id": "1.54",
+      "id": "3.2",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une remarque à joindre au sujet des documents annexés ?",
       "required": false,
       "xml_path": "topmostSubform/page1/documentS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].documentS1Struct[0].input[0]"
     },
     {
-      "id": "1.55",
+      "id": "1.44",
       "name": "title",
       "label": "title",
       "question": "Quel est l'intitulé du document annexé au rapport ?",
@@ -544,7 +550,7 @@
       "acroform_name": "topmostSubform[0].page1[0].documentS1Struct[0].title[0]"
     },
     {
-      "id": "1.56",
+      "id": "4.10",
       "name": "copyToGP",
       "label": "Médecin = médecin de famille",
       "question": "",
@@ -558,7 +564,7 @@
       ]
     },
     {
-      "id": "1.57",
+      "id": "4.11",
       "name": "diaDilatativeArteriopathy",
       "label": "diaDilatativeArteriopathy",
       "question": "",
@@ -572,7 +578,7 @@
       ]
     },
     {
-      "id": "1.58",
+      "id": "4.12",
       "name": "diaThoracicOutletSyndrome",
       "label": "Thoracic Outlet Syndrom",
       "question": "",
@@ -586,7 +592,7 @@
       ]
     },
     {
-      "id": "1.59",
+      "id": "4.13",
       "name": "diaUnclearLegComplaints",
       "label": "Douleurs inexpliqu. jambes",
       "question": "",
@@ -600,7 +606,7 @@
       ]
     },
     {
-      "id": "1.60",
+      "id": "4.14",
       "name": "diaWoundHealingDisorders",
       "label": "Troubles cicatrisation",
       "question": "",
@@ -614,7 +620,7 @@
       ]
     },
     {
-      "id": "1.61",
+      "id": "4.15",
       "name": "diaThrombosis",
       "label": "Thrombose",
       "question": "",
@@ -628,7 +634,7 @@
       ]
     },
     {
-      "id": "1.62",
+      "id": "4.16",
       "name": "diaDiabeticFootSyndrome",
       "label": "Syndrome pied diabétique",
       "question": "",
@@ -642,7 +648,7 @@
       ]
     },
     {
-      "id": "1.63",
+      "id": "4.17",
       "name": "diaLymphedema",
       "label": "Lymphœdème",
       "question": "",
@@ -656,7 +662,7 @@
       ]
     },
     {
-      "id": "1.64",
+      "id": "4.18",
       "name": "diaVasculitis",
       "label": "Vascularite",
       "question": "",
@@ -670,7 +676,7 @@
       ]
     },
     {
-      "id": "1.65",
+      "id": "4.19",
       "name": "diaVaricoseVeins",
       "label": "Varices",
       "question": "",
@@ -684,7 +690,7 @@
       ]
     },
     {
-      "id": "1.66",
+      "id": "4.20",
       "name": "dsPelvicLegArteries",
       "label": "Artères pelv. et jambes",
       "question": "",
@@ -698,7 +704,7 @@
       ]
     },
     {
-      "id": "1.67",
+      "id": "4.21",
       "name": "dsPelvicLegVeins",
       "label": "Veines pelv. et jambes",
       "question": "",
@@ -712,7 +718,7 @@
       ]
     },
     {
-      "id": "1.68",
+      "id": "4.22",
       "name": "dsRenalArteries",
       "label": "Artères rénales",
       "question": "",
@@ -726,7 +732,7 @@
       ]
     },
     {
-      "id": "1.69",
+      "id": "4.23",
       "name": "dsArmArteriesVeins",
       "label": "Artères et veines des bras",
       "question": "",
@@ -740,7 +746,7 @@
       ]
     },
     {
-      "id": "1.70",
+      "id": "4.24",
       "name": "dsVisceralArteriesAorta",
       "label": "Artères viscérales et aorte",
       "question": "",
@@ -754,7 +760,7 @@
       ]
     },
     {
-      "id": "1.71",
+      "id": "4.25",
       "name": "dsCarotidArteries",
       "label": "Carotides",
       "question": "",
@@ -768,7 +774,7 @@
       ]
     },
     {
-      "id": "1.72",
+      "id": "4.26",
       "name": "dsTemporalArteries",
       "label": "Artères temporales",
       "question": "",
@@ -782,7 +788,7 @@
       ]
     },
     {
-      "id": "1.73",
+      "id": "4.27",
       "name": "diaRaynaudSyndrome",
       "label": "Symptômes de Raynaud",
       "question": "",
@@ -796,7 +802,7 @@
       ]
     },
     {
-      "id": "1.74",
+      "id": "4.28",
       "name": "diaHypothenarHammerSyndrome",
       "label": "diaHypothenarHammerSyndrome",
       "question": "",
@@ -810,7 +816,7 @@
       ]
     },
     {
-      "id": "1.75",
+      "id": "4.29",
       "name": "diaRenovascularHypertrophy",
       "label": "diaRenovascularHypertrophy",
       "question": "",
@@ -824,7 +830,7 @@
       ]
     },
     {
-      "id": "1.76",
+      "id": "4.30",
       "name": "diaPeripheralAarterialOcclusiveDisease",
       "label": "diaPeripheralAarterialOcclusiveDisease",
       "question": "",
@@ -838,7 +844,7 @@
       ]
     },
     {
-      "id": "1.77",
+      "id": "4.31",
       "name": "diaCerebrovascularAccident",
       "label": "diaCerebrovascularAccident",
       "question": "",
@@ -852,7 +858,7 @@
       ]
     },
     {
-      "id": "1.78",
+      "id": "4.32",
       "name": "endovenousLaserTherapy",
       "label": "endovenousLaserTherapy",
       "question": "",
@@ -866,7 +872,7 @@
       ]
     },
     {
-      "id": "1.79",
+      "id": "4.33",
       "name": "ulcusTherapy",
       "label": "Traitement des ulcères",
       "question": "",
@@ -880,7 +886,7 @@
       ]
     },
     {
-      "id": "1.80",
+      "id": "4.34",
       "name": "miniphlebectomy",
       "label": "Miniphlébectomie",
       "question": "",
@@ -894,7 +900,7 @@
       ]
     },
     {
-      "id": "1.81",
+      "id": "4.35",
       "name": "sclerotherapy",
       "label": "Sclérothérapie",
       "question": "",
@@ -908,7 +914,7 @@
       ]
     },
     {
-      "id": "1.82",
+      "id": "4.36",
       "name": "catheterInterventions",
       "label": "Interventions par cathéter",
       "question": "",

@@ -3,10 +3,10 @@
   "_reviewed": false,
   "fields": [
     {
-      "comments": "Section 1 — page1"
+      "comments": "Section 7 — page1"
     },
     {
-      "id": "1.1",
+      "id": "7.1",
       "name": "course",
       "label": "course",
       "question": "",
@@ -15,16 +15,19 @@
       "acroform_name": "topmostSubform[0].page1[0].anamnesisStruct[0].course[0]"
     },
     {
-      "id": "1.2",
+      "comments": "Section 4 — page1"
+    },
+    {
+      "id": "4.1",
       "name": "prognosis",
       "label": "prognosis",
-      "question": "",
+      "question": "Quel est le pronostic pour ce patient ?",
       "required": false,
       "xml_path": "topmostSubform/page1/anamnesisStruct/prognosis",
       "acroform_name": "topmostSubform[0].page1[0].anamnesisStruct[0].prognosis[0]"
     },
     {
-      "id": "1.3",
+      "id": "7.2",
       "name": "ask4FormerProlapses",
       "label": "ask4FormerProlapses",
       "question": "",
@@ -38,7 +41,7 @@
       ]
     },
     {
-      "id": "1.4",
+      "id": "7.3",
       "name": "formerProlapses",
       "label": "formerProlapses",
       "question": "",
@@ -47,16 +50,10 @@
       "acroform_name": "topmostSubform[0].page1[0].anamnesisStruct[0].formerProlapses[0]"
     },
     {
-      "id": "1.5",
-      "name": "pad_medforms_form_id",
-      "label": "pad_medforms_form_id",
-      "question": "",
-      "required": false,
-      "xml_path": "topmostSubform/page1/pad_medforms_form_id",
-      "acroform_name": "topmostSubform[0].page1[0].pad_medforms_form_id[0]"
+      "comments": "Section 1 — page1"
     },
     {
-      "id": "1.6",
+      "id": "1.1",
       "name": "caseDate",
       "label": "caseDate",
       "question": "Quelle est la date de l'événement assuré (accident, sinistre) ? [format : JJ.MM.AAAA]",
@@ -66,7 +63,7 @@
       "type": "date"
     },
     {
-      "id": "1.7",
+      "id": "1.2",
       "name": "caseID",
       "label": "caseID",
       "question": "Quel est le numéro de dossier ou de sinistre ?",
@@ -75,7 +72,7 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].caseID[0]"
     },
     {
-      "id": "1.8",
+      "id": "1.3",
       "name": "type",
       "label": "type",
       "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
@@ -93,16 +90,19 @@
       ]
     },
     {
-      "id": "1.9",
+      "comments": "Section 6 — page1"
+    },
+    {
+      "id": "6.1",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur la couverture d'assurance (régime applicable, réserve, prise en charge particulière) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/lawS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "id": "1.10",
+      "id": "1.4",
       "name": "condensedName",
       "label": "condensedName",
       "question": "Quel est le nom complet de l'assureur ?",
@@ -111,7 +111,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedName[0]"
     },
     {
-      "id": "1.11",
+      "id": "1.5",
       "name": "condensedAddress",
       "label": "condensedAddress",
       "question": "Quelle est l'adresse complète de l'assureur (rue, NPA et localité) ?",
@@ -120,7 +120,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedAddress[0]"
     },
     {
-      "id": "1.12",
+      "id": "1.6",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
@@ -129,7 +129,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
     },
     {
-      "id": "1.13",
+      "id": "1.7",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail de l'assureur ?",
@@ -138,7 +138,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].email[0]"
     },
     {
-      "id": "1.14",
+      "id": "1.8",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone de l'assureur ?",
@@ -147,7 +147,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].phone[0]"
     },
     {
-      "id": "1.15",
+      "id": "1.9",
       "name": "fax",
       "label": "fax",
       "question": "Quel est le numéro de fax de l'assureur ?",
@@ -156,7 +156,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].fax[0]"
     },
     {
-      "id": "1.16",
+      "id": "1.10",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
@@ -165,7 +165,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
     },
     {
-      "id": "1.17",
+      "id": "1.11",
       "name": "condensedName",
       "label": "condensedName",
       "question": "Quel est le nom complet du destinataire du formulaire ?",
@@ -174,7 +174,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].condensedName[0]"
     },
     {
-      "id": "1.18",
+      "id": "1.12",
       "name": "condensedAddress",
       "label": "condensedAddress",
       "question": "Quelle est l'adresse complète du destinataire du formulaire (rue, NPA et localité) ?",
@@ -183,7 +183,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].condensedAddress[0]"
     },
     {
-      "id": "1.19",
+      "id": "1.13",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) du destinataire du formulaire ?",
@@ -192,7 +192,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].ean[0]"
     },
     {
-      "id": "1.20",
+      "id": "1.14",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail du destinataire du formulaire ?",
@@ -201,7 +201,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].email[0]"
     },
     {
-      "id": "1.21",
+      "id": "1.15",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du destinataire du formulaire ?",
@@ -210,7 +210,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].phone[0]"
     },
     {
-      "id": "1.22",
+      "id": "1.16",
       "name": "fax",
       "label": "fax",
       "question": "Quel est le numéro de fax du destinataire du formulaire ?",
@@ -219,7 +219,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].fax[0]"
     },
     {
-      "id": "1.23",
+      "id": "1.17",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du destinataire du formulaire ?",
@@ -228,7 +228,7 @@
       "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].input[0]"
     },
     {
-      "id": "1.24",
+      "id": "1.18",
       "name": "condensedName",
       "label": "condensedName",
       "question": "Quel est le nom complet de l'employeur ?",
@@ -237,7 +237,7 @@
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].condensedName[0]"
     },
     {
-      "id": "1.25",
+      "id": "1.19",
       "name": "city",
       "label": "city",
       "question": "Quelle est la localité de l'adresse de l'employeur ?",
@@ -246,16 +246,16 @@
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].city[0]"
     },
     {
-      "id": "1.26",
+      "id": "4.2",
       "name": "nif",
       "label": "nif",
-      "question": "",
+      "question": "Quel est le numéro d'identification de l'entreprise (IDE/NIF) de l'employeur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/employerS1Address/nif",
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].nif[0]"
     },
     {
-      "id": "1.27",
+      "id": "1.20",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'employeur ?",
@@ -264,7 +264,7 @@
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].input[0]"
     },
     {
-      "id": "1.28",
+      "id": "1.21",
       "name": "zip",
       "label": "zip",
       "question": "Quel est le code postal (NPA) de l'adresse de l'employeur ?",
@@ -273,7 +273,7 @@
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].zip[0]"
     },
     {
-      "id": "1.29",
+      "id": "1.22",
       "name": "street",
       "label": "street",
       "question": "Quelle est la rue et le numéro de l'adresse de l'employeur ?",
@@ -282,25 +282,25 @@
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].street[0]"
     },
     {
-      "id": "1.30",
+      "id": "4.3",
       "name": "name",
       "label": "name",
-      "question": "",
+      "question": "Quel est le libellé du diagnostic posé ?",
       "required": false,
       "xml_path": "topmostSubform/page1/diagnosisS1Struct/name",
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].name[0]"
     },
     {
-      "id": "1.31",
+      "id": "4.4",
       "name": "code",
       "label": "Code:",
-      "question": "",
+      "question": "Quel est le code CIM-10 du diagnostic ? Reprendre le code exactement tel qu'il figure dans les documents, sans le reformuler.",
       "required": false,
       "xml_path": "topmostSubform/page1/diagnosisS1Struct/code",
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].code[0]"
     },
     {
-      "id": "1.32",
+      "id": "7.4",
       "name": "type",
       "label": "Type:",
       "question": "",
@@ -319,16 +319,16 @@
       ]
     },
     {
-      "id": "1.33",
+      "id": "6.2",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur le diagnostic ?",
       "required": false,
       "xml_path": "topmostSubform/page1/diagnosisS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].diagnosisS1Struct[0].input[0]"
     },
     {
-      "id": "1.34",
+      "id": "1.23",
       "name": "firstName",
       "label": "firstName",
       "question": "Quel est le prénom du patient ?",
@@ -337,7 +337,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].firstName[0]"
     },
     {
-      "id": "1.35",
+      "id": "1.24",
       "name": "lastName",
       "label": "lastName",
       "question": "Quel est le nom de famille du patient ?",
@@ -346,7 +346,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].lastName[0]"
     },
     {
-      "id": "1.36",
+      "id": "1.25",
       "name": "street",
       "label": "street",
       "question": "Quelle est la rue et le numéro de l'adresse du patient ?",
@@ -355,7 +355,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].street[0]"
     },
     {
-      "id": "1.37",
+      "id": "1.26",
       "name": "zip",
       "label": "zip",
       "question": "Quel est le code postal (NPA) de l'adresse du patient ?",
@@ -364,7 +364,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].zip[0]"
     },
     {
-      "id": "1.38",
+      "id": "1.27",
       "name": "city",
       "label": "city",
       "question": "Quelle est la localité de l'adresse du patient ?",
@@ -373,7 +373,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].city[0]"
     },
     {
-      "id": "1.39",
+      "id": "1.28",
       "name": "ssn",
       "label": "ssn",
       "question": "Quel est le numéro AVS du patient ? [format : 756.XXXX.XXXX.XX]",
@@ -382,7 +382,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].ssn[0]"
     },
     {
-      "id": "1.40",
+      "id": "1.29",
       "name": "birthDate",
       "label": "birthDate",
       "question": "Quelle est la date de naissance du patient ? [format : JJ.MM.AAAA]",
@@ -392,7 +392,7 @@
       "type": "date"
     },
     {
-      "id": "1.41",
+      "id": "1.30",
       "name": "profession",
       "label": "profession",
       "question": "Quelle est la profession exercée par le patient ?",
@@ -401,7 +401,7 @@
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].profession[0]"
     },
     {
-      "id": "1.42",
+      "id": "1.31",
       "name": "sex",
       "label": "sex",
       "question": "Quel est le sexe du patient ? Répondre UNIQUEMENT par M (masculin) ou F (féminin).",
@@ -415,22 +415,13 @@
       ]
     },
     {
-      "id": "1.43",
+      "id": "1.32",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du patient ?",
       "required": false,
       "xml_path": "topmostSubform/page1/patientS1Address/input",
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].input[0]"
-    },
-    {
-      "id": "1.44",
-      "name": "helpSystem",
-      "label": "Avec le bouton «Envoyer» vous pouvez envoyer les données électroniquement à Suva. Vous trouverez de plus amples informations dans la fiche d'information ici.",
-      "question": "",
-      "required": false,
-      "xml_path": "topmostSubform/page1/helpSystem",
-      "acroform_name": "topmostSubform[0].page1[0].helpSystem[0]"
     },
     {
       "comments": "Section 2 — page2"
@@ -445,7 +436,10 @@
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].procedure[0]"
     },
     {
-      "id": "2.2",
+      "comments": "Section 8 — page2"
+    },
+    {
+      "id": "8.1",
       "name": "recommendation",
       "label": "recommendation",
       "question": "",
@@ -454,7 +448,7 @@
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].recommendation[0]"
     },
     {
-      "id": "2.3",
+      "id": "8.2",
       "name": "consultationInterval",
       "label": "consultationInterval",
       "question": "",
@@ -463,7 +457,7 @@
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].consultationInterval[0]"
     },
     {
-      "id": "2.4",
+      "id": "8.3",
       "name": "therapyLength",
       "label": "therapyLength",
       "question": "",
@@ -472,7 +466,7 @@
       "acroform_name": "topmostSubform[0].page2[0].therapyStruct[0].therapyLength[0]"
     },
     {
-      "id": "2.5",
+      "id": "2.2",
       "name": "percentageNum",
       "label": "%",
       "question": "Quel est le pourcentage indiqué ? Répondre par le nombre seul.",
@@ -482,7 +476,7 @@
       "type": "percent"
     },
     {
-      "id": "2.6",
+      "id": "2.3",
       "name": "beginDate",
       "label": "beginDate",
       "question": "Quelle est la date de début de la période concernée ? [format : JJ.MM.AAAA]",
@@ -492,7 +486,7 @@
       "type": "date"
     },
     {
-      "id": "2.7",
+      "id": "8.4",
       "name": "ask4NewWorkplace",
       "label": "ask4NewWorkplace",
       "question": "",
@@ -506,7 +500,7 @@
       ]
     },
     {
-      "id": "2.8",
+      "id": "8.5",
       "name": "ask4LastingHandicap",
       "label": "ask4LastingHandicap",
       "question": "",
@@ -520,7 +514,7 @@
       ]
     },
     {
-      "id": "2.9",
+      "id": "8.6",
       "name": "handicap",
       "label": "handicap",
       "question": "",
@@ -529,16 +523,19 @@
       "acroform_name": "topmostSubform[0].page2[0].employabilityStruct[0].handicap[0]"
     },
     {
-      "id": "2.10",
+      "comments": "Section 5 — page2"
+    },
+    {
+      "id": "5.1",
       "name": "fillerName",
       "label": "fillerName",
-      "question": "",
+      "question": "Qui a rempli ce formulaire ? Indiquer le nom de la personne.",
       "required": false,
       "xml_path": "topmostSubform/page2/fillerName",
       "acroform_name": "topmostSubform[0].page2[0].fillerName[0]"
     },
     {
-      "id": "2.11",
+      "id": "2.4",
       "name": "formRemark",
       "label": "formRemark",
       "question": "Y a-t-il une remarque générale à joindre au formulaire ?",
@@ -547,7 +544,7 @@
       "acroform_name": "topmostSubform[0].page2[0].formRemark[0]"
     },
     {
-      "id": "2.12",
+      "id": "2.5",
       "name": "creationDate",
       "label": "creationDate",
       "question": "Quelle est la date d'établissement du rapport ? [format : JJ.MM.AAAA]",
@@ -557,7 +554,7 @@
       "type": "date"
     },
     {
-      "id": "2.13",
+      "id": "2.6",
       "name": "modificationDate",
       "label": "modificationDate",
       "question": "Quelle est la date de dernière mise à jour du rapport ? [format : JJ.MM.AAAA]",
@@ -567,21 +564,7 @@
       "type": "date"
     },
     {
-      "id": "2.14",
-      "name": "production_modus",
-      "label": "production_modus",
-      "question": "",
-      "required": false,
-      "xml_path": "topmostSubform/page2/production_modus",
-      "acroform_name": "topmostSubform[0].page2[0].production_modus[0]",
-      "type": "bool",
-      "options": [
-        "On",
-        "Off"
-      ]
-    },
-    {
-      "id": "2.15",
+      "id": "2.7",
       "name": "condensedName",
       "label": "condensedName",
       "question": "Quel est le nom complet du médecin traitant (fournisseur de prestations) ?",
@@ -590,7 +573,7 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].condensedName[0]"
     },
     {
-      "id": "2.16",
+      "id": "2.8",
       "name": "street",
       "label": "street",
       "question": "Quelle est la rue et le numéro de l'adresse du médecin traitant (fournisseur de prestations) ?",
@@ -599,7 +582,7 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].street[0]"
     },
     {
-      "id": "2.17",
+      "id": "2.9",
       "name": "zip",
       "label": "zip",
       "question": "Quel est le code postal (NPA) de l'adresse du médecin traitant (fournisseur de prestations) ?",
@@ -608,7 +591,7 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].zip[0]"
     },
     {
-      "id": "2.18",
+      "id": "2.10",
       "name": "city",
       "label": "city",
       "question": "Quelle est la localité de l'adresse du médecin traitant (fournisseur de prestations) ?",
@@ -617,7 +600,7 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].city[0]"
     },
     {
-      "id": "2.19",
+      "id": "2.11",
       "name": "email",
       "label": "email",
       "question": "Quelle est l'adresse e-mail du médecin traitant (fournisseur de prestations) ?",
@@ -626,7 +609,7 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].email[0]"
     },
     {
-      "id": "2.20",
+      "id": "2.12",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
@@ -635,7 +618,7 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].ean[0]"
     },
     {
-      "id": "2.21",
+      "id": "2.13",
       "name": "zsr",
       "label": "zsr",
       "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
@@ -644,7 +627,7 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].zsr[0]"
     },
     {
-      "id": "2.22",
+      "id": "2.14",
       "name": "phone",
       "label": "phone",
       "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
@@ -653,22 +636,13 @@
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].phone[0]"
     },
     {
-      "id": "2.23",
+      "id": "2.15",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du médecin traitant (fournisseur de prestations) ?",
       "required": false,
       "xml_path": "topmostSubform/page2/providerS1Address/input",
       "acroform_name": "topmostSubform[0].page2[0].providerS1Address[0].input[0]"
-    },
-    {
-      "id": "2.24",
-      "name": "openAttach",
-      "label": "Transmettre documents d'accompagnement",
-      "question": "",
-      "required": false,
-      "xml_path": "topmostSubform/page2/openAttach",
-      "acroform_name": "topmostSubform[0].page2[0].openAttach[0]"
     },
     {
       "comments": "Section 3 — page3"

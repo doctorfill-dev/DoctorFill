@@ -293,7 +293,10 @@
       "type": "date"
     },
     {
-      "id": "1.32",
+      "comments": "Section 3 — page1"
+    },
+    {
+      "id": "3.1",
       "name": "generalPractitionerCentredModel",
       "label": "generalPractitionerCentredModel",
       "question": "",
@@ -302,7 +305,7 @@
       "acroform_name": "topmostSubform[0].page1[0].generalPractitionerCentredModel[0]"
     },
     {
-      "id": "1.33",
+      "id": "3.2",
       "name": "ambitionConseling",
       "label": "Consultation diabétique",
       "question": "",
@@ -316,7 +319,7 @@
       ]
     },
     {
-      "id": "1.34",
+      "id": "3.3",
       "name": "diabetesInstructions",
       "label": "Informations générales",
       "question": "",
@@ -330,7 +333,7 @@
       ]
     },
     {
-      "id": "1.35",
+      "id": "3.4",
       "name": "insulinInjection",
       "label": "Injections pour insuline",
       "question": "",
@@ -344,7 +347,7 @@
       ]
     },
     {
-      "id": "1.36",
+      "id": "3.5",
       "name": "outComeIllness",
       "label": "Complications tardives",
       "question": "",
@@ -358,7 +361,7 @@
       ]
     },
     {
-      "id": "1.37",
+      "id": "3.6",
       "name": "controllingBloodGlucose",
       "label": "Autocontrôle de la glycémie",
       "question": "",
@@ -372,7 +375,7 @@
       ]
     },
     {
-      "id": "1.38",
+      "id": "3.7",
       "name": "hypoglycemia",
       "label": "Hypoglycémie",
       "question": "",
@@ -386,7 +389,7 @@
       ]
     },
     {
-      "id": "1.39",
+      "id": "3.8",
       "name": "spezSituation",
       "label": "Situations particulières",
       "question": "",
@@ -400,7 +403,7 @@
       ]
     },
     {
-      "id": "1.40",
+      "id": "3.9",
       "name": "pumpInstructions",
       "label": "Mode d'emploi de la pompe",
       "question": "",
@@ -414,7 +417,7 @@
       ]
     },
     {
-      "id": "1.41",
+      "id": "3.10",
       "name": "footCare",
       "label": "Soins des pieds",
       "question": "",
@@ -428,7 +431,7 @@
       ]
     },
     {
-      "id": "1.42",
+      "id": "3.11",
       "name": "carTravelSport",
       "label": "Conduite/voyages/sports",
       "question": "",
@@ -442,7 +445,7 @@
       ]
     },
     {
-      "id": "1.43",
+      "id": "3.12",
       "name": "nutritionConseling",
       "label": "Conseils nutritionnels",
       "question": "",
@@ -456,7 +459,7 @@
       ]
     },
     {
-      "id": "1.44",
+      "id": "3.13",
       "name": "qualitativeDiabetesNutrition",
       "label": "Alimentation (qualitative):",
       "question": "",
@@ -470,7 +473,7 @@
       ]
     },
     {
-      "id": "1.45",
+      "id": "3.14",
       "name": "quantitativeDiabetesNutrition",
       "label": "Alimentation (quantitative):",
       "question": "",
@@ -484,7 +487,7 @@
       ]
     },
     {
-      "id": "1.46",
+      "id": "3.15",
       "name": "weightReductionTarget",
       "label": "weightReductionTarget",
       "question": "",
@@ -493,7 +496,7 @@
       "acroform_name": "topmostSubform[0].page1[0].weightReductionTarget[0]"
     },
     {
-      "id": "1.47",
+      "id": "3.16",
       "name": "quantitativeDiet",
       "label": "quantitativeDiet",
       "question": "",
@@ -502,7 +505,7 @@
       "acroform_name": "topmostSubform[0].page1[0].quantitativeDiet[0]"
     },
     {
-      "id": "1.48",
+      "id": "3.17",
       "name": "oralentidiabetica",
       "label": "A.D.O.:",
       "question": "",
@@ -511,7 +514,7 @@
       "acroform_name": "topmostSubform[0].page1[0].oralentidiabetica[0]"
     },
     {
-      "id": "1.49",
+      "id": "3.18",
       "name": "insulin",
       "label": "Insuline:",
       "question": "",
@@ -520,7 +523,7 @@
       "acroform_name": "topmostSubform[0].page1[0].insulin[0]"
     },
     {
-      "id": "1.50",
+      "id": "3.19",
       "name": "cholesterolComplete",
       "label": "Cholestérol total:",
       "question": "",
@@ -529,7 +532,7 @@
       "acroform_name": "topmostSubform[0].page1[0].cholesterolComplete[0]"
     },
     {
-      "id": "1.51",
+      "id": "3.20",
       "name": "HbA1C",
       "label": "HbA1c:",
       "question": "",
@@ -538,7 +541,7 @@
       "acroform_name": "topmostSubform[0].page1[0].HbA1C[0]"
     },
     {
-      "id": "1.52",
+      "id": "3.21",
       "name": "currentBloodGlucose",
       "label": "Glycémie actuelle:",
       "question": "",
@@ -547,7 +550,7 @@
       "acroform_name": "topmostSubform[0].page1[0].currentBloodGlucose[0]"
     },
     {
-      "id": "1.53",
+      "id": "3.22",
       "name": "weight",
       "label": "Poids:",
       "question": "",
@@ -556,7 +559,7 @@
       "acroform_name": "topmostSubform[0].page1[0].weight[0]"
     },
     {
-      "id": "1.54",
+      "id": "3.23",
       "name": "size",
       "label": "Taille:",
       "question": "",
@@ -565,7 +568,7 @@
       "acroform_name": "topmostSubform[0].page1[0].size[0]"
     },
     {
-      "id": "1.55",
+      "id": "3.24",
       "name": "triglyceride",
       "label": "Triglycéride:",
       "question": "",
@@ -574,7 +577,7 @@
       "acroform_name": "topmostSubform[0].page1[0].triglyceride[0]"
     },
     {
-      "id": "1.56",
+      "id": "3.25",
       "name": "HDL",
       "label": "HDL:",
       "question": "",
@@ -583,7 +586,7 @@
       "acroform_name": "topmostSubform[0].page1[0].HDL[0]"
     },
     {
-      "id": "1.57",
+      "id": "3.26",
       "name": "bloodPressure",
       "label": "Tension artérielle:",
       "question": "",
@@ -592,7 +595,7 @@
       "acroform_name": "topmostSubform[0].page1[0].bloodPressure[0]"
     },
     {
-      "id": "1.58",
+      "id": "3.27",
       "name": "written",
       "label": "par écrit",
       "question": "",
@@ -606,7 +609,7 @@
       ]
     },
     {
-      "id": "1.59",
+      "id": "3.28",
       "name": "byPhone",
       "label": "par téléphone",
       "question": "",
@@ -620,7 +623,7 @@
       ]
     },
     {
-      "id": "1.60",
+      "id": "3.29",
       "name": "noReportNecessary",
       "label": "rapport pas nécessaire",
       "question": "",
@@ -634,7 +637,7 @@
       ]
     },
     {
-      "id": "1.61",
+      "id": "3.30",
       "name": "counselingLanguage",
       "label": "counselingLanguage",
       "question": "",
@@ -643,7 +646,7 @@
       "acroform_name": "topmostSubform[0].page1[0].counselingLanguage[0]"
     },
     {
-      "id": "1.62",
+      "id": "3.31",
       "name": "counselingGoalDiabetes",
       "label": "counselingGoalDiabetes",
       "question": "",
@@ -652,7 +655,7 @@
       "acroform_name": "topmostSubform[0].page1[0].counselingGoalDiabetes[0]"
     },
     {
-      "id": "1.63",
+      "id": "3.32",
       "name": "remarkDiabetes",
       "label": "remarkDiabetes",
       "question": "",
@@ -661,7 +664,7 @@
       "acroform_name": "topmostSubform[0].page1[0].remarkDiabetes[0]"
     },
     {
-      "id": "1.64",
+      "id": "3.33",
       "name": "counselingGoalNutrition",
       "label": "counselingGoalNutrition",
       "question": "",
@@ -670,7 +673,7 @@
       "acroform_name": "topmostSubform[0].page1[0].counselingGoalNutrition[0]"
     },
     {
-      "id": "1.65",
+      "id": "3.34",
       "name": "remarkNutrition",
       "label": "remarkNutrition",
       "question": "",
@@ -679,7 +682,7 @@
       "acroform_name": "topmostSubform[0].page1[0].remarkNutrition[0]"
     },
     {
-      "id": "1.66",
+      "id": "3.35",
       "name": "appointmentData",
       "label": "appointmentData",
       "question": "",
@@ -688,7 +691,7 @@
       "acroform_name": "topmostSubform[0].page1[0].appointmentData[0]"
     },
     {
-      "id": "1.67",
+      "id": "3.36",
       "name": "appointment",
       "label": "appointment",
       "question": "",
@@ -698,7 +701,7 @@
       "type": "date"
     },
     {
-      "id": "1.68",
+      "id": "3.37",
       "name": "creatinineNormal",
       "label": "Créatinine normal:",
       "question": "",
@@ -707,7 +710,7 @@
       "acroform_name": "topmostSubform[0].page1[0].creatinineNormal[0]"
     },
     {
-      "id": "1.69",
+      "id": "3.38",
       "name": "creatininePatho",
       "label": "Créatinine patho.:",
       "question": "",
@@ -716,7 +719,7 @@
       "acroform_name": "topmostSubform[0].page1[0].creatininePatho[0]"
     },
     {
-      "id": "1.70",
+      "id": "3.39",
       "name": "otherIndications",
       "label": "otherIndications",
       "question": "",
@@ -725,7 +728,7 @@
       "acroform_name": "topmostSubform[0].page1[0].otherIndications[0]"
     },
     {
-      "id": "1.71",
+      "id": "1.32",
       "name": "insuredID",
       "label": "N°. d'assuré:",
       "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
@@ -734,7 +737,7 @@
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
     },
     {
-      "id": "1.72",
+      "id": "1.33",
       "name": "type",
       "label": "type",
       "question": "De quel régime d'assurance relève la prise en charge ? Répondre UNIQUEMENT par LAA (accident), LaMal (assurance de base), LCA (assurance complémentaire) ou LAM (assurance militaire).",
@@ -752,16 +755,19 @@
       ]
     },
     {
-      "id": "1.73",
+      "comments": "Section 2 — page1"
+    },
+    {
+      "id": "2.1",
       "name": "input",
       "label": "input",
-      "question": "",
+      "question": "Y a-t-il une précision à apporter sur la couverture d'assurance (régime applicable, réserve, prise en charge particulière) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/lawS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].input[0]"
     },
     {
-      "id": "1.74",
+      "id": "3.40",
       "name": "code",
       "label": "CIM-10-Code:",
       "question": "",
@@ -770,7 +776,7 @@
       "acroform_name": "topmostSubform[0].page1[0].diagnosis[0].code[0]"
     },
     {
-      "id": "1.75",
+      "id": "3.41",
       "name": "name",
       "label": "name",
       "question": "",
@@ -779,7 +785,7 @@
       "acroform_name": "topmostSubform[0].page1[0].diagnosis[0].name[0]"
     },
     {
-      "id": "1.76",
+      "id": "3.42",
       "name": "beratungsstelle",
       "label": "beratungsstelle",
       "question": "",
