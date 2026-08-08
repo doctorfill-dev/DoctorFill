@@ -111,7 +111,16 @@
       "question": "Le patient a-t-il moins de 60 ans ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/patientLessThan60",
-      "acroform_name": "topmostSubform[0].page1[0].patientLessThan60[0]"
+      "acroform_name": "topmostSubform[0].page1[0].patientLessThan60[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Minor RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "8.2",
@@ -120,7 +129,16 @@
       "question": "Le patient a-t-il 60 ans ou plus ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/patientMoreThan60",
-      "acroform_name": "topmostSubform[0].page1[0].patientMoreThan60[0]"
+      "acroform_name": "topmostSubform[0].page1[0].patientMoreThan60[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Major RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "comments": "Section 6 — page1"
@@ -187,7 +205,16 @@
       "question": "Qui a établi ce premier constat (nom et fonction) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/originator",
-      "acroform_name": "topmostSubform[0].page1[0].originator[0]"
+      "acroform_name": "topmostSubform[0].page1[0].originator[0]",
+      "type": "choice",
+      "options": [
+        "Patient",
+        "Tiers"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "8.4",
@@ -303,7 +330,18 @@
       "question": "L'accident présente-t-il des critères de gravité (haute cinétique, éjection, chute de grande hauteur) ? Répondre par oui ou non, en précisant si possible.",
       "required": false,
       "xml_path": "topmostSubform/page1/criticalAccident",
-      "acroform_name": "topmostSubform[0].page1[0].criticalAccident[0]"
+      "acroform_name": "topmostSubform[0].page1[0].criticalAccident[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Major RF)",
+        "indéterminé"
+      ],
+      "option_values": [
+        "no",
+        "yes",
+        "unknown"
+      ]
     },
     {
       "id": "8.12",
@@ -312,7 +350,16 @@
       "question": "Le patient présente-t-il un trouble de la coagulation ou prend-il un traitement anticoagulant ? Si oui, préciser lequel.",
       "required": false,
       "xml_path": "topmostSubform/page1/coagulationDisorder",
-      "acroform_name": "topmostSubform[0].page1[0].coagulationDisorder[0]"
+      "acroform_name": "topmostSubform[0].page1[0].coagulationDisorder[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Major RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "8.13",
@@ -321,7 +368,16 @@
       "question": "Le patient a-t-il perdu connaissance ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/unconsciousness",
-      "acroform_name": "topmostSubform[0].page1[0].unconsciousness[0]"
+      "acroform_name": "topmostSubform[0].page1[0].unconsciousness[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Minor RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "8.14",
@@ -339,7 +395,18 @@
       "question": "Le patient présente-t-il une amnésie antérograde ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/anterogradeAnmnesia",
-      "acroform_name": "topmostSubform[0].page1[0].anterogradeAnmnesia[0]"
+      "acroform_name": "topmostSubform[0].page1[0].anterogradeAnmnesia[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Minor RF)",
+        "indéterminé"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "8.16",
@@ -348,7 +415,18 @@
       "question": "Le patient présente-t-il une amnésie post-traumatique ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/posttraumaticAnmnesia",
-      "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesia[0]"
+      "acroform_name": "topmostSubform[0].page1[0].posttraumaticAnmnesia[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui",
+        "indéterminé"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "8.17",
@@ -385,7 +463,16 @@
       "question": "Le patient a-t-il présenté une crise d'épilepsie ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/epilepsy",
-      "acroform_name": "topmostSubform[0].page1[0].epilepsy[0]"
+      "acroform_name": "topmostSubform[0].page1[0].epilepsy[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Major RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "8.20",
@@ -403,7 +490,16 @@
       "question": "Le patient a-t-il vomi après le traumatisme ? Répondre par oui ou non, en précisant le nombre d'épisodes si connu.",
       "required": false,
       "xml_path": "topmostSubform/page1/vomiting",
-      "acroform_name": "topmostSubform[0].page1[0].vomiting[0]"
+      "acroform_name": "topmostSubform[0].page1[0].vomiting[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Major RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "1.14",
@@ -502,7 +598,16 @@
       "question": "Le patient présente-t-il un déficit neurologique focal ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/focalDeficit",
-      "acroform_name": "topmostSubform[0].page2[0].focalDeficit[0]"
+      "acroform_name": "topmostSubform[0].page2[0].focalDeficit[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Minor RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "9.5",
@@ -511,7 +616,16 @@
       "question": "Le patient présente-t-il une contusion crânienne ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/cranialContusion",
-      "acroform_name": "topmostSubform[0].page2[0].cranialContusion[0]"
+      "acroform_name": "topmostSubform[0].page2[0].cranialContusion[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Minor RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "9.6",
@@ -520,7 +634,16 @@
       "question": "Une fracture du crâne est-elle constatée ou suspectée ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/cranialFracture",
-      "acroform_name": "topmostSubform[0].page2[0].cranialFracture[0]"
+      "acroform_name": "topmostSubform[0].page2[0].cranialFracture[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui (= Major RF)"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "comments": "Section 7 — page2"

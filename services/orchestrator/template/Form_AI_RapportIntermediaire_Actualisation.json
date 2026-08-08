@@ -397,7 +397,18 @@
       "question": "Quel est l'état de santé actuel du patient ?",
       "required": false,
       "xml_path": "mutter_dok/Seite2/stateOfHealth",
-      "acroform_name": "mutter_dok[0].Seite2[0].stateOfHealth[0]"
+      "acroform_name": "mutter_dok[0].Seite2[0].stateOfHealth[0]",
+      "type": "choice",
+      "options": [
+        "est-il resté stationnaire?",
+        "s'est aggravé?",
+        "amélioré?"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "5.3",
@@ -406,7 +417,16 @@
       "question": "Le diagnostic a-t-il changé depuis le dernier rapport ? Si oui, préciser en quoi.",
       "required": false,
       "xml_path": "mutter_dok/Seite2/changeOfDiagnosis",
-      "acroform_name": "mutter_dok[0].Seite2[0].changeOfDiagnosis[0]"
+      "acroform_name": "mutter_dok[0].Seite2[0].changeOfDiagnosis[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "5.4",

@@ -188,6 +188,51 @@ def _is_checkbox(field_obj: pikepdf.Object) -> bool:
     return not (flags & _FF_PUSHBUTTON) and not (flags & _FF_RADIO)
 
 
+def _is_radio(field_obj: pikepdf.Object) -> bool:
+    """Détecte un groupe de boutons radio (bouton portant le drapeau /Radio)."""
+    ft = field_obj.get("/FT")
+    if ft is None or str(ft) != "/Btn":
+        return False
+    return bool(int(field_obj.get("/Ff") or 0) & _FF_RADIO)
+
+
+def _radio_states(field_obj: pikepdf.Object) -> dict[str, pikepdf.Object]:
+    """État « coché » → widget correspondant, pour chaque bouton du groupe."""
+    states: dict[str, pikepdf.Object] = {}
+    for kid in (field_obj.get("/Kids") or []):
+        obj = kid.get_object() if hasattr(kid, "get_object") else kid
+        ap = obj.get("/AP")
+        normal = ap.get("/N") if ap is not None else None
+        if normal is None:
+            continue
+        for key in normal.keys():
+            if key != "/Off":
+                states[key] = obj
+                break
+    return states
+
+
+def _fill_radio(field_obj: pikepdf.Object, value: Any) -> bool:
+    """
+    Coche le bouton dont l'état correspond à `value`.
+
+    Un groupe radio n'accepte qu'un /Name choisi parmi les états de ses boutons
+    (medForms exporte « 0 », « 1 », …). Y écrire une chaîne peignait le libellé
+    brut dans chacun des boutons, qui apparaissaient tous cochés.
+
+    Returns:
+        True si un bouton correspond, False si la valeur est hors du groupe.
+    """
+    states = _radio_states(field_obj)
+    wanted = f"/{str(value).strip()}"
+    if wanted not in states:
+        return False
+    field_obj["/V"] = pikepdf.Name(wanted)
+    for state, widget in states.items():
+        widget["/AS"] = pikepdf.Name(state if state == wanted else "/Off")
+    return True
+
+
 def _fill_fields_recursive(
     pdf: pikepdf.Pdf,
     acroform: pikepdf.Object,
@@ -209,6 +254,19 @@ def _fill_fields_recursive(
         t = obj.get("/T")
         name_part = str(t) if t is not None else ""
         full_name = f"{parent_name}.{name_part}" if parent_name and name_part else (name_part or parent_name)
+
+        # Un groupe radio se remplit d'un bloc : ses boutons sont des widgets, pas
+        # des champs, et n'ont pas de /T. Descendre dedans leur ferait hériter du
+        # nom du parent et les remplirait un à un comme des champs texte.
+        if _is_radio(obj):
+            if full_name in values_by_name and full_name not in filled:
+                value = values_by_name[full_name]
+                if _fill_radio(obj, value):
+                    filled.add(full_name)
+                    logger.debug("AcroForm fill: %s = %r", full_name, value)
+                else:
+                    logger.debug("Radio %s : %r hors des états du groupe", full_name, value)
+            continue
 
         # Champ feuille : le remplir si on a une valeur pour lui
         if full_name in values_by_name and full_name not in filled:

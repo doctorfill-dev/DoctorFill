@@ -500,7 +500,18 @@
       "question": "Quel est le motif du traitement ou de la consultation ?",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentReason",
-      "acroform_name": "topmostSubform[0].page1[0].treatmentReason[0]"
+      "acroform_name": "topmostSubform[0].page1[0].treatmentReason[0]",
+      "type": "choice",
+      "options": [
+        "accident",
+        "invalidité / infirmité congénitale",
+        "maladie"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "7.4",
@@ -509,7 +520,16 @@
       "question": "Sur quelle durée le traitement est-il prévu ?",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentDurationSelect",
-      "acroform_name": "topmostSubform[0].page1[0].treatmentDurationSelect[0]"
+      "acroform_name": "topmostSubform[0].page1[0].treatmentDurationSelect[0]",
+      "type": "choice",
+      "options": [
+        "Durée:",
+        "plus d’un an"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "6.3",
@@ -527,7 +547,16 @@
       "question": "Quelle est la justification médicale de la demande ?",
       "required": false,
       "xml_path": "topmostSubform/page1/motivationType",
-      "acroform_name": "topmostSubform[0].page1[0].motivationType[0]"
+      "acroform_name": "topmostSubform[0].page1[0].motivationType[0]",
+      "type": "choice",
+      "options": [
+        "Objectif de réinsertion (moyen aux.):",
+        "Objectif de traitement (appareil de trait.):"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "1.42",

@@ -493,7 +493,18 @@
       "question": "Quel objectif de perte de poids est visé ?",
       "required": false,
       "xml_path": "topmostSubform/page1/weightReductionTarget",
-      "acroform_name": "topmostSubform[0].page1[0].weightReductionTarget[0]"
+      "acroform_name": "topmostSubform[0].page1[0].weightReductionTarget[0]",
+      "type": "choice",
+      "options": [
+        "Avec réduction du poids",
+        "Sans réduction du poids",
+        "Poids limite à atteindre"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "3.16",
@@ -502,7 +513,20 @@
       "question": "Quel régime quantitatif est prescrit (apport calorique ou glucidique visé) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/quantitativeDiet",
-      "acroform_name": "topmostSubform[0].page1[0].quantitativeDiet[0]"
+      "acroform_name": "topmostSubform[0].page1[0].quantitativeDiet[0]",
+      "type": "choice",
+      "options": [
+        "1200 kcal",
+        "1600 kcal",
+        "2000 kcal",
+        "2400 kcal"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
     },
     {
       "id": "3.17",
@@ -643,7 +667,20 @@
       "question": "Dans quelle langue le conseil doit-il être donné ?",
       "required": false,
       "xml_path": "topmostSubform/page1/counselingLanguage",
-      "acroform_name": "topmostSubform[0].page1[0].counselingLanguage[0]"
+      "acroform_name": "topmostSubform[0].page1[0].counselingLanguage[0]",
+      "type": "choice",
+      "options": [
+        "allemand",
+        "français",
+        "italien",
+        "accompagné d'un interprète"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
     },
     {
       "id": "3.31",
@@ -688,7 +725,16 @@
       "question": "Quelles sont les informations relatives au rendez-vous de conseil ?",
       "required": false,
       "xml_path": "topmostSubform/page1/appointmentData",
-      "acroform_name": "topmostSubform[0].page1[0].appointmentData[0]"
+      "acroform_name": "topmostSubform[0].page1[0].appointmentData[0]",
+      "type": "choice",
+      "options": [
+        "fixer rdv",
+        "Pat. terminé au:"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "3.36",

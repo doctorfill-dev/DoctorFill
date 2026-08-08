@@ -303,7 +303,15 @@
       "required": false,
       "xml_path": "topmostSubform/page1/patientS1Address/geschlecht",
       "acroform_name": "topmostSubform[0].page1[0].patientS1Address[0].geschlecht[0]",
-      "type": "sex"
+      "type": "sex",
+      "options": [
+        "M",
+        "F"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "1.18",

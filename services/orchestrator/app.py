@@ -262,6 +262,26 @@ def _normalize_field_value(value: str, field_type: str | None) -> str:
     return value
 
 
+def _resolve_option_value(value: str, f_def: Dict) -> str:
+    """
+    Traduit le libellé choisi par le LLM en valeur d'export du formulaire.
+
+    Les groupes de boutons radio medForms exportent un index (« 0 », « 1 », …)
+    et non le libellé affiché ; `option_values` porte la correspondance, dérivée
+    du XFA par tools/gen_template. Un libellé inconnu est laissé tel quel : le
+    remplissage laissera alors le groupe vide plutôt que de cocher au hasard.
+    """
+    options = f_def.get("options")
+    option_values = f_def.get("option_values")
+    if not options or not option_values or len(options) != len(option_values):
+        return value
+    target = value.strip().casefold()
+    for label, exported in zip(options, option_values):
+        if label.strip().casefold() == target:
+            return exported
+    return value
+
+
 def _sanitize_filename(filename: str, index: int) -> str:
     """
     [SEC-01] Assainit un nom de fichier uploadé.
@@ -754,6 +774,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                     continue
                 # Normalisation selon le type déclaré dans le template
                 value = _normalize_field_value(value, f_def.get("type"))
+                value = _resolve_option_value(value, f_def)
                 # XFA path
                 if f_def.get("xml_path"):
                     xfa_values[f_def["xml_path"]] = value
@@ -1285,6 +1306,7 @@ async def rerun_pipeline_task(job_id: str):
                 if f_def is None:
                     continue
                 value = _normalize_field_value(value, f_def.get("type"))
+                value = _resolve_option_value(value, f_def)
                 if f_def.get("xml_path"):
                     xfa_values[f_def["xml_path"]] = value
                 if f_def.get("acroform_name"):

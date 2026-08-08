@@ -237,7 +237,18 @@
       "question": "Quel est le statut professionnel du patient (salarié, indépendant, sans emploi, en formation) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/employmentState",
-      "acroform_name": "topmostSubform[0].page1[0].employmentState[0]"
+      "acroform_name": "topmostSubform[0].page1[0].employmentState[0]",
+      "type": "choice",
+      "options": [
+        "Indépendant",
+        "Salarié",
+        "Sans activité lucrative"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "23.5",
@@ -255,7 +266,16 @@
       "question": "Quel est le motif du traitement ou de la consultation ?",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentReason",
-      "acroform_name": "topmostSubform[0].page1[0].treatmentReason[0]"
+      "acroform_name": "topmostSubform[0].page1[0].treatmentReason[0]",
+      "type": "choice",
+      "options": [
+        "Maladie",
+        "Accident"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "1.18",
@@ -335,7 +355,16 @@
       "question": "Le patient a-t-il déjà été traité pour cette affection ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page2/priorTreatmentChoice",
-      "acroform_name": "topmostSubform[0].page2[0].priorTreatmentChoice[0]"
+      "acroform_name": "topmostSubform[0].page2[0].priorTreatmentChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "24.4",
@@ -441,7 +470,16 @@
       "question": "Le patient a-t-il déjà subi un accident antérieur ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/priorAccidentChoice",
-      "acroform_name": "topmostSubform[0].page3[0].priorAccidentChoice[0]"
+      "acroform_name": "topmostSubform[0].page3[0].priorAccidentChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "25.3",
@@ -469,7 +507,16 @@
       "question": "Une affection préexistante influence-t-elle le processus de guérison ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/healingProcessChoice",
-      "acroform_name": "topmostSubform[0].page3[0].healingProcessChoice[0]"
+      "acroform_name": "topmostSubform[0].page3[0].healingProcessChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "25.6",
@@ -539,7 +586,16 @@
       "question": "D'autres facteurs influencent-ils l'incapacité de travail ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page4/otherFactorsChoice",
-      "acroform_name": "topmostSubform[0].page4[0].otherFactorsChoice[0]"
+      "acroform_name": "topmostSubform[0].page4[0].otherFactorsChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "26.2",
@@ -919,7 +975,16 @@
       "question": "Une autre activité professionnelle est-elle envisageable pour le patient ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/otherWorkChoice",
-      "acroform_name": "topmostSubform[0].page5[0].otherWorkChoice[0]"
+      "acroform_name": "topmostSubform[0].page5[0].otherWorkChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "27.4",
@@ -937,7 +1002,16 @@
       "question": "Le patient exerce-t-il déjà une autre activité professionnelle ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/alreadyOtherWorkChoice",
-      "acroform_name": "topmostSubform[0].page5[0].alreadyOtherWorkChoice[0]"
+      "acroform_name": "topmostSubform[0].page5[0].alreadyOtherWorkChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "27.6",
@@ -955,7 +1029,16 @@
       "question": "Des limitations s'appliquent-elles à une nouvelle activité ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/restrictionsNewWorkChoice",
-      "acroform_name": "topmostSubform[0].page5[0].restrictionsNewWorkChoice[0]"
+      "acroform_name": "topmostSubform[0].page5[0].restrictionsNewWorkChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "27.8",
@@ -973,7 +1056,16 @@
       "question": "L'aptitude à conduire du patient est-elle limitée ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page5/limitationForDrivingChoice",
-      "acroform_name": "topmostSubform[0].page5[0].limitationForDrivingChoice[0]"
+      "acroform_name": "topmostSubform[0].page5[0].limitationForDrivingChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "comments": "Section 6 — page6"
@@ -1112,7 +1204,16 @@
       "question": "Un autre assureur est-il concerné par ce cas ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page6/otherInsurancesChoice",
-      "acroform_name": "topmostSubform[0].page6[0].otherInsurancesChoice[0]"
+      "acroform_name": "topmostSubform[0].page6[0].otherInsurancesChoice[0]",
+      "type": "choice",
+      "options": [
+        "Non",
+        "Oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     }
   ]
 }

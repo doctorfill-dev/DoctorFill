@@ -521,6 +521,30 @@ def _items(elem: ET.Element) -> list[str]:
             for t in _children(group, "text") if t.text]
 
 
+def _exclgroup_options(elem: ET.Element) -> tuple[list[str], list[str]]:
+    """
+    Libellés et valeurs d'export d'un groupe de boutons radio.
+
+    Un exclGroup ne porte pas ses propres <items> : chaque bouton enfant déclare
+    son libellé dans <caption> et sa valeur d'export dans <items>. Le nom du
+    bouton ne suit pas le libellé — le LCA nomme « employed » celui qui affiche
+    « Indépendant » — donc on lit systématiquement le couple caption/items.
+
+    Returns:
+        (libellés, valeurs) de même longueur, dans l'ordre du formulaire.
+    """
+    labels: list[str] = []
+    values: list[str] = []
+    for child in _children(elem, "field"):
+        items = _items(child)
+        caption = _caption(child).strip()
+        if not items or not caption:
+            continue
+        labels.append(caption)
+        values.append(items[0])
+    return labels, values
+
+
 def _walk(node: ET.Element, path: list[str]) -> Iterator[tuple[list[str], ET.Element, ET.Element]]:
     """
     Parcourt l'arbre et produit (chemin SOM, élément) pour chaque champ.
@@ -560,6 +584,12 @@ def parse_xfa_fields(template_xml: str) -> list[dict[str, Any]]:
         ui = _ui_kind(elem)
         segments = [s.split("[")[0] for s in som_path]
         question, vocab_type = _describe(segments[-1], segments[:-1])
+        options, option_values = _items(elem), []
+        field_type = UI_TO_TYPE.get(ui)
+        if _tag(elem) == "exclGroup":
+            options, option_values = _exclgroup_options(elem)
+            if options:
+                field_type = "choice"
         fields.append({
             "question": question,
             "vocab_type": vocab_type,
@@ -570,9 +600,10 @@ def parse_xfa_fields(template_xml: str) -> list[dict[str, Any]]:
             "xml_path": "/".join(p if not p.endswith("[0]") else p[:-3] for p in som_path),
             "name": som_path[-1].split("[")[0],
             "ui": ui,
-            "type": UI_TO_TYPE.get(ui),
+            "type": field_type,
             "label": _caption(elem),
-            "options": _items(elem),
+            "options": options,
+            "option_values": option_values,
             "readonly": elem.get("access") == "readOnly",
         })
     return fields
@@ -728,6 +759,10 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
             entry["type"] = resolved_type
         if f["options"]:
             entry["options"] = f["options"]
+        # Valeurs d'export d'un groupe radio : le formulaire attend « 0 »/« 1 »,
+        # pas le libellé affiché. Sans elles, aucun bouton n'est coché.
+        if f["option_values"]:
+            entry["option_values"] = f["option_values"]
         entries.append(entry)
 
     orphans = {q for q in (f.get("question") for f in prior.values()) if q} - reused_keys

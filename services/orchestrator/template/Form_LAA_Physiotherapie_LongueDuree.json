@@ -329,7 +329,24 @@
       "question": "Quels types de traitement sont prescrits ou en cours ?",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentTypes",
-      "acroform_name": "topmostSubform[0].page1[0].treatmentTypes[0]"
+      "acroform_name": "topmostSubform[0].page1[0].treatmentTypes[0]",
+      "type": "choice",
+      "options": [
+        "Traitement physiothérapeutique",
+        "Thérapie médicale d’entraînement",
+        "Hippothérapie",
+        "Traitement dans un bassin de marche/une piscine",
+        "Examen du logement/poste de travail",
+        "Robotique"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
     },
     {
       "id": "2.3",
@@ -339,7 +356,13 @@
       "required": false,
       "xml_path": "topmostSubform/page1/numSessions",
       "acroform_name": "topmostSubform[0].page1[0].numSessions[0]",
-      "type": "int"
+      "type": "int",
+      "options": [
+        "traitement de longue durée (à partir de 37 séances)"
+      ],
+      "option_values": [
+        "0"
+      ]
     },
     {
       "id": "1.27",

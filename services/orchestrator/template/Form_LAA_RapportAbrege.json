@@ -194,7 +194,16 @@
       "question": "Quel est le type d'activité professionnelle exercée par le patient (salarié, indépendant, sans emploi, en formation) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/employmentType",
-      "acroform_name": "topmostSubform[0].page1[0].employmentType[0]"
+      "acroform_name": "topmostSubform[0].page1[0].employmentType[0]",
+      "type": "choice",
+      "options": [
+        "intellectuelle",
+        "physique"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "comments": "Section 3 — page1"

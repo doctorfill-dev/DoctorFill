@@ -489,7 +489,18 @@
       "question": "Quel est le type de rendez-vous souhaité ? (0 = dès que possible, 1 = à partir d'une date, 2 = date fixe)",
       "required": false,
       "xml_path": "topmostSubform/page1/appointmentType",
-      "acroform_name": "topmostSubform[0].page1[0].appointmentType[0]"
+      "acroform_name": "topmostSubform[0].page1[0].appointmentType[0]",
+      "type": "choice",
+      "options": [
+        "Patient se présente",
+        "Prendre rendez-vous dès le",
+        "Rendez-vous pris le"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "5.3",

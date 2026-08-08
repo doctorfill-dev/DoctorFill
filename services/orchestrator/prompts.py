@@ -244,7 +244,16 @@ def build_batch_extraction_prompt(
     if chunks_context:
         parts.append(f"EXTRAITS DE DOCUMENTS (source secondaire) :\n{chunks_context}")
 
-    field_lines = "\n".join(f'• [{f["id"]}] {f["question"]}' for f in fields)
+    # Les options d'un groupe de boutons radio doivent être reprises telles quelles :
+    # le remplissage les apparie au libellé exact pour choisir le bouton à cocher.
+    def _line(f: Dict) -> str:
+        line = f'• [{f["id"]}] {f["question"]}'
+        options = f.get("options")
+        if options and f.get("type") == "choice":
+            line += " (réponds exactement par l'une de ces valeurs : " + " | ".join(options) + ")"
+        return line
+
+    field_lines = "\n".join(_line(f) for f in fields)
     parts.append(f"CHAMPS À EXTRAIRE :\n{field_lines}")
 
     # Fournir un exemple JSON avec tous les IDs pour guider le modèle

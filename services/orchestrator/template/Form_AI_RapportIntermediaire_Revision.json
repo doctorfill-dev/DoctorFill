@@ -393,7 +393,18 @@
       "question": "Quel est l'état de santé actuel du patient ?",
       "required": false,
       "xml_path": "mutter_dok/Seite2/stateOfHealth",
-      "acroform_name": "mutter_dok[0].Seite2[0].stateOfHealth[0]"
+      "acroform_name": "mutter_dok[0].Seite2[0].stateOfHealth[0]",
+      "type": "choice",
+      "options": [
+        "est-il resté stationnaire?",
+        "s'est aggravé?",
+        "amélioré?"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "5.3",
@@ -402,7 +413,16 @@
       "question": "Le diagnostic a-t-il changé depuis le dernier rapport ? Si oui, préciser en quoi.",
       "required": false,
       "xml_path": "mutter_dok/Seite2/changeOfDiagnosis",
-      "acroform_name": "mutter_dok[0].Seite2[0].changeOfDiagnosis[0]"
+      "acroform_name": "mutter_dok[0].Seite2[0].changeOfDiagnosis[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "5.4",
@@ -450,7 +470,16 @@
       "question": "Une reconversion ou un changement d'activité professionnelle est-il nécessaire ? Si oui, préciser.",
       "required": false,
       "xml_path": "mutter_dok/Seite3/needChangeInProfession",
-      "acroform_name": "mutter_dok[0].Seite3[0].needChangeInProfession[0]"
+      "acroform_name": "mutter_dok[0].Seite3[0].needChangeInProfession[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "6.3",
@@ -459,7 +488,16 @@
       "question": "Le patient a-t-il besoin de l'aide d'un tiers ? Si oui, préciser pour quels actes.",
       "required": false,
       "xml_path": "mutter_dok/Seite3/needThirdPartyHelp",
-      "acroform_name": "mutter_dok[0].Seite3[0].needThirdPartyHelp[0]"
+      "acroform_name": "mutter_dok[0].Seite3[0].needThirdPartyHelp[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "6.4",
@@ -478,7 +516,16 @@
       "question": "Des investigations complémentaires sont-elles nécessaires ? Si oui, lesquelles ?",
       "required": false,
       "xml_path": "mutter_dok/Seite3/needAdditionalClarification",
-      "acroform_name": "mutter_dok[0].Seite3[0].needAdditionalClarification[0]"
+      "acroform_name": "mutter_dok[0].Seite3[0].needAdditionalClarification[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "6.6",

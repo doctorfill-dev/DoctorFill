@@ -313,7 +313,22 @@
       "question": "Quel est le motif de ce rapport ?",
       "required": false,
       "xml_path": "topmostSubform/page1/reason",
-      "acroform_name": "topmostSubform[0].page1[0].reason[0]"
+      "acroform_name": "topmostSubform[0].page1[0].reason[0]",
+      "type": "choice",
+      "options": [
+        "Maladie",
+        "Accident",
+        "Maladie professionnelle",
+        "Grossesse",
+        "Non définie"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
     },
     {
       "id": "14.7",
@@ -350,7 +365,16 @@
       "question": "Le patient a-t-il déjà été traité pour cette affection ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page1/hasPreviousTreatments",
-      "acroform_name": "topmostSubform[0].page1[0].hasPreviousTreatments[0]"
+      "acroform_name": "topmostSubform[0].page1[0].hasPreviousTreatments[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "14.11",
@@ -517,7 +541,16 @@
       "question": "D'autres facteurs influencent-ils l'évolution ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/hasOtherFactors",
-      "acroform_name": "topmostSubform[0].page3[0].hasOtherFactors[0]"
+      "acroform_name": "topmostSubform[0].page3[0].hasOtherFactors[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "16.3",
@@ -568,7 +601,16 @@
       "question": "Le patient a-t-il été hospitalisé ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page4/hospitalisationChoice",
-      "acroform_name": "topmostSubform[0].page4[0].hospitalisationChoice[0]"
+      "acroform_name": "topmostSubform[0].page4[0].hospitalisationChoice[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "17.3",
@@ -940,7 +982,16 @@
       "question": "Le patient peut-il reprendre le travail avant le week-end ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page4/returnBeforeWeekend",
-      "acroform_name": "topmostSubform[0].page4[0].returnBeforeWeekend[0]"
+      "acroform_name": "topmostSubform[0].page4[0].returnBeforeWeekend[0]",
+      "type": "choice",
+      "options": [
+        "oui",
+        "non"
+      ],
+      "option_values": [
+        "yes",
+        "no"
+      ]
     },
     {
       "id": "17.7",
@@ -968,7 +1019,16 @@
       "question": "Un autre assureur est-il concerné par ce cas ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page4/hasOtherInsurer",
-      "acroform_name": "topmostSubform[0].page4[0].hasOtherInsurer[0]"
+      "acroform_name": "topmostSubform[0].page4[0].hasOtherInsurer[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "17.10",

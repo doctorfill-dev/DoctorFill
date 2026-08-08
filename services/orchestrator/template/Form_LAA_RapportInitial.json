@@ -408,7 +408,16 @@
       "question": "Y a-t-il des circonstances particulières à signaler (alcool, médicaments, tiers impliqué) ?",
       "required": false,
       "xml_path": "topmostSubform/page2/specialCircumstances",
-      "acroform_name": "topmostSubform[0].page2[0].specialCircumstances[0]"
+      "acroform_name": "topmostSubform[0].page2[0].specialCircumstances[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "15.3",
@@ -471,7 +480,16 @@
       "question": "Les constatations médicales sont-elles compatibles avec le déroulement de l'accident décrit ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/plausibleAccident",
-      "acroform_name": "topmostSubform[0].page3[0].plausibleAccident[0]"
+      "acroform_name": "topmostSubform[0].page3[0].plausibleAccident[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "16.2",
@@ -501,7 +519,16 @@
       "question": "Le patient a-t-il été hospitalisé ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/hospitalisationChoice",
-      "acroform_name": "topmostSubform[0].page3[0].hospitalisationChoice[0]"
+      "acroform_name": "topmostSubform[0].page3[0].hospitalisationChoice[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "comments": "Section 3 — page3"
@@ -554,7 +581,16 @@
       "question": "Le patient peut-il reprendre le travail avant le week-end ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/returnBeforeWeekend",
-      "acroform_name": "topmostSubform[0].page3[0].returnBeforeWeekend[0]"
+      "acroform_name": "topmostSubform[0].page3[0].returnBeforeWeekend[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "16.6",
@@ -563,7 +599,16 @@
       "question": "Le traitement est-il terminé ? Répondre par oui ou non.",
       "required": false,
       "xml_path": "topmostSubform/page3/treatmentCompletion",
-      "acroform_name": "topmostSubform[0].page3[0].treatmentCompletion[0]"
+      "acroform_name": "topmostSubform[0].page3[0].treatmentCompletion[0]",
+      "type": "choice",
+      "options": [
+        "non",
+        "oui"
+      ],
+      "option_values": [
+        "0",
+        "1"
+      ]
     },
     {
       "id": "16.7",

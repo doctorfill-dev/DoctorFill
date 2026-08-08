@@ -468,7 +468,18 @@
       "question": "De quel type de rendez-vous s'agit-il (première consultation, contrôle, avis spécialisé) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/appointmentType",
-      "acroform_name": "topmostSubform[0].page1[0].appointmentType[0]"
+      "acroform_name": "topmostSubform[0].page1[0].appointmentType[0]",
+      "type": "choice",
+      "options": [
+        "Patient se présente",
+        "Prendre rendez-vous dès le",
+        "Rendez-vous pris le"
+      ],
+      "option_values": [
+        "0",
+        "1",
+        "2"
+      ]
     },
     {
       "id": "4.6",
