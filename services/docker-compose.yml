@@ -92,6 +92,9 @@ services:
     container_name: df-services-orchestrator
     build:
       context: ./orchestrator
+      args:
+        # Renseigner au build : APP_VERSION=$(cat ../VERSION) docker compose up -d --build
+        APP_VERSION: ${APP_VERSION:-}
     image: doctorfill/orchestrator:latest
     ports:
       - "8080:8080"

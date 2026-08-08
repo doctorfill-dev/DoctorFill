@@ -13,6 +13,13 @@ import {
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
 
+/** Réponse de GET /health : identité du backend piloté par cette interface. */
+interface BackendInfo {
+  version: string;
+  model: string;
+  forms: number;
+}
+
 const apiFetch = (url: string, options: RequestInit = {}) => {
   const headers = new Headers(options.headers || {});
   if (API_KEY) headers.set("X-API-Key", API_KEY);
@@ -98,6 +105,7 @@ export default function App() {
   const [refineLoading, setRefineLoading] = useState(false);
   const [refineError, setRefineError] = useState<string | null>(null);
   const [isRerunning, setIsRerunning] = useState(false);
+  const [backend, setBackend] = useState<BackendInfo | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -117,6 +125,20 @@ export default function App() {
       }
     };
     fetchForms();
+  }, []);
+
+  // /health est hors authentification : il renseigne la version du backend, à
+  // comparer avec celle de l'interface (déploiements indépendants).
+  useEffect(() => {
+    const fetchHealth = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/health`);
+        if (res.ok) setBackend(await res.json());
+      } catch {
+        setBackend(null);
+      }
+    };
+    fetchHealth();
   }, []);
 
   const extractZipToPdfs = async (file: File): Promise<File[]> => {
@@ -496,9 +518,34 @@ export default function App() {
               <img src="/logo.png" alt="DoctorFill" className="w-10 h-10 rounded-md shadow-sm border border-zinc-200" />
               doctorfill-dev.
             </h1>
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <Server className="w-3.5 h-3.5 text-zinc-400" />
-              <p className="text-xs font-mono text-zinc-500 uppercase tracking-wider">Nvidia DGX Spark // Gen-XFA</p>
+              <p className="text-xs font-mono text-zinc-500 uppercase tracking-wider">Nvidia DGX Spark</p>
+              <span className="text-xs font-mono text-zinc-300">//</span>
+              <span
+                className="text-xs font-mono text-zinc-500 tracking-wider"
+                title="Version de l'interface (build Cloudflare Pages)"
+              >
+                ui v{__APP_VERSION__}
+              </span>
+              <span className="text-xs font-mono text-zinc-300">//</span>
+              {backend ? (
+                <span
+                  className={`text-xs font-mono tracking-wider ${
+                    backend.version === __APP_VERSION__ ? "text-zinc-500" : "text-amber-600"
+                  }`}
+                  title={
+                    backend.version === __APP_VERSION__
+                      ? `Backend ${backend.model} — ${backend.forms} formulaire(s)`
+                      : `Interface en v${__APP_VERSION__}, backend en v${backend.version} : un des deux déploiements est en retard.`
+                  }
+                >
+                  api v{backend.version}
+                  {backend.version !== __APP_VERSION__ && " ⚠"}
+                </span>
+              ) : (
+                <span className="text-xs font-mono text-zinc-400 tracking-wider">api —</span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3 bg-zinc-50/50 p-1.5 rounded-sm border border-zinc-200">

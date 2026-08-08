@@ -70,15 +70,28 @@ huggingface-cli download BAAI/bge-reranker-v2-m3
 ## 4. Build et lancement
 
 ```bash
+# Récupérer les PDF vierges medForms (non versionnés, ~34 Mo)
+cd orchestrator && python -m tools.gen_catalog --list tools/catalog_fr.txt --write && cd ..
+
 # Build des images custom (orchestrator, marker_ocr, tei)
-docker compose build
+# APP_VERSION injecte la version affichée dans l'application et par /health.
+APP_VERSION=$(cat ../VERSION) docker compose build
 
 # Lancement complet (mode détaché)
 docker compose up -d
 
 # Vérifier les logs de démarrage
 docker compose logs -f
+
+# Contrôler la version déployée
+curl -s http://localhost:8080/health | python3 -m json.tool
 ```
+
+> Sans l'étape `gen_catalog`, aucun formulaire n'est exposé : le démarrage
+> journalise un avertissement par template dont le PDF est absent.
+
+> Sans `APP_VERSION`, `/health` renvoie `"version": "inconnue"` — l'interface
+> affichera alors un écart de version avec le frontend.
 
 ### Temps de démarrage
 
@@ -152,7 +165,7 @@ sudo systemctl enable cloudflared
 
 ```bash
 # Rebuild un service spécifique
-docker compose build orchestrator && docker compose up -d orchestrator
+APP_VERSION=$(cat ../VERSION) docker compose build orchestrator && docker compose up -d orchestrator
 
 # Redémarrer tout
 docker compose restart

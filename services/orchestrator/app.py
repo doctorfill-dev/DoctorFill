@@ -104,6 +104,29 @@ VALID_FORM_IDS: Set[str] = set()
 # Expose aussi les templates générés mais pas encore relus (`_reviewed: false`).
 SHOW_DRAFT_FORMS = os.getenv("SHOW_DRAFT_FORMS", "false").lower() == "true"
 
+
+def _read_version() -> str:
+    """
+    Version du backend, lue depuis le fichier VERSION à la racine du dépôt.
+
+    Le Dockerfile ne copie que services/orchestrator/, d'où la copie locale du
+    fichier ; APP_VERSION permet de l'injecter au build sans y toucher.
+    """
+    from_env = os.getenv("APP_VERSION", "").strip()
+    if from_env:
+        return from_env
+    for candidate in (Path("VERSION"), Path(__file__).resolve().parents[2] / "VERSION"):
+        try:
+            content = candidate.read_text(encoding="utf-8").strip()
+            if content:
+                return content
+        except OSError:
+            continue
+    return "inconnue"
+
+
+APP_VERSION = _read_version()
+
 # --- Contrôle qualité de l'extraction
 # Longueur minimale (après normalisation) d'une citation pour être vérifiable.
 MIN_QUOTE_LEN = 12
@@ -821,7 +844,15 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "orchestrator"}
+    # /health est le seul endpoint hors authentification : c'est donc lui que le
+    # frontend interroge pour afficher la version du backend qu'il pilote.
+    return {
+        "status": "ok",
+        "service": "orchestrator",
+        "version": APP_VERSION,
+        "model": VLLM_MODEL,
+        "forms": len(VALID_FORM_IDS),
+    }
 
 
 @app.get("/forms")
