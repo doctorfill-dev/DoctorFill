@@ -42,6 +42,14 @@ interface ChatMessage {
   content: string;
 }
 
+/**
+ * Rattachement d'une valeur à son texte source, établi côté backend par
+ * core/provenance. Du plus fort au plus faible : la valeur est citée mot pour
+ * mot, elle figure ailleurs dans le dossier, elle est reformulée, ou la
+ * citation ne se retrouve nulle part.
+ */
+type Grounding = "verified" | "attested" | "inferred" | "unverified" | "not_checkable";
+
 interface FormField {
   id: string;
   label: string;
@@ -49,6 +57,87 @@ interface FormField {
   section: string;
   value: string | null;
   source_quote: string | null;
+  grounding: Grounding | null;
+  source_document: string | null;
+  source_page: number | null;
+  source_excerpt: string | null;
+  source_match: string | null;
+}
+
+const GROUNDING_UI: Record<Grounding, { label: string; className: string; title: string }> = {
+  verified: {
+    label: "vérifié",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    title: "La valeur est citée mot pour mot dans le passage ci-dessous.",
+  },
+  attested: {
+    label: "attesté",
+    className: "bg-emerald-50/60 text-emerald-600 border-emerald-100",
+    title: "La valeur figure dans le dossier, mais pas à l'endroit cité par le modèle.",
+  },
+  inferred: {
+    label: "reformulé",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+    title: "Le passage cité est réel, mais la valeur en est une reformulation : à relire.",
+  },
+  unverified: {
+    label: "non tracé",
+    className: "bg-red-50 text-red-700 border-red-200",
+    title: "Le passage cité ne se retrouve dans aucun document : à vérifier impérativement.",
+  },
+  not_checkable: {
+    label: "non vérifiable",
+    className: "bg-zinc-50 text-zinc-500 border-zinc-200",
+    title: "Valeur trop courte pour être recherchée dans le texte (M, F, un nombre isolé).",
+  },
+};
+
+function GroundingBadge({ grounding }: { grounding: Grounding }) {
+  const ui = GROUNDING_UI[grounding];
+  return (
+    <span
+      title={ui.title}
+      className={`shrink-0 px-1.5 py-0.5 rounded-sm border text-[9px] font-mono uppercase tracking-wider ${ui.className}`}
+    >
+      {ui.label}
+    </span>
+  );
+}
+
+/**
+ * Passage source, avec le fragment exact surligné.
+ *
+ * On affiche le texte réel du dossier plutôt que la citation rendue par le
+ * modèle : c'est ce qui transforme l'avertissement en vérification.
+ */
+function SourceEvidence({ field }: { field: FormField }) {
+  if (!field.source_excerpt) {
+    return field.source_quote ? (
+      <p className="text-[11px] text-zinc-400 mt-1.5 italic line-clamp-2" title={field.source_quote}>
+        « {field.source_quote} »
+      </p>
+    ) : null;
+  }
+
+  const match = field.source_match;
+  const at = match ? field.source_excerpt.indexOf(match) : -1;
+  const origin = [field.source_document, field.source_page ? `p. ${field.source_page}` : null]
+    .filter(Boolean).join(" · ");
+
+  return (
+    <div className="mt-1.5">
+      <p className="text-[11px] text-zinc-500 leading-snug" title={field.source_excerpt}>
+        {at < 0 ? field.source_excerpt : (
+          <>
+            {field.source_excerpt.slice(0, at)}
+            <mark className="bg-amber-100 text-zinc-800 rounded-sm px-0.5">{match}</mark>
+            {field.source_excerpt.slice(at + (match?.length ?? 0))}
+          </>
+        )}
+      </p>
+      {origin && <p className="text-[10px] font-mono text-zinc-400 mt-0.5">{origin}</p>}
+    </div>
+  );
 }
 
 function CopyButton({ text }: { text: string }) {
@@ -883,18 +972,17 @@ export default function App() {
                                 {f.question && (
                                   <p className="text-[11px] text-zinc-400 mb-1.5 leading-snug">{f.question}</p>
                                 )}
-                                {/* Valeur extraite */}
+                                {/* Valeur extraite, avec son rattachement au dossier */}
                                 {f.value ? (
-                                  <p className="text-sm font-semibold text-zinc-900 break-words">{f.value}</p>
+                                  <div className="flex items-start gap-2">
+                                    <p className="text-sm font-semibold text-zinc-900 break-words">{f.value}</p>
+                                    {f.grounding && <GroundingBadge grounding={f.grounding} />}
+                                  </div>
                                 ) : (
                                   <p className="text-sm text-zinc-300 italic">Non renseigné</p>
                                 )}
-                                {/* Citation source */}
-                                {f.source_quote && (
-                                  <p className="text-[11px] text-zinc-400 mt-1.5 italic line-clamp-2" title={f.source_quote}>
-                                    « {f.source_quote} »
-                                  </p>
-                                )}
+                                {/* Passage source, fragment exact surligné */}
+                                {f.value && <SourceEvidence field={f} />}
                               </div>
                               {/* Actions hover */}
                               <div className="shrink-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity self-start pt-0.5">

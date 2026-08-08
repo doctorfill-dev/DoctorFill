@@ -13,7 +13,6 @@ import httpx
 import json
 import logging
 import time
-import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Set
@@ -29,6 +28,7 @@ from core.fill import update_datasets
 from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 from core.acroform import detect_form_type, fill_acroform
+from core.provenance import SourceIndex, ground_value
 from medical_synthesis import run_medical_synthesis
 from prompts import (SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt,
                      SECTION_SYNTHESIS_KEYS, build_chat_messages, build_synthesis_refine_messages)
@@ -152,10 +152,11 @@ def _build_id() -> str:
 APP_BUILD_ID = _build_id()
 
 # --- Contrôle qualité de l'extraction
-# Longueur minimale (après normalisation) d'une citation pour être vérifiable.
-MIN_QUOTE_LEN = 12
-# Score de rerank en dessous duquel le meilleur chunk d'un champ est jugé non pertinent.
-MIN_RERANK_SCORE = float(os.getenv("MIN_RERANK_SCORE", "0.05"))
+# La confiance est établie par core/provenance : la valeur produite est-elle
+# retrouvable dans le texte des documents, et où ? Le seuil de rerank qui tenait
+# ce rôle notait la source secondaire du prompt et flaggait 94 champs sur 112,
+# dont 76 correctement remplis — voir l'en-tête de core/provenance.py.
+
 # Plafond de génération pour un batch d'extraction (~7 champs × valeur + citation).
 MAX_TOKENS_EXTRACT = int(os.getenv("MAX_TOKENS_EXTRACT", "2048"))
 # Retries sur un appel LLM d'extraction (l'OCR en a 5, le rerank 3, celui-ci n'en avait aucun).
@@ -393,35 +394,36 @@ def _filter_synthesis_for_section(synthesis: Dict | None, section_id: str) -> st
     return json.dumps(filtered, ensure_ascii=False) if filtered else None
 
 
-def _normalize_for_match(text: str) -> str:
-    """Minuscules, sans accents ni ponctuation, espaces compactés — pour comparer deux textes."""
-    stripped = unicodedata.normalize("NFKD", text.lower())
-    stripped = "".join(c for c in stripped if not unicodedata.combining(c))
-    return re.sub(r"[^a-z0-9]+", " ", stripped).strip()
-
-
-def _verify_source_quote(quote: str, chunks: List[str]) -> bool:
+def _synthesis_as_source(synthesis: Dict | None) -> List[Dict]:
     """
-    Vérifie qu'une citation produite par le LLM apparaît bien dans les chunks fournis.
+    Expose la synthèse médicale comme source indexable, marquée comme dérivée.
 
-    La comparaison est normalisée (casse, accents, ponctuation, espaces) car le LLM
-    reformate souvent la citation. Une citation trop courte n'est pas discriminante.
+    C'est la source *principale* du prompt d'extraction : sans elle dans l'index,
+    toute valeur citée depuis la synthèse plutôt que depuis un document brut
+    était déclarée non tracée. Le drapeau `derived` évite l'excès inverse — la
+    synthèse est une production du modèle, s'y adosser ne vaut pas preuve.
     """
-    needle = _normalize_for_match(quote)
-    if len(needle) < MIN_QUOTE_LEN:
-        return False
-    return any(needle in _normalize_for_match(c) for c in chunks)
+    if not synthesis:
+        return []
+    return [{
+        "filename": "synthèse médicale",
+        "markdown": json.dumps(synthesis, ensure_ascii=False, indent=2),
+        "derived": True,
+    }]
 
 
-def _annotate_confidence(results: List[Dict], chunks: List[str],
+def _annotate_confidence(results: List[Dict], source_index: SourceIndex,
                          field_score_map: Dict[str, float]) -> None:
     """
-    Enrichit sur place chaque résultat d'extraction avec des signaux de confiance.
+    Rattache chaque valeur extraite au texte dont elle provient.
 
-    Trois signaux, aucun appel LLM supplémentaire :
-    - rerank_score  : pertinence du meilleur chunk retrouvé pour ce champ
-    - quote_verified: la citation du LLM se retrouve-t-elle vraiment dans les chunks
-    - flags         : motifs d'alerte, à afficher à la relecture
+    Aucun appel LLM supplémentaire, aucun seuil : la valeur se retrouve dans les
+    documents ou elle ne s'y retrouve pas. Le résultat porte le verdict
+    (`grounding`), et l'ancrage quand il existe — document, page, extrait — de
+    quoi vérifier d'un coup d'œil plutôt que d'avoir à croire le modèle.
+
+    `rerank_score` reste renseigné à titre de diagnostic, mais ne déclenche plus
+    rien : voir l'en-tête de core/provenance.py.
 
     On ne supprime jamais une valeur — c'est au clinicien de trancher.
     """
@@ -429,22 +431,12 @@ def _annotate_confidence(results: List[Dict], chunks: List[str],
         payload = res.get("result")
         if not isinstance(payload, dict):
             continue
-        fid = str(res["id"])
-        score = field_score_map.get(fid, 0.0)
-        payload["rerank_score"] = round(score, 4)
+        payload["rerank_score"] = round(field_score_map.get(str(res["id"]), 0.0), 4)
 
-        flags: List[str] = []
         value = str(payload.get("value") or "").strip()
-        if value:
-            quote = str(payload.get("source_quote") or "").strip()
-            verified = _verify_source_quote(quote, chunks) if quote else False
-            payload["quote_verified"] = verified
-            if not verified:
-                flags.append("quote_unverified")
-            if score < MIN_RERANK_SCORE:
-                flags.append("weak_retrieval")
-        if flags:
-            payload["flags"] = flags
+        if not value:
+            continue
+        payload.update(ground_value(value, str(payload.get("source_quote") or ""), source_index))
 
 
 def _group_fields_into_batches(fields: List[Dict], max_batch_size: int = 7) -> List[List[Dict]]:
@@ -648,6 +640,13 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             synthesis = await run_medical_synthesis(ocr_raw_results, VLLM_URL, VLLM_MODEL)
             timings["medical_synthesis"] = time.perf_counter() - t_synthesis_start
 
+            # Index de provenance : construit sur le texte OCR complet, pas sur
+            # les chunks retenus. Une citation exacte tirée d'un document classé
+            # hors du top-24 passait sinon pour inventée.
+            derived_sources = _synthesis_as_source(synthesis)
+            source_index = SourceIndex(ocr_raw_results, derived_sources)
+            JOBS[job_id]["_source_documents"] = ocr_raw_results
+
             synthesis_json: str | None = None
             if synthesis:
                 synthesis_json = json.dumps(synthesis, ensure_ascii=False)
@@ -730,7 +729,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 result = await extract_fields_batch_vllm(
                     client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem
                 )
-                _annotate_confidence(result, merged_chunks[:24], field_score_map)
+                _annotate_confidence(result, source_index, field_score_map)
                 batches_done += 1
                 JOBS[job_id].update({
                     "message": f"🤖 Extraction {batches_done}/{len(batches)} sections...",
@@ -1014,9 +1013,12 @@ async def get_fields(job_id: str, token: str = ""):
             "section": f.get("section", ""),
             "value": payload.get("value"),
             "source_quote": payload.get("source_quote"),
-            "quote_verified": payload.get("quote_verified"),
-            "rerank_score": payload.get("rerank_score"),
-            "flags": payload.get("flags", []),
+            # Rattachement au texte source : verdict + où le vérifier.
+            "grounding": payload.get("grounding"),
+            "source_document": payload.get("source_document"),
+            "source_page": payload.get("source_page"),
+            "source_excerpt": payload.get("source_excerpt"),
+            "source_match": payload.get("source_match"),
         })
     return {"fields": fields_out}
 
@@ -1252,6 +1254,11 @@ async def rerun_pipeline_task(job_id: str):
         n_fields = len(fields_with_q)
         logger.info(f"[{job_id[:8]}] Re-run: {n_fields} champs, {col_count} chunks en ChromaDB.")
 
+        # Le re-run ne repasse pas par l'OCR : il réutilise le texte conservé
+        # avec le job. Sans lui, aucune valeur ne pourrait être rattachée.
+        source_index = SourceIndex(JOBS[job_id].get("_source_documents", []),
+                                   _synthesis_as_source(synthesis))
+
         limits = httpx.Limits(max_connections=50, max_keepalive_connections=10, keepalive_expiry=30)
         async with httpx.AsyncClient(limits=limits) as client:
             JOBS[job_id].update({"message": "🔄 Re-run : re-encodage des questions...", "progress": 15})
@@ -1295,7 +1302,7 @@ async def rerun_pipeline_task(job_id: str):
                 section = str(batch_fields[0]["id"]).split(".")[0]
                 filtered_synthesis = _filter_synthesis_for_section(synthesis, section)
                 result = await extract_fields_batch_vllm(client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem)
-                _annotate_confidence(result, merged[:24], field_score_map)
+                _annotate_confidence(result, source_index, field_score_map)
                 batches_done += 1
                 JOBS[job_id].update({
                     "message": f"🔄 Re-run : extraction {batches_done}/{len(batches)}...",
@@ -1433,7 +1440,9 @@ async def debug_results(job_id: str, token: str = ""):
                 "source_quote": r.get("result", {}).get("source_quote") if "result" in r else None,
                 "quote_verified": r.get("result", {}).get("quote_verified") if "result" in r else None,
                 "rerank_score": r.get("result", {}).get("rerank_score") if "result" in r else None,
-                "flags": r.get("result", {}).get("flags", []) if "result" in r else [],
+                "grounding": r.get("result", {}).get("grounding") if "result" in r else None,
+                "source_document": r.get("result", {}).get("source_document") if "result" in r else None,
+                "source_page": r.get("result", {}).get("source_page") if "result" in r else None,
                 "error": r.get("error"),
             }
             for r in debug_results
