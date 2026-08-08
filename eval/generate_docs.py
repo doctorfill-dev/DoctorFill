@@ -51,10 +51,10 @@ DONNÉES PATIENT
     Date de naiss.: {f['2.3']['expected']}
     No AVS :        {f['2.4']['expected']}
     Adresse :       {f['2.5']['expected']}, {f['2.7']['expected']} {f['2.6']['expected']}
-    Téléphone :     {f['2.8']['expected']}
+    Téléphone :     {f['2.9']['expected']}
     Sexe :          Féminin
 
-Canton de traitement : {f['1.2']['expected']}
+Canton de traitement : {f['1.1']['expected']}
 
 ═══════════════════════════════════════════════
 
@@ -100,10 +100,10 @@ Tél. spécialiste : {f['2.13']['expected']}
 
 INCAPACITÉ DE TRAVAIL
 
-Activité exercée : {f['3.8']['expected']}
+Activité exercée : {f['3.29']['expected']}
 
-Période 1 : du {f['3.10']['expected']} au {f['3.11']['expected']} — {f['3.9']['expected']}%
-Période 2 : du {f['3.13']['expected']} au {f['3.14']['expected']} — {f['3.12']['expected']}%
+Période 1 : du {f['3.9']['expected']} au {f['3.10']['expected']} — {f['3.8']['expected']}%
+Période 2 : du {f['3.12']['expected']} au {f['3.13']['expected']} — {f['3.11']['expected']}%
 
 ═══════════════════════════════════════════════
 
@@ -130,12 +130,12 @@ Tél. : {f['2.10']['expected']}
 
                                         Neuchâtel, le 10 mars 2026
 
-À l'attention de l'Office AI du canton de {f['1.2']['expected']}
+À l'attention de l'Office AI du canton de {f['1.1']['expected']}
 
 Concerne : Mme {f['2.1']['expected']} {f['2.2']['expected']}, née le {f['2.3']['expected']}
 No AVS : {f['2.4']['expected']}
 Domiciliée au {f['2.5']['expected']}, {f['2.7']['expected']} {f['2.6']['expected']}
-Joignable au {f['2.8']['expected']}
+Joignable au {f['2.9']['expected']}
 
 Chère Madame, cher Monsieur,
 
@@ -155,9 +155,9 @@ Irfen 400 mg en réserve, ainsi que Sirdalud 4 mg le soir. Malgré cela, les
 douleurs persistent et limitent considérablement les activités quotidiennes.
 
 Concernant la capacité de travail, Mme {f['2.2']['expected']} exerce la profession
-d'{f['3.8']['expected'].lower()}. J'ai attesté une incapacité de travail de {f['3.9']['expected']}%
-du {f['3.10']['expected']} au {f['3.11']['expected']}, puis de {f['3.12']['expected']}% du {f['3.13']['expected']}
-au {f['3.14']['expected']}, la période de traitement s'étendant du {f['3.2']['expected']}
+d'{f['3.29']['expected'].lower()}. J'ai attesté une incapacité de travail de {f['3.8']['expected']}%
+du {f['3.9']['expected']} au {f['3.10']['expected']}, puis de {f['3.11']['expected']}% du {f['3.12']['expected']}
+au {f['3.13']['expected']}, la période de traitement s'étendant du {f['3.2']['expected']}
 au {f['3.3']['expected']}.
 
 La patiente est également suivie par le Dr. Anna Keller, rhumatologue,
@@ -177,8 +177,8 @@ def style_clinical_notes(gt: dict) -> str:
     return f"""NOTES CLINIQUES - CONSULTATION DU 10.03.2026
 
 Pat. : {f['2.2']['expected']} {f['2.1']['expected']} | F | {f['2.3']['expected']} | AVS {f['2.4']['expected']}
-Adr. : {f['2.5']['expected']}, {f['2.7']['expected']} {f['2.6']['expected']} | Tél. {f['2.8']['expected']}
-Canton : {f['1.2']['expected']}
+Adr. : {f['2.5']['expected']}, {f['2.7']['expected']} {f['2.6']['expected']} | Tél. {f['2.9']['expected']}
+Canton : {f['1.1']['expected']}
 Méd. traitant : {f['7.2']['expected']} | Tél. cab. {f['2.10']['expected']}
 Spéc. : Dr. A. Keller (Rhumato) | {f['2.13']['expected']}
 
@@ -209,9 +209,9 @@ TTT :
 - Période ttt : {f['3.2']['expected']} - {f['3.3']['expected']}
 
 IT :
-- Prof : {f['3.8']['expected']}
-- P1 : {f['3.10']['expected']}-{f['3.11']['expected']} = {f['3.9']['expected']}%
-- P2 : {f['3.13']['expected']}-{f['3.14']['expected']} = {f['3.12']['expected']}%
+- Prof : {f['3.29']['expected']}
+- P1 : {f['3.9']['expected']}-{f['3.10']['expected']} = {f['3.8']['expected']}%
+- P2 : {f['3.12']['expected']}-{f['3.13']['expected']} = {f['3.11']['expected']}%
 
 PLAN : Rééval. dans 3 mois. IRM contrôle si aggravation.
 """
