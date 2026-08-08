@@ -29,23 +29,10 @@ BASE_URL = "https://medforms.ch/formTemplates"
 FORMS_DIR = Path("forms")
 TEMPLATE_DIR = Path("template")
 
-# Identifiants historiques, conservés le temps d'une régénération pour que les
-# questions déjà relues suivent le renommage vers la nomenclature medForms.
-# À retirer une fois les anciens templates supprimés du dépôt.
-LEGACY_IDS = {
-    "AI_ReadaptationRente": "AVS",
-    "Adressage_Cardiologie": "Cardio",
-    "LAA_RapportAbrege": "LAA_ABRG",
-}
-
-
 def _prior_template(form_id: str) -> Path | None:
-    """Template dont reprendre les questions : le nouveau s'il existe, sinon l'ancien."""
-    for candidate in (TEMPLATE_DIR / f"Form_{form_id}.json",
-                      TEMPLATE_DIR / f"Form_{LEGACY_IDS.get(form_id, form_id)}.json"):
-        if candidate.exists():
-            return candidate
-    return None
+    """Template existant dont reprendre les questions déjà rédigées."""
+    candidate = TEMPLATE_DIR / f"Form_{form_id}.json"
+    return candidate if candidate.exists() else None
 
 
 def fetch(code: str, cache_dir: Path) -> Path:

@@ -1,13 +1,18 @@
 # TODO agent-01 « hot-fixer » — état des lieux
 
-> Session du 7 août 2026. Branche **`dev`** (créée depuis `origin/dev`, mise à jour
-> par fast-forward depuis `main`, 46 commits de retard rattrapés).
-> Tout est **committé sur `dev`**, les 7 commits sont **signés**, **rien n'est poussé**.
+> Sessions des 7-8 août 2026. Branche **`dev`** (créée depuis `origin/dev`, mise à
+> jour par fast-forward depuis `main`, 46 commits de retard rattrapés).
+> Tout est **committé et poussé sur `origin/dev`**, tous les commits sont **signés**.
+>
+> **Version `0.2.0`**, affichée dans l'en-tête de l'application et par `/health`.
 
 ## 0. Commits
 
 ```
-8e118b8  docs: session handover notes
+2b22d65  feat: complete all 21 forms — every question written
+252f2a9  feat: extend the medForms vocabulary from 3 to 7 publishable forms
+f64a1bc  feat: surface frontend and backend versions in the app
+79e53b2  docs: session handover notes
 5f50752  feat: render the filled form in-app with pdf.js
 10762a2  perf: read the native text layer before reaching for OCR
 0056663  feat: surface confidence signals on extracted fields
@@ -16,7 +21,11 @@ c9bb5d9  feat: derive form templates from the XFA packet
 744eb9b  fix: render filled fields in every PDF viewer
 ```
 
-Base : `d052a6d` (état de `main`). Pousser avec `git push -u origin dev`.
+Base : `d052a6d` (état de `main`). `dev` est en avance de 10 commits sur `main`.
+
+> **Détail** : `TODO-agent-01-hot-fixer.md` a été retrouvé supprimé de l'arbre de
+> travail (suppression non commitée, d'origine inconnue) et restauré depuis `HEAD`.
+> Le contenu committé n'avait pas été touché.
 
 > **Détail rencontré** : `.gitignore` contient `eval` alors que `eval/*.py` et
 > `ground_truth.json` sont suivis. La règle est inerte pour l'existant mais fait
@@ -100,8 +109,8 @@ Nomenclature refaite d'après le régime d'assurance de la taxonomie medForms.
 | `Cardio` | `Adressage_Cardiologie` | `medforms.20.10.140.5010` |
 | `LAA_ABRG` | `LAA_RapportAbrege` | `medforms.40.40.40.5020` |
 
-Renommage fait via `LEGACY_IDS` dans `gen_catalog.py` : **0 question perdue**
-(90/90, 66/66, 38/38), vérifié par comparaison des jeux de questions.
+Renommage vérifié par comparaison des jeux de questions avant/après :
+**0 question perdue** (90/90, 66/66, 38/38).
 
 Couverture `acroform_name` : **68→90**, **12→66**, **1→38**.
 
@@ -141,6 +150,23 @@ Remplace l'`<iframe src={blobUrl}>` qui déléguait au lecteur natif du navigate
 navigation page à page.
 
 Textes « XFA » de l'UI corrigés (`App.tsx`, `Landing.tsx`).
+
+`annotationMode` est `ENABLE`, **délibérément pas `ENABLE_FORMS`** — voir §4.
+
+### 2.8 Versionnage
+
+Le fichier **`VERSION`** à la racine est la source unique. Vite l'inline au build
+(`__APP_VERSION__`), l'orchestrateur lit `APP_VERSION` injecté en argument de build
+(le fichier est hors du contexte de build Docker) avec repli sur le fichier pour
+une exécution locale.
+
+L'en-tête de l'application affiche **`ui vX` et `api vX`**, et passe en ambre
+lorsque les deux diffèrent. Les deux composants se déployant séparément (Cloudflare
+Pages / DGX Spark), un numéro unique aurait masqué le seul cas qui compte : l'un
+des deux en retard. `/health` renvoie aussi le modèle et le nombre de formulaires
+exposés.
+
+Build : `APP_VERSION=$(cat ../VERSION) docker compose build` (runbook mis à jour).
 
 ---
 
@@ -208,54 +234,33 @@ ne pas s'y fier.
 
 ## 7. Reste à faire
 
-### 7.1 Bloquant pour publier — **461 questions cliniques à rédiger**
+### 7.1 Formulaires — **terminé**
 
-18 formulaires sur 21 sont en brouillon (`_reviewed: false`, donc masqués).
-**982/1443 questions (68 %) sont générées automatiquement** par le vocabulaire ;
-le reste est du contenu clinique propre à chaque formulaire.
+Les **21 formulaires sont publiables** : 1430 champs, **toutes les questions
+rédigées**, `_reviewed: true` partout.
 
-Par ordre d'usage en cabinet :
+La rédaction a été menée en deux temps. D'abord le vocabulaire : sur les 461
+questions initialement manquantes, 307 réutilisaient 63 noms de champs partagés
+entre plusieurs formulaires — le catalogue medForms partage bien plus que ses blocs
+d'adresse. Décrire ce vocabulaire une fois a couvert 84 % du travail. Ensuite les
+240 restantes, écrites à la main : batterie duplex d'angiologie, score de Glasgow
+du MTBI, checklist d'enseignement du diabète, évaluation de capacité de travail LCA.
 
-| formulaire | à rédiger |
-|---|---|
-| `LAA_RapportInitial` | 31 |
-| `LAA_CertificatMedical_Suva` | 30 |
-| `LAA_RapportIntermediaire_Suva` | 21 |
-| `LAMal_RapportInitial` | 43 |
-| `LAA_Physiotherapie` | 14 |
-| `LAA_MoyensAuxiliaires` | 17 |
-| `AI_MoyensAuxiliaires` | 6 |
-| `Gyneco_AnnonceMaternite` | 5 |
-| `AI_RapportIntermediaire_Actualisation` | 12 |
-| `AI_RapportIntermediaire_Revision` | 16 |
-| `LAA_Physiotherapie_LongueDuree` | 25 |
-| `LAM_FeuilleMaladieAccident` | 19 |
-| `LAM_RapportIntermediaire` | 22 |
-| `LAA_PriseEnChargeHospitaliere` | 29 |
-| `LAA_PremierDiagnostic_MTBI` | 36 |
-| `Adressage_Angiologie` | 38 |
-| `Prescription_EnseignementDiabete` | 43 |
-| `LCA_IncapaciteTravail` | 54 |
+**Conséquence pour la suite** : tout formulaire ajouté au catalogue héritera
+automatiquement d'une large part de ses questions. Mesuré sur les échantillons :
+médiane autour de 50 % pour un formulaire inconnu, davantage pour les formulaires
+d'assureur qui suivent le modèle Sumex de près.
 
-Lister les champs concernés d'un formulaire :
+Ajouter un formulaire :
 
 ```bash
 cd services/orchestrator
-python -c "
-import json,sys
-d=json.load(open(f'template/Form_{sys.argv[1]}.json'))
-for e in d['fields']:
-    if 'id' in e and not e.get('question'):
-        print(f\"{e['id']:<8}{e['name']:<28}{e.get('label','')}\")
-" LAA_RapportInitial
+# 1. trouver son code medForms
+python -m tools.gen_template <fichier.pdf> --identify
+# 2. l'ajouter à tools/catalog_fr.txt, puis générer
+python -m tools.gen_catalog --list tools/catalog_fr.txt --write
+# 3. compléter les questions restantes, puis basculer _reviewed à true
 ```
-
-Passer un formulaire en publiable = remplir toutes ses `question`, puis
-`_reviewed: true`.
-
-**Piste pour accélérer** : élargir encore `FIELD_VOCAB` / `CONTEXT_VOCAB` dans
-`gen_template.py`. Les 30 noms de champs les plus fréquents couvrent 40 % du
-reste ; chaque entrée ajoutée profite à tous les formulaires du catalogue.
 
 ### 7.2 Non fait, à mesurer
 
@@ -323,18 +328,14 @@ Celles de `textlayer.py` et `appearance.py` **ne le sont pas** — à ouvrir si 
 - **`TECHNICAL_NAMES`** — liste des champs de plomberie écartés. Volontairement
   restreinte : `blockAddress`, `input` et les dates de formulaire portent du
   contenu réel.
-- **14 questions** rédigées à la main pour les 3 formulaires relus.
-  ⚠️ **Deux sont des suppositions** : `recipientBlockAddressLeft` et
-  `recipientBlockAddressRight` d'`AI_ReadaptationRente`. Le rendu montre un bloc
-  gauche piloté par le canton (office AI) et un bloc droit sans étiquette. **À
-  confirmer par quelqu'un qui connaît le formulaire.**
+- **Les 1430 questions** des 21 formulaires — ~240 écrites à la main, le reste
+  produit par le vocabulaire. **Aucune n'a été relue par un clinicien.**
+  ⚠️ Deux restent des suppositions : `recipientBlockAddressLeft` et
+  `recipientBlockAddressRight` (blocs destinataire de l'en-tête, présents sur
+  plusieurs formulaires d'assureur). Le rendu montre un bloc gauche piloté par le
+  canton et un bloc droit sans étiquette. **À confirmer.**
 - **`catalog_fr.txt`** — la sélection des 21 formulaires est mon choix, pas une
   demande explicite.
-
-### Temporaire, à retirer
-
-- **`LEGACY_IDS`** dans `gen_catalog.py` — table de correspondance ancien → nouveau
-  nom. N'a plus d'utilité maintenant que la régénération est committée.
 
 ### Dépendances ajoutées
 
@@ -362,20 +363,33 @@ Celles de `textlayer.py` et `appearance.py` **ne le sont pas** — à ouvrir si 
 
 ---
 
-## 9. Reprendre demain
+## 9. Reprendre
 
 ```bash
 cd ~/code/doctorfill/doctorfill-app
-git checkout dev
-git log --oneline -5
+git checkout dev && git pull
 
-# récupérer les PDF (non versionnés)
+# 1. récupérer les PDF vierges — indispensable, ils ne sont pas versionnés
 cd services/orchestrator
 python -m tools.gen_catalog --list tools/catalog_fr.txt --write
+# doit afficher : 1430/1430 (100 %), 0 à rédiger, 0 échec
 
-# voir ce qui reste à rédiger
-python -m tools.gen_catalog --list tools/catalog_fr.txt
+# 2. déployer le backend, version incluse
+cd ../ && APP_VERSION=$(cat ../VERSION) docker compose build && docker compose up -d
+curl -s http://localhost:8080/health | python3 -m json.tool
+
+# 3. front
+cd ../frontend && npm install && npm run build
 ```
 
-Ordre suggéré : (1) rejouer l'eval pour avoir un chiffre de référence,
-(2) rédiger les questions des formulaires LAA, (3) calibrer `MIN_RERANK_SCORE`.
+**Le seul travail restant est une mesure, pas du développement.** Rejouer l'eval
+donne le premier chiffre de qualité depuis les correctifs (§7.2), et c'est lui qui
+permet de calibrer `MIN_RERANK_SCORE` puis d'arbitrer les évolutions reportées
+(§7.3 : modèle MoE, OCR par VLM, ordonnanceur à échéance).
+
+Rappel des deux réserves : le pipeline n'a **jamais tourné de bout en bout** contre
+le vrai backend, et les 1430 questions n'ont **pas été relues par un clinicien** —
+elles sont cohérentes et vérifiées mécaniquement, mais leur pertinence médicale
+reste à confirmer. Le champ `_reviewed` marque « toutes les questions écrites », pas
+« validées par un médecin » ; c'est une distinction à garder en tête avant une mise
+en production.
