@@ -35,13 +35,19 @@
 ### Backend (DGX Spark)
 
 ```bash
-cd services
+cd services/orchestrator
+python -m tools.gen_catalog --list tools/catalog_fr.txt --write   # PDF vierges, non versionnés
+cd ..
 cp .env.example .env    # Configurer les variables
-docker compose up -d    # Lancer les 4 services
+./build.sh              # Build + lancement des 4 services
 docker compose ps       # Vérifier la santé
 ```
 
 > Premier lancement : ~10 min (téléchargement et chargement des modèles en VRAM)
+
+> `build.sh` injecte version, commit et horodatage dans l'image ; `/health` et
+> l'en-tête de l'application les affichent. Sans l'étape `gen_catalog`, aucun
+> formulaire n'est exposé.
 
 ### Frontend
 

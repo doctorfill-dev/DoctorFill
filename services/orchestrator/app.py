@@ -127,6 +127,30 @@ def _read_version() -> str:
 
 APP_VERSION = _read_version()
 
+# Identité de build : la version seule ne distingue pas deux images construites
+# depuis des commits différents, ce qui est le cas courant entre deux releases.
+# Le commit et la date sont injectés au build (voir Dockerfile) ; leur absence
+# signale une image construite hors du script de déploiement.
+APP_COMMIT = os.getenv("APP_COMMIT", "").strip() or "inconnu"
+APP_BUILT_AT = os.getenv("APP_BUILT_AT", "").strip() or "inconnue"
+
+
+def _build_id() -> str:
+    """
+    Identifiant de build complet, au format SemVer 2.0 avec métadonnées.
+
+    Exemple : `0.2.0+ed0a9d7.20260808T2231Z`. Le `+…` n'entre pas dans la
+    comparaison de versions (spec SemVer), ce qui est exactement le
+    comportement voulu : deux builds d'une même version restent compatibles.
+    """
+    if APP_COMMIT == "inconnu":
+        return APP_VERSION
+    stamp = APP_BUILT_AT.replace("-", "").replace(":", "")
+    return f"{APP_VERSION}+{APP_COMMIT}" + (f".{stamp}" if APP_BUILT_AT != "inconnue" else "")
+
+
+APP_BUILD_ID = _build_id()
+
 # --- Contrôle qualité de l'extraction
 # Longueur minimale (après normalisation) d'une citation pour être vérifiable.
 MIN_QUOTE_LEN = 12
@@ -871,6 +895,9 @@ async def health_check():
         "status": "ok",
         "service": "orchestrator",
         "version": APP_VERSION,
+        "build": APP_BUILD_ID,
+        "commit": APP_COMMIT,
+        "built_at": APP_BUILT_AT,
         "model": VLLM_MODEL,
         "forms": len(VALID_FORM_IDS),
     }

@@ -1,3 +1,4 @@
+import { execSync } from "child_process"
 import fs from "fs"
 import path from "path"
 import { defineConfig } from "vite"
@@ -15,10 +16,28 @@ function readVersion(): string {
   }
 }
 
+// Cloudflare Pages construit sur un clone superficiel où `git describe` n'a pas
+// de tag à quoi se raccrocher : sa variable d'environnement fait autorité, et le
+// dépôt local ne sert que de repli pour les builds sur poste.
+function readCommit(): string {
+  const fromCI = process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA
+  if (fromCI) return fromCI.slice(0, 7)
+  try {
+    return execSync("git describe --always --dirty --abbrev=7", {
+      cwd: __dirname,
+      stdio: ["ignore", "pipe", "ignore"],
+    }).toString().trim()
+  } catch {
+    return "inconnu"
+  }
+}
+
 export default defineConfig({
   plugins: [react()],
   define: {
     __APP_VERSION__: JSON.stringify(readVersion()),
+    __APP_COMMIT__: JSON.stringify(readCommit()),
+    __APP_BUILT_AT__: JSON.stringify(new Date().toISOString().slice(0, 16) + "Z"),
   },
   resolve: {
     alias: {

@@ -73,25 +73,37 @@ huggingface-cli download BAAI/bge-reranker-v2-m3
 # Récupérer les PDF vierges medForms (non versionnés, ~34 Mo)
 cd orchestrator && python -m tools.gen_catalog --list tools/catalog_fr.txt --write && cd ..
 
-# Build des images custom (orchestrator, marker_ocr, tei)
-# APP_VERSION injecte la version affichée dans l'application et par /health.
-APP_VERSION=$(cat ../VERSION) docker compose build
-
-# Lancement complet (mode détaché)
-docker compose up -d
+# Build des images custom (orchestrator, marker_ocr, tei) puis lancement.
+# build.sh dérive du dépôt la version, le commit et l'horodatage, et les injecte
+# dans l'image : c'est ce qui rend traçable ce qui tourne réellement.
+./build.sh
 
 # Vérifier les logs de démarrage
 docker compose logs -f
 
-# Contrôler la version déployée
+# Contrôler le build déployé
 curl -s http://localhost:8080/health | python3 -m json.tool
+```
+
+Réponse attendue de `/health` :
+
+```json
+{
+  "status": "ok",
+  "version": "0.2.0",
+  "build": "0.2.0+ed0a9d7.20260808T2231Z",
+  "commit": "ed0a9d7",
+  "built_at": "2026-08-08T22:31Z",
+  "forms": 21
+}
 ```
 
 > Sans l'étape `gen_catalog`, aucun formulaire n'est exposé : le démarrage
 > journalise un avertissement par template dont le PDF est absent.
 
-> Sans `APP_VERSION`, `/health` renvoie `"version": "inconnue"` — l'interface
-> affichera alors un écart de version avec le frontend.
+> Un `docker compose build` lancé à la main reste valide, mais `/health`
+> renverra `"commit": "inconnu"` : l'image ne sera rattachable à aucun commit.
+> Un commit suffixé `-dirty` signale un build fait sur un arbre modifié.
 
 ### Temps de démarrage
 
@@ -165,7 +177,7 @@ sudo systemctl enable cloudflared
 
 ```bash
 # Rebuild un service spécifique
-APP_VERSION=$(cat ../VERSION) docker compose build orchestrator && docker compose up -d orchestrator
+./build.sh orchestrator
 
 # Redémarrer tout
 docker compose restart

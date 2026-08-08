@@ -16,9 +16,20 @@ const API_KEY = import.meta.env.VITE_API_KEY || "";
 /** Réponse de GET /health : identité du backend piloté par cette interface. */
 interface BackendInfo {
   version: string;
+  /** Identité complète, `version+commit.horodatage` (SemVer 2.0). */
+  build?: string;
+  commit?: string;
+  built_at?: string;
   model: string;
   forms: number;
 }
+
+/** Identité de ce build de l'interface, figée par vite.config.ts. */
+const UI_BUILD = {
+  version: __APP_VERSION__,
+  commit: __APP_COMMIT__,
+  builtAt: __APP_BUILT_AT__,
+};
 
 const apiFetch = (url: string, options: RequestInit = {}) => {
   const headers = new Headers(options.headers || {});
@@ -56,6 +67,42 @@ function CopyButton({ text }: { text: string }) {
     >
       {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
     </button>
+  );
+}
+
+/**
+ * Identité d'un déploiement : version affichée, commit au survol.
+ *
+ * Le commit est le seul discriminant entre deux builds d'une même version —
+ * c'est lui qu'on cite pour reproduire un comportement observé en production.
+ */
+function BuildTag({
+  label, version, commit, builtAt, detail, stale = false, staleDetail,
+}: {
+  label: string;
+  version: string;
+  commit?: string;
+  builtAt?: string;
+  detail: string;
+  stale?: boolean;
+  staleDetail?: string;
+}) {
+  const known = commit && commit !== "inconnu";
+  const lines = [
+    stale && staleDetail ? staleDetail : detail,
+    known ? `commit ${commit}` : "commit inconnu — image construite hors du script de déploiement",
+    builtAt && builtAt !== "inconnue" ? `build du ${builtAt}` : null,
+  ].filter(Boolean);
+
+  return (
+    <span
+      className={`text-xs font-mono tracking-wider ${stale ? "text-amber-600" : "text-zinc-500"}`}
+      title={lines.join("\n")}
+    >
+      {label} v{version}
+      {known && <span className="text-zinc-400">·{commit}</span>}
+      {stale && " ⚠"}
+    </span>
   );
 }
 
@@ -522,27 +569,24 @@ export default function App() {
               <Server className="w-3.5 h-3.5 text-zinc-400" />
               <p className="text-xs font-mono text-zinc-500 uppercase tracking-wider">Nvidia DGX Spark</p>
               <span className="text-xs font-mono text-zinc-300">//</span>
-              <span
-                className="text-xs font-mono text-zinc-500 tracking-wider"
-                title="Version de l'interface (build Cloudflare Pages)"
-              >
-                ui v{__APP_VERSION__}
-              </span>
+              <BuildTag
+                label="ui"
+                version={UI_BUILD.version}
+                commit={UI_BUILD.commit}
+                builtAt={UI_BUILD.builtAt}
+                detail="Interface — build Cloudflare Pages"
+              />
               <span className="text-xs font-mono text-zinc-300">//</span>
               {backend ? (
-                <span
-                  className={`text-xs font-mono tracking-wider ${
-                    backend.version === __APP_VERSION__ ? "text-zinc-500" : "text-amber-600"
-                  }`}
-                  title={
-                    backend.version === __APP_VERSION__
-                      ? `Backend ${backend.model} — ${backend.forms} formulaire(s)`
-                      : `Interface en v${__APP_VERSION__}, backend en v${backend.version} : un des deux déploiements est en retard.`
-                  }
-                >
-                  api v{backend.version}
-                  {backend.version !== __APP_VERSION__ && " ⚠"}
-                </span>
+                <BuildTag
+                  label="api"
+                  version={backend.version}
+                  commit={backend.commit}
+                  builtAt={backend.built_at}
+                  detail={`Backend ${backend.model} — ${backend.forms} formulaire(s)`}
+                  stale={backend.version !== UI_BUILD.version}
+                  staleDetail={`Interface en v${UI_BUILD.version}, backend en v${backend.version} : un des deux déploiements est en retard.`}
+                />
               ) : (
                 <span className="text-xs font-mono text-zinc-400 tracking-wider">api —</span>
               )}

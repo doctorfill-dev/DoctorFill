@@ -99,8 +99,11 @@ services:
     build:
       context: ./orchestrator
       args:
-        # Renseigner au build : APP_VERSION=$(cat ../VERSION) docker compose up -d --build
+        # Renseignés par ./build.sh, qui les dérive du dépôt. Un build lancé à la
+        # main sans eux reste valide : /health affichera « inconnu ».
         APP_VERSION: ${APP_VERSION:-}
+        APP_COMMIT: ${APP_COMMIT:-}
+        APP_BUILT_AT: ${APP_BUILT_AT:-}
     image: doctorfill/orchestrator:latest
     ports:
       - "8080:8080"
