@@ -18,8 +18,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- 5) Copie du script de l'API
-COPY app.py .
+# --- 5) Copie des scripts de l'API
+COPY app.py textlayer.py ./
 
 # --- 6) Ouverture du port interne 8082
 EXPOSE 8082
