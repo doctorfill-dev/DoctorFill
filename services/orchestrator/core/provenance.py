@@ -48,6 +48,19 @@ SHORT_MATCH_CHARS = 12
 # Texte rendu autour d'un ancrage, de part et d'autre.
 EXCERPT_MARGIN = 140
 
+# Longueur à partir de laquelle on retente la recherche sans aucun espace.
+# La couche texte des PDF coupe des mots au milieu (« complica tion », « traite
+# ment », « ar térielle ») : le LLM lit à travers, une comparaison exacte non.
+# Assez long pour qu'une correspondance sans frontières de mot reste sûre : à
+# cette longueur, une coïncidence sur une suite alphanumérique continue est
+# négligeable, y compris sur un dossier de plusieurs centaines de milliers de
+# caractères.
+SQUASHED_MIN_CHARS = 16
+
+# Découpe d'une citation en propositions, quand elle n'est pas retrouvée entière.
+# Le modèle recompose souvent plusieurs fragments réels en une seule « citation ».
+_SEGMENT_SPLIT = re.compile(r"[;.]\s+|\n+")
+
 _PAGE_HEADING = re.compile(r"^##\s*Page\s+(\d+)\s*$", re.MULTILINE)
 
 _MONTHS_FR = ("janvier", "février", "mars", "avril", "mai", "juin",
@@ -163,6 +176,10 @@ class SourceIndex:
                 "text": text,
                 "normalized": normalized,
                 "origin": origin,
+                # Forme sans espaces, pour rattraper les mots coupés par la
+                # couche texte (voir SQUASHED_MIN_CHARS).
+                "squashed": normalized.replace(" ", ""),
+                "squashed_origin": [o for c, o in zip(normalized, origin) if c != " "],
                 "pages": _page_offsets(text),
                 "derived": bool(doc.get("derived")),
             })
@@ -186,17 +203,25 @@ class SourceIndex:
         else:
             pattern = None
 
+        squashed_target = target.replace(" ", "")
+        retry_squashed = len(squashed_target) >= SQUASHED_MIN_CHARS
+
         for doc in self._docs:
             origin, text = doc["origin"], doc["text"]
+            span = len(target)
             if pattern is not None:
                 match = pattern.search(doc["normalized"])
                 position = match.start() if match else -1
             else:
                 position = doc["normalized"].find(target)
+            if position < 0 and retry_squashed:
+                position = doc["squashed"].find(squashed_target)
+                if position >= 0:
+                    origin, span = doc["squashed_origin"], len(squashed_target)
             if position < 0:
                 continue
             start = origin[position]
-            end = origin[min(position + len(target), len(origin)) - 1] + 1
+            end = origin[min(position + span, len(origin)) - 1] + 1
             return {
                 "document": doc["filename"],
                 "page": _page_at(doc["pages"], start),
@@ -239,6 +264,40 @@ def _excerpt(text: str, start: int, end: int) -> str:
     return ("… " if left > 0 else "") + snippet + (" …" if right < len(text) else "")
 
 
+def _locate_quote(quote: str, index: SourceIndex) -> tuple[dict | None, bool]:
+    """
+    Localise la citation, entière si possible, sinon par propositions.
+
+    Le modèle recompose fréquemment une « citation » à partir de plusieurs
+    fragments réels — les lignes d'un tableau de diagnostics rassemblées en une
+    phrase, par exemple. Refuser ces citations en bloc les rangeait avec les
+    inventions, ce que le signal a précisément pour but de distinguer.
+
+    Returns:
+        (ancrage, partiel). `partiel` signale une citation retrouvée seulement
+        par morceaux : elle atteste d'une source réelle, pas d'une reprise
+        littérale, et plafonne donc le verdict.
+    """
+    if len(normalize(quote)) < MIN_QUOTE_CHARS:
+        return None, False
+
+    whole = index.find(quote)
+    if whole is not None:
+        return whole, False
+
+    # La proposition la plus longue est la plus discriminante : c'est celle dont
+    # une correspondance fortuite est la moins probable.
+    segments = sorted((s.strip() for s in _SEGMENT_SPLIT.split(quote)),
+                      key=lambda s: len(normalize(s)), reverse=True)
+    for segment in segments:
+        if len(normalize(segment)) < MIN_QUOTE_CHARS:
+            break
+        hit = index.find(segment)
+        if hit is not None:
+            return hit, True
+    return None, False
+
+
 def ground_value(value: str, quote: str, index: SourceIndex) -> dict[str, Any]:
     """
     Rattache une valeur extraite à son texte source.
@@ -252,9 +311,7 @@ def ground_value(value: str, quote: str, index: SourceIndex) -> dict[str, Any]:
     value = (value or "").strip()
     quote = (quote or "").strip()
 
-    quote_hit = None
-    if len(normalize(quote)) >= MIN_QUOTE_CHARS:
-        quote_hit = index.find(quote)
+    quote_hit, quote_partial = _locate_quote(quote, index)
 
     result: dict[str, Any] = {"quote_verified": quote_hit is not None}
 
@@ -276,8 +333,15 @@ def ground_value(value: str, quote: str, index: SourceIndex) -> dict[str, Any]:
         _locate(quote_hit)
         return result
 
-    # La valeur est-elle portée par la citation elle-même ?
-    if quote_hit is not None:
+    # La valeur est-elle portée par une citation reprise littéralement ?
+    #
+    # Cette voie exige la citation *entière*. Sur une citation seulement
+    # retrouvée par morceaux, « la valeur est dans la citation » ne prouve que
+    # la cohérence du modèle avec lui-même : c'est ainsi qu'une adresse dont le
+    # numéro de rue était inventé passait pour attestée, alors que seul le nom
+    # du cabinet existait dans le dossier. On laisse ce cas descendre à la
+    # recherche de la valeur elle-même, ci-dessous.
+    if quote_hit is not None and not quote_partial:
         quote_norm = normalize(quote)
         if any(re.search(rf"\b{re.escape(normalize(v))}\b", quote_norm) for v in _variants(value)):
             result["grounding"] = _grade(VERIFIED, quote_hit)
