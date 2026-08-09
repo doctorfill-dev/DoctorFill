@@ -232,6 +232,58 @@
       "acroform_name": "mutter_dok[0].Seite2[0].patientS1Address[0].input[0]"
     },
     {
+      "comments": "Section 9 — Seite2"
+    },
+    {
+      "id": "9.1",
+      "name": "diagDescription",
+      "label": "diagDescription",
+      "question": "Quels sont les diagnostics retenus, avec pour chacun la date depuis laquelle il existe ? Lister toutes les entrées, une par ligne.",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/Block_1_Diagnosen/diagDescription",
+      "acroform_name": "mutter_dok[0].Seite2[0].Block_1_Diagnosen[0].#area[0].diagDescription[0]"
+    },
+    {
+      "id": "9.2",
+      "name": "lastTreatment",
+      "label": "lastTreatment",
+      "question": "À quelle date remonte le dernier examen ou la dernière consultation ? [format : JJ.MM.AAAA]",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/Block_2.1_AerztlicheAngaben/lastTreatment",
+      "acroform_name": "mutter_dok[0].Seite2[0].Block_2\\.1_AerztlicheAngaben[0].lastTreatment[0]",
+      "type": "date"
+    },
+    {
+      "id": "9.3",
+      "name": "anamnesis",
+      "label": "anamnesis",
+      "question": "Quelle est l'anamnèse du patient : antécédents, évolution et circonstances ayant conduit à la situation actuelle ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite2/Block_2.2_AerztlicheAngaben/anamnesis",
+      "acroform_name": "mutter_dok[0].Seite2[0].Block_2\\.2_AerztlicheAngaben[0].anamnesis[0]"
+    },
+    {
+      "comments": "Section 10 — Seite3"
+    },
+    {
+      "id": "10.1",
+      "name": "report",
+      "label": "report",
+      "question": "Quel est le constat médical : examen clinique, résultats d'examens complémentaires et éléments objectifs relevés ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/Block_2.3_AerztlicheAngaben/report",
+      "acroform_name": "mutter_dok[0].Seite3[0].Block_2\\.3_AerztlicheAngaben[0].report[0]"
+    },
+    {
+      "id": "10.2",
+      "name": "prognosis",
+      "label": "prognosis",
+      "question": "Quel est le pronostic pour ce patient ?",
+      "required": false,
+      "xml_path": "mutter_dok/Seite3/Block_2.4_AerztlicheAngaben/prognosis",
+      "acroform_name": "mutter_dok[0].Seite3[0].Block_2\\.4_AerztlicheAngaben[0].prognosis[0]"
+    },
+    {
       "comments": "Section 3 — Seite3"
     },
     {

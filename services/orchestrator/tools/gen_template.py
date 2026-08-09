@@ -270,6 +270,13 @@ FIELD_VOCAB = {
     "prognosis": ("Quel est le pronostic pour ce patient ?", None),
     "findings": ("Quelles sont les constatations cliniques ?", None),
     "diagnosis": ("Quel est le diagnostic posé ?", None),
+    "diagDescription": ("Quels sont les diagnostics retenus, avec pour chacun la date "
+                        "depuis laquelle il existe ? Lister toutes les entrées, une "
+                        "par ligne.", None),
+    "lastTreatment": ("À quelle date remonte le dernier examen ou la dernière "
+                      "consultation ? [format : JJ.MM.AAAA]", "date"),
+    "report": ("Quel est le constat médical : examen clinique, résultats d'examens "
+               "complémentaires et éléments objectifs relevés ?", None),
     "therapy": ("Quelle thérapie est mise en place ?", None),
     "medication": ("Quels médicaments le patient prend-il ?", None),
     "hospitalisationFrom": ("À partir de quelle date le patient est-il hospitalisé ? "
@@ -525,6 +532,22 @@ def _items(elem: ET.Element) -> list[str]:
 # Le traiter comme acquis ferait livrer le formulaire avec ce texte en place.
 _PLACEHOLDER = re.compile(r"<[^<>]*>")
 
+# La couche AcroForm ne nomme pas toujours un champ comme le XFA.
+# 1. Un point dans un nom de bloc (« Block_2.1_AerztlicheAngaben ») est traité
+#    par le producteur du PDF comme un séparateur de hiérarchie : le nom se
+#    scinde en deux nœuds et l'échappement « \ » subsiste dans le parent.
+# 2. Un conteneur `area` ne pèse pas sur l'expression SOM du XFA, mais apparaît
+#    tout de même comme « #area[0] » dans la couche AcroForm.
+# Ces deux écarts faisaient déclarer « sans widget » — donc jamais remplis — les
+# champs cliniques de plusieurs formulaires : diagnostic, anamnèse, pronostic.
+_SOM_ESCAPE = re.compile(r"\\(.)")
+_SOM_AREA = re.compile(r"(?:^|\.)#\w+\[\d+\]")
+
+
+def _canonical_som(name: str) -> str:
+    """Forme comparable d'un nom de widget, indépendante de ces deux écarts."""
+    return _SOM_AREA.sub("", _SOM_ESCAPE.sub(r"\1", name))
+
 
 def _exclgroup_options(elem: ET.Element) -> tuple[list[str], list[str]]:
     """
@@ -690,7 +713,9 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
     # Scheibenstrasse 70 »). Ces champs font autorité et ne doivent pas être
     # soumis au modèle — voir `preset` plus bas.
     acro_values = extract_acroform_field_names(pdf_path)
-    acro_names = set(acro_values)
+    # Indexé sur la forme canonique : c'est elle qui se compare au SOM du XFA.
+    # La valeur reste le nom réel du widget, seul utilisable au remplissage.
+    acro_by_som = {_canonical_som(name): name for name in acro_values}
 
     fillable, skipped, unmatched = [], [], []
     for f in xfa_fields:
@@ -700,10 +725,14 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
         if not keep_technical and f["name"] in TECHNICAL_NAMES:
             skipped.append(f["som"])
             continue
-        if f["som"] not in acro_names:
+        widget = acro_by_som.get(_canonical_som(f["som"]))
+        if widget is None:
             # exclGroup et conteneurs n'ont pas de widget propre : normal.
             unmatched.append(f["som"])
             continue
+        # Le nom réel du widget, échappements compris : c'est lui que
+        # core/acroform reconstruit au remplissage.
+        f["widget"] = widget
         fillable.append(f)
 
     if not fillable:
@@ -760,7 +789,7 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
             "question": kept.get("question") or f["question"],
             "required": kept.get("required", False),
             "xml_path": f["xml_path"],
-            "acroform_name": f["som"],
+            "acroform_name": f["widget"],
         }
         # Un type saisi à la main l'emporte : il encode une intention métier
         # (« percent », « sex ») que l'UI XFA ne dit pas.
@@ -777,7 +806,7 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
         # destinataire, code EAN, données de routage. L'extraction les écrasait
         # partiellement — un formulaire AI se retrouvait adressé à la caisse
         # maladie du dossier, à l'adresse de l'office AI restée dessous.
-        preset = acro_values.get(f["som"], "").strip()
+        preset = acro_values.get(f["widget"], "").strip()
         if preset and not _PLACEHOLDER.fullmatch(preset):
             entry["preset"] = preset
         entries.append(entry)
