@@ -222,6 +222,12 @@ RÈGLES STRICTES :
 8. Pour les listes (ex: diagnostics), liste TOUTES les entrées séparées par des sauts de ligne.
 9. "source_quote" doit être la citation EXACTE du texte source (max 100 caractères).
    Si valeur vide, mettre "" pour source_quote aussi.
+10. Les clés techniques de la synthèse ("document_source", noms de fichiers .pdf)
+    désignent la provenance interne d'une information : ne les utilise JAMAIS comme
+    valeur d'un champ.
+11. Ne complète JAMAIS une adresse ou une coordonnée partielle avec des éléments
+    provenant d'une autre personne ou d'une autre entité. Une adresse de cabinet
+    sans rue reste sans rue.
 """
 
 

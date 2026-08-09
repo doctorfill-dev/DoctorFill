@@ -194,7 +194,8 @@
       "options": [
         "LAMal",
         "LCA"
-      ]
+      ],
+      "preset": "LAMal"
     },
     {
       "id": "1.21",
@@ -433,7 +434,8 @@
       "options": [
         "Sélectionner l'assureur...",
         "0"
-      ]
+      ],
+      "preset": "0"
     },
     {
       "comments": "Section 15 — page2"

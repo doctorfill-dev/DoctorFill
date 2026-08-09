@@ -394,6 +394,21 @@ def _filter_synthesis_for_section(synthesis: Dict | None, section_id: str) -> st
     return json.dumps(filtered, ensure_ascii=False) if filtered else None
 
 
+def _extractable_fields(template: Dict) -> List[Dict]:
+    """
+    Champs à soumettre au modèle.
+
+    Écarte les champs `preset` : l'éditeur du formulaire les a déjà renseignés
+    (adresse de l'office destinataire, code EAN, données de routage) et ils font
+    autorité. Les extraire produisait des documents incohérents — un formulaire
+    AI adressé à « Helvetia Santé SA » parce que le dossier mentionnait cette
+    caisse, à l'adresse de l'Office AI restée en dessous. Ça allège aussi le
+    budget LLM de 112 questions sur l'ensemble du catalogue.
+    """
+    return [f for f in template["fields"]
+            if f.get("question", "").strip() and not f.get("preset")]
+
+
 def _synthesis_as_source(synthesis: Dict | None) -> List[Dict]:
     """
     Expose la synthèse médicale comme source indexable, marquée comme dérivée.
@@ -677,7 +692,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             # Une question vide ne produit qu'un embedding parasite : les templates
             # générés par tools/gen_template.py la laissent à "" tant qu'elle n'est
             # pas rédigée.
-            fields_with_q = [f for f in template["fields"] if f.get("question", "").strip()]
+            fields_with_q = _extractable_fields(template)
             n_fields = len(fields_with_q)
             logger.info(f"[{job_id[:8]}] Step 3: {n_fields} champs — phase A rerank, phase B batch-LLM...")
 
@@ -1250,7 +1265,7 @@ async def rerun_pipeline_task(job_id: str):
         with open(f"template/Form_{form_id}.json", "r") as f:
             template = json.load(f)
 
-        fields_with_q = [f for f in template["fields"] if f.get("question", "").strip()]
+        fields_with_q = _extractable_fields(template)
         n_fields = len(fields_with_q)
         logger.info(f"[{job_id[:8]}] Re-run: {n_fields} champs, {col_count} chunks en ChromaDB.")
 

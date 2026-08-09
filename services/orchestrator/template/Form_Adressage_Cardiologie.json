@@ -17,7 +17,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "comments": "Section 11 — page1"
@@ -29,7 +30,8 @@
       "question": "Quelle démarche le destinataire doit-il entreprendre concernant le rendez-vous (prendre rendez-vous, confirmer une date déjà fixée, attendre) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/appointmentPendencyTask",
-      "acroform_name": "topmostSubform[0].page1[0].appointmentPendencyTask[0]"
+      "acroform_name": "topmostSubform[0].page1[0].appointmentPendencyTask[0]",
+      "preset": "Prendre rendez-vous dès maintenant"
     },
     {
       "id": "11.2",
@@ -414,7 +416,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "11.17",
@@ -500,7 +503,8 @@
         "0",
         "1",
         "2"
-      ]
+      ],
+      "preset": "/1"
     },
     {
       "id": "5.3",
@@ -561,7 +565,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.3",
@@ -575,7 +580,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.4",
@@ -589,7 +595,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.5",
@@ -603,7 +610,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.6",
@@ -617,7 +625,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.7",
@@ -631,7 +640,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.8",
@@ -645,7 +655,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.9",
@@ -659,7 +670,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.10",
@@ -673,7 +685,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "6.11",
@@ -687,7 +700,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "11.20",
@@ -719,7 +733,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "comments": "Section 10 — page2"

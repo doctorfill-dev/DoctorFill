@@ -550,7 +550,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "2.5",
@@ -564,7 +565,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "2.6",
@@ -578,7 +580,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "2.7",

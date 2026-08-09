@@ -521,6 +521,11 @@ def _items(elem: ET.Element) -> list[str]:
             for t in _children(group, "text") if t.text]
 
 
+# Texte indicatif du gabarit Designer, pas une valeur : « <TT.MM.JJJJ> ».
+# Le traiter comme acquis ferait livrer le formulaire avec ce texte en place.
+_PLACEHOLDER = re.compile(r"<[^<>]*>")
+
+
 def _exclgroup_options(elem: ET.Element) -> tuple[list[str], list[str]]:
     """
     Libellés et valeurs d'export d'un groupe de boutons radio.
@@ -680,7 +685,12 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
     if not xfa_fields:
         raise GenerationError(f"{pdf_path.name} : aucun champ trouvé dans le XFA")
 
-    acro_names = set(extract_acroform_field_names(pdf_path))
+    # Les valeurs comptent autant que les noms : un formulaire medForms vierge
+    # arrive avec son bloc destinataire déjà rempli (« IV-Stelle Kanton Bern,
+    # Scheibenstrasse 70 »). Ces champs font autorité et ne doivent pas être
+    # soumis au modèle — voir `preset` plus bas.
+    acro_values = extract_acroform_field_names(pdf_path)
+    acro_names = set(acro_values)
 
     fillable, skipped, unmatched = [], [], []
     for f in xfa_fields:
@@ -763,6 +773,13 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
         # pas le libellé affiché. Sans elles, aucun bouton n'est coché.
         if f["option_values"]:
             entry["option_values"] = f["option_values"]
+        # Champ déjà renseigné par l'éditeur du formulaire : adresse de l'office
+        # destinataire, code EAN, données de routage. L'extraction les écrasait
+        # partiellement — un formulaire AI se retrouvait adressé à la caisse
+        # maladie du dossier, à l'adresse de l'office AI restée dessous.
+        preset = acro_values.get(f["som"], "").strip()
+        if preset and not _PLACEHOLDER.fullmatch(preset):
+            entry["preset"] = preset
         entries.append(entry)
 
     orphans = {q for q in (f.get("question") for f in prior.values()) if q} - reused_keys

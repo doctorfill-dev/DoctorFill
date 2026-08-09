@@ -40,7 +40,8 @@
         "LAI",
         "LAM",
         "ORG"
-      ]
+      ],
+      "preset": "LAA"
     },
     {
       "comments": "Section 8 — page1"
@@ -73,7 +74,8 @@
       "question": "Quel est le nom complet du destinataire du formulaire ?",
       "required": false,
       "xml_path": "topmostSubform/page1/consumerS1Address/condensedName",
-      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].condensedName[0]"
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].condensedName[0]",
+      "preset": "Suva · Elektronische Kommunikation"
     },
     {
       "id": "1.5",
@@ -82,7 +84,8 @@
       "question": "Quelle est l'adresse complète du destinataire du formulaire (rue, NPA et localité) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/consumerS1Address/condensedAddress",
-      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].condensedAddress[0]"
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].condensedAddress[0]",
+      "preset": "Fluhmattstrasse 1 · 6002 Luzern"
     },
     {
       "id": "1.6",
@@ -91,7 +94,8 @@
       "question": "Quel est le numéro GLN (anciennement EAN) du destinataire du formulaire ?",
       "required": false,
       "xml_path": "topmostSubform/page1/consumerS1Address/ean",
-      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].ean[0]"
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].ean[0]",
+      "preset": "7601003000078"
     },
     {
       "id": "1.7",
@@ -109,7 +113,8 @@
       "question": "Quel est le numéro de téléphone du destinataire du formulaire ?",
       "required": false,
       "xml_path": "topmostSubform/page1/consumerS1Address/phone",
-      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].phone[0]"
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].phone[0]",
+      "preset": "041 4195111"
     },
     {
       "id": "1.9",
@@ -127,7 +132,8 @@
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées du destinataire du formulaire ?",
       "required": false,
       "xml_path": "topmostSubform/page1/consumerS1Address/input",
-      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].input[0]"
+      "acroform_name": "topmostSubform[0].page1[0].consumerS1Address[0].input[0]",
+      "preset": "exaddress#@#7601003000078#@##@##@##@##@#company#@#Suva#@#Elektronische Kommunikation#@##@##@#Fluhmattstrasse 1#@#6002#@#Luzern#@#LU#@#CH#@#041 4195111#@##@##@##@#041 4195828#@##@#www.suva.ch#@##@#"
     },
     {
       "id": "1.11",
@@ -136,7 +142,8 @@
       "question": "Quel est le nom complet de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/condensedName",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedName[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedName[0]",
+      "preset": "Suva Zentralschweiz · Service Center"
     },
     {
       "id": "1.12",
@@ -145,7 +152,8 @@
       "question": "Quelle est l'adresse complète de l'assureur (rue, NPA et localité) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/condensedAddress",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedAddress[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].condensedAddress[0]",
+      "preset": "Postfach · 6009 Luzern"
     },
     {
       "id": "1.13",
@@ -154,7 +162,8 @@
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/ean",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]",
+      "preset": "7601003000078"
     },
     {
       "id": "1.14",
@@ -172,7 +181,8 @@
       "question": "Quel est le numéro de téléphone de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/phone",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].phone[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].phone[0]",
+      "preset": "0848 830 830"
     },
     {
       "id": "1.16",
@@ -181,7 +191,8 @@
       "question": "Quel est le numéro de fax de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/fax",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].fax[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].fax[0]",
+      "preset": "0848 830 831"
     },
     {
       "id": "1.17",
@@ -190,7 +201,8 @@
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/input",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]",
+      "preset": "exaddress#@#7601003000078#@##@##@##@##@#company#@#Suva Zentralschweiz#@#Service Center#@##@#Postfach#@##@#6009#@#Luzern#@##@##@#0848 830 830#@##@##@##@#0848 830 831#@##@##@#"
     },
     {
       "id": "1.18",
@@ -409,7 +421,8 @@
       "options": [
         "non",
         "oui"
-      ]
+      ],
+      "preset": "non"
     },
     {
       "id": "8.4",
@@ -537,7 +550,8 @@
       "options": [
         "non",
         "oui"
-      ]
+      ],
+      "preset": "non"
     },
     {
       "id": "2.2",
@@ -898,7 +912,8 @@
       "options": [
         "non",
         "oui"
-      ]
+      ],
+      "preset": "non"
     },
     {
       "comments": "Section 3 — page3"

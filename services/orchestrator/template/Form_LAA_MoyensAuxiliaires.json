@@ -215,7 +215,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "7.2",
@@ -229,7 +230,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "3.2",
@@ -243,7 +245,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "7.3",
@@ -257,7 +260,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "comments": "Section 6 — page1"

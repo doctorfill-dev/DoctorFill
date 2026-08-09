@@ -31,7 +31,8 @@
       "question": "Quel est le numéro d'assuré du patient auprès de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/lawS1Struct/insuredID",
-      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]"
+      "acroform_name": "topmostSubform[0].page1[0].lawS1Struct[0].insuredID[0]",
+      "preset": "00.000.000"
     },
     {
       "id": "1.4",
@@ -49,7 +50,8 @@
         "IVG",
         "MVG",
         "ORG"
-      ]
+      ],
+      "preset": "MVG"
     },
     {
       "comments": "Section 3 — page1"
@@ -276,7 +278,8 @@
       "question": "Quel est le nom de l'entreprise ou de l'institution de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/companyName",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].companyName[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].companyName[0]",
+      "preset": "Suva Genève"
     },
     {
       "id": "1.19",
@@ -285,7 +288,8 @@
       "question": "Quel est le nom du service ou du département de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/departmentName",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].departmentName[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].departmentName[0]",
+      "preset": "Assurance militaire"
     },
     {
       "id": "5.2",
@@ -294,7 +298,8 @@
       "question": "Quelle est la case postale de l'adresse ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/poBox",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].poBox[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].poBox[0]",
+      "preset": "Postfach"
     },
     {
       "id": "1.20",
@@ -303,7 +308,8 @@
       "question": "Quel est le code postal (NPA) de l'adresse de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/zip",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].zip[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].zip[0]",
+      "preset": "6009"
     },
     {
       "id": "1.21",
@@ -312,7 +318,8 @@
       "question": "Quelle est la localité de l'adresse de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/city",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].city[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].city[0]",
+      "preset": "Luzern"
     },
     {
       "id": "1.22",
@@ -321,7 +328,8 @@
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/ean",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].ean[0]",
+      "preset": "7601003003130"
     },
     {
       "id": "1.23",
@@ -330,7 +338,8 @@
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
       "required": false,
       "xml_path": "topmostSubform/page1/insuranceS1Address/input",
-      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]"
+      "acroform_name": "topmostSubform[0].page1[0].insuranceS1Address[0].input[0]",
+      "preset": "exaddress#@#7601003003130#@##@##@##@##@#company#@#Suva Genève#@#Assurance militaire#@#Service Center#@#Postfach#@##@#6009#@#Luzern#@##@##@##@##@##@##@##@##@##@#"
     },
     {
       "id": "1.24",

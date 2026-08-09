@@ -303,7 +303,8 @@
         "LAI",
         "LAM",
         "ORG"
-      ]
+      ],
+      "preset": "LAI"
     },
     {
       "id": "8.2",
@@ -321,7 +322,8 @@
       "question": "Quel est le nom de l'entreprise ou de l'institution de l'assureur ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/insuranceS1Address/companyName",
-      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].companyName[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].companyName[0]",
+      "preset": "IV-Stelle Kanton Bern"
     },
     {
       "id": "1.26",
@@ -330,7 +332,8 @@
       "question": "Quel est le nom du service ou du département de l'assureur ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/insuranceS1Address/departmentName",
-      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].departmentName[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].departmentName[0]",
+      "preset": "Postfach"
     },
     {
       "id": "1.27",
@@ -339,7 +342,8 @@
       "question": "Quelle est la rue et le numéro de l'adresse de l'assureur ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/insuranceS1Address/street",
-      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].street[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].street[0]",
+      "preset": "Scheibenstrasse 70"
     },
     {
       "id": "1.28",
@@ -348,7 +352,8 @@
       "question": "Quel est le code postal (NPA) de l'adresse de l'assureur ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/insuranceS1Address/zip",
-      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].zip[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].zip[0]",
+      "preset": "3014"
     },
     {
       "id": "1.29",
@@ -357,7 +362,8 @@
       "question": "Quelle est la localité de l'adresse de l'assureur ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/insuranceS1Address/city",
-      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].city[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].city[0]",
+      "preset": "Bern"
     },
     {
       "id": "1.30",
@@ -366,7 +372,8 @@
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/insuranceS1Address/ean",
-      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].ean[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].ean[0]",
+      "preset": "7601003002485"
     },
     {
       "id": "1.31",
@@ -375,7 +382,8 @@
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/insuranceS1Address/input",
-      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].input[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].insuranceS1Address[0].input[0]",
+      "preset": "exaddress#@#7601003002485#@##@##@##@##@#company#@#IV-Stelle Kanton Bern#@##@##@#rPostfach#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@##@#"
     },
     {
       "comments": "Section 5 — Seite2"

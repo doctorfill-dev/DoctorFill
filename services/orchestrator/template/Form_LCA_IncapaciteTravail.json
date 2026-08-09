@@ -154,7 +154,8 @@
         "LAI",
         "LAM",
         "ORG"
-      ]
+      ],
+      "preset": "LCA"
     },
     {
       "comments": "Section 12 — page1"
@@ -325,7 +326,8 @@
       "options": [
         "Sélectionner l'assureur...",
         "0"
-      ]
+      ],
+      "preset": "0"
     },
     {
       "comments": "Section 24 — page2"

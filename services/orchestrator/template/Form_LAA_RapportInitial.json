@@ -237,7 +237,8 @@
       "options": [
         "LCA",
         "LAA"
-      ]
+      ],
+      "preset": "LAA"
     },
     {
       "id": "1.23",
@@ -387,7 +388,8 @@
       "options": [
         "Sélectionner l'assureur...",
         "0"
-      ]
+      ],
+      "preset": "0"
     },
     {
       "comments": "Section 15 — page2"

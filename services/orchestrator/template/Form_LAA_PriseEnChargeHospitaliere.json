@@ -124,7 +124,8 @@
         "LAA",
         "LAI",
         "LAM"
-      ]
+      ],
+      "preset": "LAA"
     },
     {
       "id": "1.13",
@@ -431,7 +432,8 @@
       "options": [
         "ICD",
         "FreeText"
-      ]
+      ],
+      "preset": "ICD"
     },
     {
       "id": "3.2",
@@ -472,7 +474,8 @@
       "options": [
         "ICD",
         "FreeText"
-      ]
+      ],
+      "preset": "ICD"
     },
     {
       "id": "3.3",
@@ -513,7 +516,8 @@
       "options": [
         "CHOP",
         "FreeText"
-      ]
+      ],
+      "preset": "CHOP"
     },
     {
       "id": "3.4",
@@ -554,7 +558,8 @@
       "options": [
         "CHOP",
         "FreeText"
-      ]
+      ],
+      "preset": "CHOP"
     },
     {
       "id": "3.5",
@@ -643,7 +648,8 @@
         "25",
         "26",
         "27"
-      ]
+      ],
+      "preset": "0"
     }
   ]
 }

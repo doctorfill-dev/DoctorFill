@@ -362,7 +362,8 @@
       ],
       "option_values": [
         "0"
-      ]
+      ],
+      "preset": "/0"
     },
     {
       "id": "1.27",
@@ -544,7 +545,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "2.5",
@@ -558,7 +560,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "2.6",
@@ -572,7 +575,8 @@
       "options": [
         "On",
         "Off"
-      ]
+      ],
+      "preset": "/Off"
     },
     {
       "id": "2.7",
@@ -603,7 +607,8 @@
       "required": false,
       "xml_path": "topmostSubform/page1/submitTimeNum",
       "acroform_name": "topmostSubform[0].page1[0].submitTimeNum[0]",
-      "type": "int"
+      "type": "int",
+      "preset": "0"
     },
     {
       "id": "7.2",
@@ -613,7 +618,8 @@
       "required": false,
       "xml_path": "topmostSubform/page1/submitTimeAltNum",
       "acroform_name": "topmostSubform[0].page1[0].submitTimeAltNum[0]",
-      "type": "int"
+      "type": "int",
+      "preset": "0"
     },
     {
       "comments": "Section 6 — page2"

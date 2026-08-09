@@ -117,7 +117,8 @@
         "LaMal",
         "LCA",
         "LAA"
-      ]
+      ],
+      "preset": "LAA"
     },
     {
       "id": "1.9",
@@ -288,7 +289,8 @@
       "options": [
         "Sélectionner l'assureur...",
         "0"
-      ]
+      ],
+      "preset": "0"
     },
     {
       "id": "4.2",
