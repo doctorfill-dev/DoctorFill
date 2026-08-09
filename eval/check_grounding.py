@@ -33,6 +33,7 @@ def main() -> int:
     parser.add_argument("--form", default="LCA_IncapaciteTravail")
     parser.add_argument("--docs", required=True, help="Dossier de PDF à soumettre")
     parser.add_argument("--out", type=pathlib.Path, help="Écrire les champs bruts en JSON")
+    parser.add_argument("--pdf", type=pathlib.Path, help="Télécharger le formulaire rempli")
     args = parser.parse_args()
 
     src = pathlib.Path(args.docs).expanduser()
@@ -95,6 +96,11 @@ def main() -> int:
     if args.out:
         args.out.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"\nChamps bruts écrits dans {args.out}")
+    if args.pdf:
+        pdf = client.get(f"{args.api}/download/{job_id}", params={"token": token})
+        pdf.raise_for_status()
+        args.pdf.write_bytes(pdf.content)
+        print(f"Formulaire rempli écrit dans {args.pdf} ({len(pdf.content)} octets)")
     return 0
 
 
