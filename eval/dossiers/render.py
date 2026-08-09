@@ -246,19 +246,53 @@ def _plain(markdown: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", text)
 
 
+# Repli sans police Unicode : translittérer plutôt que remplacer. Les « ? »
+# produits par un encodage latin-1 se retrouvaient tels quels dans les valeurs
+# extraites — un défaut du corpus qu'on aurait imputé au pipeline.
+_TRANSLITTERATION = str.maketrans({
+    "—": "-", "–": "-", "’": "'", "‘": "'", "“": '"', "”": '"',
+    "…": "...", "«": '"', "»": '"', " ": " ", "€": "EUR", "×": "x",
+})
+
+# Chemins usuels d'une police Unicode, Debian puis Arch. `fc-match` est un
+# meilleur repli mais suppose fontconfig ; on l'essaie en dernier.
+_FONT_CANDIDATES = (
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    "/usr/share/fonts/TTF/DejaVuSans.ttf",
+    "/usr/share/fonts/noto/NotoSans-Regular.ttf",
+    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    "/Library/Fonts/Arial Unicode.ttf",
+)
+
+
+def _unicode_font() -> str | None:
+    for candidate in _FONT_CANDIDATES:
+        if Path(candidate).exists():
+            return candidate
+    try:
+        import subprocess
+        found = subprocess.run(["fc-match", "-f", "%{file}", "sans-serif"],
+                               capture_output=True, text=True, timeout=5).stdout.strip()
+        return found if found.endswith((".ttf", ".otf")) and Path(found).exists() else None
+    except Exception:
+        return None
+
+
 def to_pdf(markdown: str, path: Path) -> None:
     from fpdf import FPDF
 
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
-    try:
-        pdf.add_font("DejaVu", "", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
-        pdf.set_font("DejaVu", size=9)
+    font = _unicode_font()
+    if font:
+        pdf.add_font("corps", "", font)
+        pdf.set_font("corps", size=9)
         encode = lambda t: t  # noqa: E731
-    except Exception:
+    else:
         pdf.set_font("Helvetica", size=9)
-        encode = lambda t: t.encode("latin-1", "replace").decode("latin-1")  # noqa: E731
+        encode = lambda t: t.translate(_TRANSLITTERATION).encode(  # noqa: E731
+            "latin-1", "replace").decode("latin-1")
     for line in _plain(markdown).split("\n"):
         pdf.multi_cell(0, 5, encode(line) or " ", new_x="LMARGIN", new_y="NEXT")
     pdf.output(str(path))
