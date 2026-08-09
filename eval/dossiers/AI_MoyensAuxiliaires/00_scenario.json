@@ -1,0 +1,17 @@
+{
+  "form": "AI_MoyensAuxiliaires",
+  "titre": "Demande de moyens auxiliaires AI — prothèse tibiale",
+  "patient": "MERCIER Sylvie",
+  "naissance": "22.09.1968",
+  "avs": "756.3312.8845.07",
+  "assureur": "Office AI du canton de Vaud",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_prescription-appareillage",
+    "05_rapport-centre-appareillage",
+    "06_incapacites-travail"
+  ]
+}

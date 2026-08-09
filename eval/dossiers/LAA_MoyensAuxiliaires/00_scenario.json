@@ -1,0 +1,18 @@
+{
+  "form": "LAA_MoyensAuxiliaires",
+  "titre": "Demande de moyens auxiliaires LAA",
+  "patient": "PILLET Bernard",
+  "naissance": "09.03.1966",
+  "avs": "756.1178.5540.94",
+  "assureur": "Suva, agence de Fribourg",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_prescription-moyens-auxiliaires",
+    "05_rapport-orthopediste",
+    "06_accident",
+    "07_incapacites-travail"
+  ]
+}

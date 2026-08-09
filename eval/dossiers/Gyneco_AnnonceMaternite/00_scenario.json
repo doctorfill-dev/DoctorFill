@@ -1,0 +1,15 @@
+{
+  "form": "Gyneco_AnnonceMaternite",
+  "titre": "Annonce de maternité",
+  "patient": "DA SILVA Carla",
+  "naissance": "12.07.1995",
+  "avs": "756.4419.7702.83",
+  "assureur": "Sanitas Assurance-maladie SA",
+  "medecin": "Dr méd. Julien Rossier",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_suivi-grossesse"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "form": "AI_RapportIntermediaire_Actualisation",
+  "titre": "Rapport intermédiaire AI — actualisation",
+  "patient": "BERNASCONI Elena",
+  "naissance": "07.07.1987",
+  "avs": "756.8821.4409.62",
+  "assureur": "Office AI du canton de Vaud",
+  "medecin": "Dre méd. Claire Vernet",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_irm-cerebrale",
+    "05_evaluation-fonctionnelle",
+    "06_incapacites-travail"
+  ]
+}

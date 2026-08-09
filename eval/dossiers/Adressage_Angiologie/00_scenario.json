@@ -1,0 +1,16 @@
+{
+  "form": "Adressage_Angiologie",
+  "titre": "Adressage en angiologie — claudication intermittente",
+  "patient": "CHEVALLEY Roger",
+  "naissance": "18.11.1957",
+  "avs": "756.8802.3317.71",
+  "assureur": "CSS Assurance-maladie SA",
+  "medecin": "Dre méd. Claire Vernet",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_demande-consultation-angiologie",
+    "05_bilan-biologique"
+  ]
+}

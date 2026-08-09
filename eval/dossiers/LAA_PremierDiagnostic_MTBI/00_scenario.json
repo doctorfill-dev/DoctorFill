@@ -1,0 +1,17 @@
+{
+  "form": "LAA_PremierDiagnostic_MTBI",
+  "titre": "Premier diagnostic LAA — traumatisme cranio-cérébral léger",
+  "patient": "HOFMANN Céline",
+  "naissance": "03.10.1988",
+  "avs": "756.7788.1145.60",
+  "assureur": "Zurich Assurances SA",
+  "medecin": "Dr méd. Pierre Morand",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_bilan-neurocognitif",
+    "05_accident",
+    "06_incapacites-travail"
+  ]
+}

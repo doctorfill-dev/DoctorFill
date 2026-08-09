@@ -1,0 +1,17 @@
+{
+  "form": "AI_RapportIntermediaire_Revision",
+  "titre": "Rapport intermédiaire AI — révision du droit",
+  "patient": "AEBISCHER Daniel",
+  "naissance": "30.11.1974",
+  "avs": "756.4477.1203.85",
+  "assureur": "Office AI du canton de Vaud",
+  "medecin": "Dre méd. Isabelle Favre",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_bilan-neuropsychologique",
+    "05_evaluation-revision",
+    "06_incapacites-travail"
+  ]
+}

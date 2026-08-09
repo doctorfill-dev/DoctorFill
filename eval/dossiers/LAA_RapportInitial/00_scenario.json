@@ -1,0 +1,17 @@
+{
+  "form": "LAA_RapportInitial",
+  "titre": "Rapport médical initial LAA — fracture du poignet",
+  "patient": "LEUENBERGER Nadia",
+  "naissance": "04.02.1997",
+  "avs": "756.9034.2218.41",
+  "assureur": "Suva, agence de Lausanne",
+  "medecin": "Dr méd. Pierre Morand",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_radiographies",
+    "05_accident",
+    "06_incapacites-travail"
+  ]
+}

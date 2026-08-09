@@ -1,0 +1,17 @@
+{
+  "form": "LAMal_RapportInitial",
+  "titre": "Rapport médical initial LAMal — gonarthrose et prothèse totale",
+  "patient": "MARTIN Josiane",
+  "naissance": "11.08.1963",
+  "avs": "756.2201.9948.12",
+  "assureur": "Assura-Basis SA",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_radiographies-genou",
+    "05_planification-operatoire",
+    "06_incapacites-travail"
+  ]
+}

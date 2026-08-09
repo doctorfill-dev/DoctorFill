@@ -1,0 +1,17 @@
+{
+  "form": "LAA_Physiotherapie",
+  "titre": "Prescription de physiothérapie LAA",
+  "patient": "GRAF Sandra",
+  "naissance": "25.12.1993",
+  "avs": "756.4405.6612.37",
+  "assureur": "Helsana Accidents SA",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_prescription-physiotherapie",
+    "05_accident",
+    "06_incapacites-travail"
+  ]
+}

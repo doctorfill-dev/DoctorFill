@@ -1,0 +1,15 @@
+{
+  "form": "LAM_FeuilleMaladieAccident",
+  "titre": "Feuille de maladie/accident — assurance militaire",
+  "patient": "BAUMGARTNER Yannick",
+  "naissance": "02.02.2005",
+  "avs": "756.6690.1123.48",
+  "assureur": "Assurance militaire (Suva AM), Lucerne",
+  "medecin": "Dr méd. Pierre Morand",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_attestation-service"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "form": "LAA_CertificatMedical_Suva",
+  "titre": "Certificat médical Suva — plaie de la main avec section tendineuse",
+  "patient": "SCHNEIDER Lukas",
+  "naissance": "28.08.1990",
+  "avs": "756.5561.3308.77",
+  "assureur": "Suva, agence d'Yverdon-les-Bains",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_protocole-operatoire",
+    "05_bilan-ergotherapie",
+    "06_accident",
+    "07_incapacites-travail"
+  ]
+}

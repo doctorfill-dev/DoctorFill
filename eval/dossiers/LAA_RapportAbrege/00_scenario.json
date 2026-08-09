@@ -1,0 +1,16 @@
+{
+  "form": "LAA_RapportAbrege",
+  "titre": "Rapport abrégé LAA — entorse de cheville",
+  "patient": "FERREIRA Miguel",
+  "naissance": "19.06.1992",
+  "avs": "756.2245.9917.33",
+  "assureur": "Suva, agence de Lausanne",
+  "medecin": "Dr méd. Pierre Morand",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_accident",
+    "05_incapacites-travail"
+  ]
+}

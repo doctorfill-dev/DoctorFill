@@ -1,0 +1,17 @@
+{
+  "form": "LAM_RapportIntermediaire",
+  "titre": "Rapport intermédiaire — assurance militaire",
+  "patient": "RUFFIEUX Damien",
+  "naissance": "21.09.2001",
+  "avs": "756.3348.7790.26",
+  "assureur": "Assurance militaire (Suva AM), Lucerne",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_irm-lombaire",
+    "05_evolution-huit-mois",
+    "06_incapacites-travail"
+  ]
+}

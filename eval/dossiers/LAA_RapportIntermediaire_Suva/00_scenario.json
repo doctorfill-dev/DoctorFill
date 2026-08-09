@@ -1,0 +1,18 @@
+{
+  "form": "LAA_RapportIntermediaire_Suva",
+  "titre": "Rapport intermédiaire Suva — rupture de coiffe des rotateurs",
+  "patient": "ZUFFEREY Patrick",
+  "naissance": "12.05.1979",
+  "avs": "756.6612.4471.29",
+  "assureur": "Suva, agence de Sion",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_irm-epaule",
+    "05_evaluation-reprise",
+    "06_accident",
+    "07_incapacites-travail"
+  ]
+}

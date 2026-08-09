@@ -1,0 +1,16 @@
+{
+  "form": "Adressage_Cardiologie",
+  "titre": "Adressage en cardiologie — angor d'effort",
+  "patient": "PERRIN Anne-Lise",
+  "naissance": "29.05.1969",
+  "avs": "756.5527.8834.19",
+  "assureur": "Groupe Mutuel Assurances SA",
+  "medecin": "Dre méd. Claire Vernet",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_demande-consultation-cardiologie",
+    "05_ecg-biologie"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "form": "AI_ReadaptationRente",
+  "titre": "Rapport médical AI — réadaptation et droit à la rente",
+  "patient": "DUBOIS Marie",
+  "naissance": "15.03.1985",
+  "avs": "756.1234.5678.90",
+  "assureur": "Office AI du canton de Neuchâtel",
+  "medecin": "Dre méd. Anna Keller",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_rapport-irm",
+    "05_evaluation-capacite-travail",
+    "06_incapacites-travail"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "form": "LCA_IncapaciteTravail",
+  "titre": "Certificat médical d'incapacité de travail pour assureur-vie",
+  "patient": "NICOLET Fabienne",
+  "naissance": "06.01.1981",
+  "avs": "756.7714.2265.03",
+  "assureur": "Bâloise Vie SA",
+  "medecin": "Dre méd. Isabelle Favre",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_evaluation-capacite-lca",
+    "05_incapacites-travail"
+  ]
+}

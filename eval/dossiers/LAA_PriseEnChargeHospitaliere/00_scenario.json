@@ -1,0 +1,17 @@
+{
+  "form": "LAA_PriseEnChargeHospitaliere",
+  "titre": "Prise en charge hospitalière LAA — polytraumatisme",
+  "patient": "ROULIN Georges",
+  "naissance": "17.01.1971",
+  "avs": "756.3390.7724.18",
+  "assureur": "Suva, agence de Fribourg",
+  "medecin": "Dr méd. Marc Brunner",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_sejour-hospitalier",
+    "05_accident",
+    "06_incapacites-travail"
+  ]
+}

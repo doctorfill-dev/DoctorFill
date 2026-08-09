@@ -1,0 +1,16 @@
+{
+  "form": "Prescription_EnseignementDiabete",
+  "titre": "Prescription d'enseignement thérapeutique du diabète",
+  "patient": "AMSTUTZ Werner",
+  "naissance": "03.02.1972",
+  "avs": "756.6035.4419.28",
+  "assureur": "Visana Assurance SA",
+  "medecin": "Dre méd. Claire Vernet",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_prescription-enseignement",
+    "05_bilan-biologique-diabete"
+  ]
+}

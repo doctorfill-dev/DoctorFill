@@ -1,0 +1,18 @@
+{
+  "form": "LAA_Physiotherapie_LongueDuree",
+  "titre": "Physiothérapie de longue durée LAA — SDRC du membre supérieur",
+  "patient": "TISSOT Olivier",
+  "naissance": "14.04.1977",
+  "avs": "756.9923.3081.55",
+  "assureur": "Suva, agence de La Chaux-de-Fonds",
+  "medecin": "Dre méd. Anna Keller",
+  "documents": [
+    "01_fiche-administrative",
+    "02_anamnese-antecedents",
+    "03_consultations",
+    "04_demande-physiotherapie-longue-duree",
+    "05_bilan-ergotherapie",
+    "06_accident",
+    "07_incapacites-travail"
+  ]
+}
