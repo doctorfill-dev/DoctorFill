@@ -29,6 +29,7 @@ from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 from core.acroform import detect_form_type, fill_acroform
 from core.provenance import SourceIndex, ground_value
+import stats
 from medical_synthesis import run_medical_synthesis
 from prompts import (SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt,
                      SECTION_SYNTHESIS_KEYS, build_chat_messages, build_synthesis_refine_messages)
@@ -873,12 +874,21 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             (debug_dir / "summary.txt").write_text(summary, encoding="utf-8")
             logger.info(f"[{job_id[:8]}] Pipeline terminé en {timings['total']:.1f}s — Debug: {debug_dir}")
 
+            # Durée vécue par l'utilisateur : de la soumission au formulaire prêt,
+            # transfert et attente comprises. `timings["total"]` ne couvre que le
+            # pipeline lui-même et reste au journal de debug.
+            elapsed = time.time() - JOBS[job_id].get("started_at", time.time())
+            # Seules les exécutions abouties sont comptées : la durée d'un job en
+            # échec ne dit rien du coût d'un dossier traité.
+            stats.record_run(form_id, total_files, elapsed)
+
             JOBS[job_id].update({
                 "status": "completed",
                 "message": f"✅ Formulaire généré en {timings['total']:.0f}s !",
                 "progress": 100,
                 "file_path": str(output_pdf),
                 "completed_at": time.time(),
+                "duration_s": round(elapsed, 1),
                 "_form_id": form_id,
                 "_tmp_dir": str(tmp_dir),
                 "_debug_dir": str(debug_dir),
@@ -914,6 +924,21 @@ async def health_check():
         "built_at": APP_BUILT_AT,
         "model": VLLM_MODEL,
         "forms": len(VALID_FORM_IDS),
+    }
+
+
+@app.get("/stats")
+async def pipeline_stats(form_id: str = ""):
+    """
+    Repères de durée, calculés sur les exécutions abouties.
+
+    `form_id` restreint au formulaire demandé : un rapport de 112 champs et une
+    annonce de maternité de 23 champs n'ont pas le même coût, et une moyenne qui
+    les mélange n'aide personne.
+    """
+    return {
+        "global": stats.summary(),
+        "form": stats.summary(form_id) if form_id else None,
     }
 
 
@@ -980,6 +1005,8 @@ async def process_form(
         "message": "Initialisation du pipeline...",
         "progress": 0,
         "token": download_token,
+        # Origine du chronomètre affiché pendant le traitement.
+        "started_at": time.time(),
     }
 
     background_tasks.add_task(run_pipeline_task, job_id, form_id, tmp_dir, saved_report_paths)
@@ -994,10 +1021,15 @@ async def get_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job introuvable ou expiré.")
     job = JOBS[job_id]
     # Ne pas exposer le token ni le file_path dans le status
+    # elapsed_s alimente le chronomètre pendant le traitement ; duration_s est la
+    # durée définitive, celle qui entre dans la moyenne.
+    started = job.get("started_at")
     return {
         "status": job.get("status"),
         "message": job.get("message"),
         "progress": job.get("progress"),
+        "elapsed_s": round(time.time() - started, 1) if started else None,
+        "duration_s": job.get("duration_s"),
     }
 
 

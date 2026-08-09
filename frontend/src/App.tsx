@@ -7,11 +7,20 @@ import { PdfViewer } from "@/components/PdfViewer";
 import {
   Loader2, FolderArchive, FileCheck, FileText, Trash2,
   ChevronRight, Server, Send, Bot, User, ClipboardList, MessageSquare, Copy, Check,
-  Brain, RefreshCw, Save, Wand2, AlertTriangle,
+  Brain, RefreshCw, Save, Wand2, AlertTriangle, Timer,
 } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const API_KEY = import.meta.env.VITE_API_KEY || "";
+
+/** Réponse de GET /stats : repères de durée sur les exécutions abouties. */
+interface PipelineStats {
+  runs: number;
+  average_seconds: number | null;
+  recent_average_seconds: number | null;
+  average_seconds_per_document: number | null;
+  last_seconds: number | null;
+}
 
 /** Réponse de GET /health : identité du backend piloté par cette interface. */
 interface BackendInfo {
@@ -195,6 +204,76 @@ function BuildTag({
   );
 }
 
+/** mm:ss — au-delà de l'heure, hh:mm:ss. */
+function formatDuration(seconds: number | null | undefined): string {
+  if (seconds === null || seconds === undefined) return "—";
+  const total = Math.max(0, Math.round(seconds));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = total % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+
+/**
+ * Chronomètre du traitement en cours, puis durée de la dernière exécution,
+ * confrontés à la moyenne des exécutions abouties.
+ *
+ * La moyenne sert d'attente : elle dit au clinicien combien de temps il va
+ * patienter, ce qu'une barre de progression seule ne dit pas.
+ */
+function DureeIndicateur({
+  running, elapsed, lastDuration, stats,
+}: {
+  running: boolean;
+  elapsed: number;
+  lastDuration: number | null;
+  stats: PipelineStats | null;
+}) {
+  const moyenne = stats?.recent_average_seconds ?? stats?.average_seconds ?? null;
+  const repere = moyenne !== null && stats
+    ? `moyenne ${formatDuration(moyenne)} sur ${stats.runs} exécution${stats.runs > 1 ? "s" : ""}`
+    : "aucune moyenne disponible";
+
+  if (running) {
+    return (
+      <div className="flex items-center justify-between gap-2 text-xs font-mono text-zinc-500 bg-zinc-50 border border-zinc-200 px-3 py-2 rounded-sm">
+        <span className="flex items-center gap-2">
+          <Timer className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="text-zinc-900 font-semibold tabular-nums">{formatDuration(elapsed)}</span>
+        </span>
+        <span className="text-zinc-400">{repere}</span>
+      </div>
+    );
+  }
+
+  if (lastDuration !== null) {
+    return (
+      <div className="flex items-center justify-between gap-2 text-xs font-mono text-zinc-500 bg-emerald-50/60 border border-emerald-100 px-3 py-2 rounded-sm">
+        <span className="flex items-center gap-2">
+          <Timer className="w-3.5 h-3.5 text-emerald-600" />
+          <span className="text-emerald-800 font-semibold tabular-nums">
+            terminé en {formatDuration(lastDuration)}
+          </span>
+        </span>
+        <span className="text-zinc-400">{repere}</span>
+      </div>
+    );
+  }
+
+  if (!stats || stats.runs === 0) return null;
+  return (
+    <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 px-3 py-2">
+      <Timer className="w-3.5 h-3.5" />
+      <span>
+        {repere}
+        {stats.average_seconds_per_document !== null &&
+          ` · ${formatDuration(stats.average_seconds_per_document)} par document`}
+      </span>
+    </div>
+  );
+}
+
 // Group fields by section number
 function groupBySection(fields: FormField[]): Record<string, FormField[]> {
   return fields.reduce((acc, f) => {
@@ -215,6 +294,11 @@ export default function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
+  /** Chronomètre : origine du traitement en cours, puis durée définitive. */
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState<number>(0);
+  const [lastDuration, setLastDuration] = useState<number | null>(null);
+  const [stats, setStats] = useState<PipelineStats | null>(null);
 
   // Chat state
   const [jobId, setJobId] = useState<string | null>(null);
@@ -481,6 +565,29 @@ export default function App() {
     }
   };
 
+  // Le chronomètre bat côté client : une seconde de dérive avec le serveur est
+  // sans conséquence, et ça évite un aller-retour par seconde.
+  useEffect(() => {
+    if (startedAt === null) return;
+    setElapsed(Math.floor((Date.now() - startedAt) / 1000));
+    const timer = window.setInterval(
+      () => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+    return () => window.clearInterval(timer);
+  }, [startedAt]);
+
+  const fetchStats = async () => {
+    try {
+      const res = await apiFetch(`${BASE_URL}/stats`);
+      if (res.ok) setStats((await res.json()).global);
+    } catch {
+      setStats(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
   const pollStatus = async (jid: string, token: string) => {
     try {
       const res = await apiFetch(`${BASE_URL}/status/${jid}`);
@@ -497,12 +604,17 @@ export default function App() {
         setIsRerunning(false);
         setStatusMessage("");
         setProgress(0);
+        setStartedAt(null);
+        // La durée fait foi côté serveur : c'est elle qui entre dans la moyenne.
+        setLastDuration(data.duration_s ?? Math.floor((Date.now() - (startedAt ?? Date.now())) / 1000));
+        fetchStats();
         // Charger champs + synthèse
         fetchFormFields(jid, token);
         fetchSynthesis(jid, token);
       } else if (data.status === "failed") {
         setError(data.message);
         setIsLoading(false);
+        setStartedAt(null);
       } else {
         setTimeout(() => pollStatus(jid, token), 2000);
       }
@@ -519,6 +631,8 @@ export default function App() {
     setPdfUrl(null);
     setProgress(0);
     setStatusMessage("Initialisation de la connexion...");
+    setStartedAt(Date.now());
+    setLastDuration(null);
     setChatMessages([]);
     setFormFields([]);
     setSynthesisText("");
@@ -767,6 +881,12 @@ export default function App() {
                       {statusMessage}
                     </div>
                   )}
+                  <DureeIndicateur
+                    running={isLoading}
+                    elapsed={elapsed}
+                    lastDuration={lastDuration}
+                    stats={stats}
+                  />
                 </div>
               </CardContent>
             </Card>

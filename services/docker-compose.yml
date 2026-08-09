@@ -109,6 +109,10 @@ services:
       - "8080:8080"
     env_file:
       - .env
+    volumes:
+      # Durées des pipelines abouties — la seule chose que DoctorFill conserve
+      # d'une exécution à l'autre. Aucun contenu de dossier n'y figure.
+      - doctorfill-stats:/data/stats
     depends_on:
       vllm:
         condition: service_healthy
@@ -123,3 +127,6 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+
+volumes:
+  doctorfill-stats:
