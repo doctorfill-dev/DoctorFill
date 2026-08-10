@@ -57,25 +57,28 @@
       "acroform_name": "mutter_dok[0].Seite1[0].treatmentS1Struct[0].input[0]"
     },
     {
-      "id": "8.2",
+      "comments": "Section 11 — Seite1"
+    },
+    {
+      "id": "11.1",
       "name": "recipientBlockAddressRight",
       "label": "recipientBlockAddressRight",
-      "question": "Quelle est l'adresse complète du service ou de la personne destinataire du rapport, si elle diffère de l'office AI (nom, rue, NPA et localité) ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/recipientBlockAddressRight",
-      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressRight[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressRight[0]",
+      "computed": ""
     },
     {
-      "id": "8.3",
+      "id": "11.2",
       "name": "recipientBlockAddressLeft",
       "label": "recipientBlockAddressLeft",
-      "question": "Quelle est l'adresse complète de l'office AI destinataire du rapport (nom, rue, NPA et localité) ? Elle correspond au canton de traitement du patient.",
       "required": false,
       "xml_path": "mutter_dok/Seite1/recipientBlockAddressLeft",
-      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressLeft[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressLeft[0]",
+      "computed": "IV-Stelle Kanton Bern\nPostfach\nScheibenstrasse 70\n3014 Bern"
     },
     {
-      "id": "8.4",
+      "id": "8.2",
       "name": "companyName",
       "label": "companyName",
       "question": "Quel est le nom de l'entreprise ou de l'institution de l'assureur ?",
@@ -85,7 +88,7 @@
       "preset": "IV-Stelle Kanton Bern"
     },
     {
-      "id": "8.5",
+      "id": "8.3",
       "name": "departmentName",
       "label": "departmentName",
       "question": "Quel est le nom du service ou du département de l'assureur ?",
@@ -95,7 +98,7 @@
       "preset": "Postfach"
     },
     {
-      "id": "8.6",
+      "id": "8.4",
       "name": "street",
       "label": "street",
       "question": "Quelle est la rue et le numéro de l'adresse de l'assureur ?",
@@ -105,7 +108,7 @@
       "preset": "Scheibenstrasse 70"
     },
     {
-      "id": "8.7",
+      "id": "8.5",
       "name": "zip",
       "label": "zip",
       "question": "Quel est le code postal (NPA) de l'adresse de l'assureur ?",
@@ -115,7 +118,7 @@
       "preset": "3014"
     },
     {
-      "id": "8.8",
+      "id": "8.6",
       "name": "city",
       "label": "city",
       "question": "Quelle est la localité de l'adresse de l'assureur ?",
@@ -125,7 +128,7 @@
       "preset": "Bern"
     },
     {
-      "id": "8.9",
+      "id": "8.7",
       "name": "ean",
       "label": "ean",
       "question": "Quel est le numéro GLN (anciennement EAN) de l'assureur ?",
@@ -135,7 +138,7 @@
       "preset": "7601003002485"
     },
     {
-      "id": "8.10",
+      "id": "8.8",
       "name": "input",
       "label": "input",
       "question": "Y a-t-il une remarque ou une précision à ajouter concernant les coordonnées de l'assureur ?",

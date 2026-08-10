@@ -101,7 +101,11 @@ def main() -> int:
             failures += 1
             continue
 
-        fields = [e for e in template["fields"] if "id" in e]
+        # Un champ `computed` (bloc adresse destinataire) n'a pas de question à
+        # écrire : sa valeur se déduit du formulaire. Le compter comme « à
+        # rédiger » faisait basculer trois formulaires en non relu, donc hors
+        # catalogue.
+        fields = [e for e in template["fields"] if "id" in e and "computed" not in e]
         auto = sum(1 for e in fields if e.get("question"))
         total_fields += len(fields)
         total_auto += auto

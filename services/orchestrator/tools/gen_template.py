@@ -688,6 +688,45 @@ def _path_key(xml_path: str | None) -> str | None:
     return "/".join(segments[-2:]) if segments else None
 
 
+# Bloc adresse du destinataire : sa version visible sur le formulaire.
+# Les champs structurés qui l'alimentent vivent dans un sous-formulaire
+# `insuranceS1Address` (ou `consumerS1Address`) déjà rempli par l'éditeur, mais
+# déclaré `presence="invisible"` — d'où un bloc qui paraît vide alors que le
+# destinataire est parfaitement connu. Le demander au modèle produisait des
+# adresses inventées ; on le compose à partir des champs structurés.
+_RECIPIENT_BLOCK = "recipientBlockAddress"
+_RECIPIENT_SOURCES = ("insuranceS1Address", "consumerS1Address", "recipientS1Address")
+_ADDRESS_ORDER = ("companyName", "departmentName", "street")
+
+
+def _derive_recipient_block(entries: list[dict[str, Any]]) -> None:
+    """Compose le bloc adresse destinataire depuis les champs structurés."""
+    sources = [e for e in entries
+               if e.get("preset")
+               and any(b in (e.get("xml_path") or "") for b in _RECIPIENT_SOURCES)]
+    if not sources:
+        return
+    par_nom = {e["name"]: e["preset"].strip() for e in sources if e.get("name")}
+
+    lignes = [par_nom[n] for n in _ADDRESS_ORDER if par_nom.get(n)]
+    localite = " ".join(v for v in (par_nom.get("zip"), par_nom.get("city")) if v)
+    if localite:
+        lignes.append(localite)
+    if len(lignes) < 2:
+        return  # trop lacunaire pour valoir mieux que rien
+
+    # Le formulaire n'affiche qu'un des deux blocs, selon le placement de la
+    # fenêtre d'enveloppe ; son script retient celui qui porte une valeur. On
+    # renseigne donc le gauche et on retire les deux de l'extraction.
+    for entry in entries:
+        if not (entry.get("name") or "").startswith(_RECIPIENT_BLOCK):
+            continue
+        entry.pop("question", None)
+        # Le droit reste vide : `computed` vide le marque comme « ni demandé au
+        # modèle, ni écrit », sans le compter parmi les questions à rédiger.
+        entry["computed"] = "\n".join(lignes) if entry["name"].endswith("Left") else ""
+
+
 def build_template(pdf_path: Path, keep_technical: bool = False,
                    existing: Path | None = None) -> dict[str, Any]:
     """
@@ -810,6 +849,8 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
         if preset and not _PLACEHOLDER.fullmatch(preset):
             entry["preset"] = preset
         entries.append(entry)
+
+    _derive_recipient_block(entries)
 
     orphans = {q for q in (f.get("question") for f in prior.values()) if q} - reused_keys
     for q in sorted(orphans):

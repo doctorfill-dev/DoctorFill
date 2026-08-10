@@ -407,7 +407,20 @@ def _extractable_fields(template: Dict) -> List[Dict]:
     budget LLM de 112 questions sur l'ensemble du catalogue.
     """
     return [f for f in template["fields"]
-            if f.get("question", "").strip() and not f.get("preset")]
+            if f.get("question", "").strip()
+            and not f.get("preset") and not f.get("computed")]
+
+
+def _computed_values(template: Dict) -> List[tuple[Dict, str]]:
+    """
+    Champs dont la valeur se déduit du formulaire lui-même.
+
+    Le bloc adresse du destinataire en est le seul cas aujourd'hui : il est la
+    version visible de champs structurés déjà renseignés par l'éditeur, mais
+    masqués dans la mise en page. Le demander au modèle produisait des adresses
+    inventées — un numéro de rue emprunté au patient, un code postal fabriqué.
+    """
+    return [(f, f["computed"]) for f in template["fields"] if f.get("computed")]
 
 
 def _synthesis_as_source(synthesis: Dict | None) -> List[Dict]:
@@ -818,6 +831,12 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                 if f_def.get("xml_path"):
                     xfa_values[f_def["xml_path"]] = value
                 # AcroForm name (champ optionnel dans le template JSON)
+                if f_def.get("acroform_name"):
+                    acro_values[f_def["acroform_name"]] = value
+
+            for f_def, value in _computed_values(template):
+                if f_def.get("xml_path"):
+                    xfa_values[f_def["xml_path"]] = value
                 if f_def.get("acroform_name"):
                     acro_values[f_def["acroform_name"]] = value
 

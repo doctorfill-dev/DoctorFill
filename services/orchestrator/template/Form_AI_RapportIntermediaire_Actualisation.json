@@ -61,25 +61,25 @@
       "acroform_name": "mutter_dok[0].Seite1[0].treatmentS1Struct[0].input[0]"
     },
     {
-      "comments": "Section 7 — Seite1"
+      "comments": "Section 9 — Seite1"
     },
     {
-      "id": "7.1",
+      "id": "9.1",
       "name": "recipientBlockAddressRight",
       "label": "recipientBlockAddressRight",
-      "question": "Quelle est l'adresse complète du service ou de la personne destinataire du rapport, si elle diffère de l'organisme principal (nom, rue, NPA et localité) ?",
       "required": false,
       "xml_path": "mutter_dok/Seite1/recipientBlockAddressRight",
-      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressRight[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressRight[0]",
+      "computed": ""
     },
     {
-      "id": "7.2",
+      "id": "9.2",
       "name": "recipientBlockAddressLeft",
       "label": "recipientBlockAddressLeft",
-      "question": "Quelle est l'adresse complète de l'organisme destinataire du rapport (nom, rue, NPA et localité) ? Elle correspond au canton de traitement du patient.",
       "required": false,
       "xml_path": "mutter_dok/Seite1/recipientBlockAddressLeft",
-      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressLeft[0]"
+      "acroform_name": "mutter_dok[0].Seite1[0].recipientBlockAddressLeft[0]",
+      "computed": "IV-Stelle Kanton Bern\nPostfach\nScheibenstrasse 70\n3014 Bern"
     },
     {
       "id": "1.2",
