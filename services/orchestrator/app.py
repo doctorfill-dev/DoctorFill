@@ -168,6 +168,24 @@ MAX_LLM_RETRIES = 3
 # excédentaires attendent simplement dans sa file.
 LLM_CONCURRENCY = int(os.getenv("LLM_CONCURRENCY", "24"))
 RERANK_CONCURRENCY = int(os.getenv("RERANK_CONCURRENCY", "5"))
+OCR_CONCURRENCY = int(os.getenv("OCR_CONCURRENCY", "3"))
+
+# Exécutions de pipeline menées de front. Mesuré sur le GB10 : une seule
+# exécution occupe déjà 17 des 24 emplacements de vLLM, et la puce est limitée
+# par sa bande passante mémoire. Au-delà de deux, chaque traitement ralentit
+# proportionnellement sans que le débit total progresse — autant faire attendre
+# le troisième, avec un temps annoncé, que dégrader tout le monde.
+MAX_PARALLEL_JOBS = int(os.getenv("MAX_PARALLEL_JOBS", "2"))
+
+# Ces sémaphores sont *globaux*, pas par job. Créés dans le pipeline, deux jobs
+# concurrents ouvraient 2 × LLM_CONCURRENCY requêtes vers un vLLM qui en sert 24,
+# et 2 × 3 OCR sur le GPU : chacun croyait respecter une limite que l'autre
+# ignorait. asyncio.Semaphore ne se lie plus à une boucle depuis Python 3.10,
+# leur création au chargement du module est donc sûre.
+_LLM_SEM = asyncio.Semaphore(LLM_CONCURRENCY)
+_RERANK_SEM = asyncio.Semaphore(RERANK_CONCURRENCY)
+_OCR_SEM = asyncio.Semaphore(OCR_CONCURRENCY)
+_PIPELINE_SEM = asyncio.Semaphore(MAX_PARALLEL_JOBS)
 
 # Embeddings des questions d'un template : identiques d'un job à l'autre et d'un
 # re-run à l'autre, alors qu'ils étaient recalculés à chaque fois.
@@ -567,6 +585,29 @@ async def extract_fields_batch_vllm(
 
 async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
     """
+    Portier d'exécution : attend un créneau, puis lance le pipeline.
+
+    Au-delà de MAX_PARALLEL_JOBS, on fait patienter plutôt que de ralentir les
+    exécutions en cours. Le GB10 est saturé par une seule d'entre elles : lancer
+    tout le monde de front ne fait qu'allonger l'attente de chacun, sans rien
+    produire de plus vite. Le chronomètre court pendant l'attente — c'est bien le
+    temps que l'utilisateur subit.
+    """
+    if _PIPELINE_SEM.locked():
+        attente = stats.summary().get("recent_average_seconds")
+        repere = f" — environ {attente / 60:.0f} min" if attente else ""
+        logger.info(f"[{job_id[:8]}] En file d'attente ({MAX_PARALLEL_JOBS} exécutions en cours)")
+        JOBS[job_id].update({
+            "status": "processing",
+            "message": f"⏳ En file d'attente{repere}…",
+            "progress": 2,
+        })
+    async with _PIPELINE_SEM:
+        await _run_pipeline(job_id, form_id, tmp_dir, report_paths)
+
+
+async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
+    """
     Pipeline avec streaming OCR→embed, synthèse médicale globale et semaphores rerank/LLM.
     - STEP 1 : OCR et embedding en parallèle via asyncio.Queue
     - STEP 2 : Synthèse médicale globale (LLM lit tous les documents, produit un JSON structuré)
@@ -597,7 +638,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
 
             t_ocr_start = time.perf_counter()
             ocr_done = 0
-            ocr_sem = asyncio.Semaphore(3)
+            ocr_sem = _OCR_SEM
             MAX_OCR_RETRIES = 5
             col = chroma_client.get_or_create_collection(name=collection_name)
             chunk_index = 0
@@ -745,8 +786,7 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
             all_q_embs = await fetch_question_embeddings(
                 client, form_id, [f["question"] for f in fields_with_q])
 
-            rerank_sem = asyncio.Semaphore(RERANK_CONCURRENCY)
-            llm_sem = asyncio.Semaphore(LLM_CONCURRENCY)
+            rerank_sem, llm_sem = _RERANK_SEM, _LLM_SEM
 
             # --- Phase A : retrieval + rerank par champ (top-12 chunks) ---
             async def _retrieve_for_field(field: Dict, q_emb) -> tuple[List[str], float]:
@@ -1374,8 +1414,7 @@ async def rerun_pipeline_task(job_id: str):
             all_q_embs = await fetch_question_embeddings(
                 client, form_id, [f["question"] for f in fields_with_q])
 
-            rerank_sem = asyncio.Semaphore(RERANK_CONCURRENCY)
-            llm_sem = asyncio.Semaphore(LLM_CONCURRENCY)
+            rerank_sem, llm_sem = _RERANK_SEM, _LLM_SEM
 
             async def _retrieve_field(field: Dict, q_emb) -> tuple[List[str], float]:
                 hits = col.query(query_embeddings=[q_emb], n_results=min(30, col_count))["documents"][0]
