@@ -423,6 +423,38 @@ def _computed_values(template: Dict) -> List[tuple[Dict, str]]:
     return [(f, f["computed"]) for f in template["fields"] if f.get("computed")]
 
 
+def _canton_recipient(template: Dict, results: List[Dict]) -> Dict[str, str]:
+    """
+    Destinataire correspondant au canton de traitement extrait.
+
+    Un formulaire AI s'adresse à l'office AI *du canton du patient*. Le gabarit
+    porte cette table et la applique par script — mais le script ne s'exécute
+    que dans un lecteur XFA, jamais dans le PDF qu'on livre. Sans ça, un dossier
+    neuchâtelois partait à l'office de Berne, l'adresse par défaut du vierge.
+
+    Canton absent ou inconnu : on ne renvoie rien et le formulaire garde ses
+    valeurs d'origine — mieux vaut le défaut du gabarit qu'un office arbitraire.
+
+    Returns:
+        nom de champ → valeur, à écrire tel quel.
+    """
+    table = template.get("_recipient_by_canton")
+    if not table:
+        return {}
+    canton_ids = {str(f["id"]) for f in template["fields"]
+                  if f.get("name") == "treatmentCanton"}
+    for res in results:
+        if str(res.get("id")) not in canton_ids:
+            continue
+        valeur = str((res.get("result") or {}).get("value") or "").strip().upper()
+        if valeur in table:
+            logger.info("Destinataire dérivé du canton %s", valeur)
+            return table[valeur]
+        if valeur:
+            logger.warning("Canton %r hors de la table du formulaire", valeur)
+    return {}
+
+
 def _synthesis_as_source(synthesis: Dict | None) -> List[Dict]:
     """
     Expose la synthèse médicale comme source indexable, marquée comme dérivée.
@@ -839,6 +871,17 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
                     xfa_values[f_def["xml_path"]] = value
                 if f_def.get("acroform_name"):
                     acro_values[f_def["acroform_name"]] = value
+
+            # Le destinataire dépend du canton : il écrase aussi bien les valeurs
+            # par défaut du gabarit que ce que le modèle aurait pu produire.
+            for nom, value in _canton_recipient(template, results).items():
+                for f_def in template["fields"]:
+                    if f_def.get("name") != nom:
+                        continue
+                    if f_def.get("xml_path"):
+                        xfa_values[f_def["xml_path"]] = value
+                    if f_def.get("acroform_name"):
+                        acro_values[f_def["acroform_name"]] = value
 
             output_pdf = tmp_dir / "output.pdf"
 

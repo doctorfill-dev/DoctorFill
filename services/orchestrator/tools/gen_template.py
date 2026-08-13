@@ -18,6 +18,7 @@ Usage :
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import logging
 import re
@@ -699,8 +700,51 @@ _RECIPIENT_SOURCES = ("insuranceS1Address", "consumerS1Address", "recipientS1Add
 _ADDRESS_ORDER = ("companyName", "departmentName", "street")
 
 
-def _derive_recipient_block(entries: list[dict[str, Any]]) -> None:
-    """Compose le bloc adresse destinataire depuis les champs structurés."""
+# Table des destinataires par canton, embarquée dans le formulaire.
+#
+# Les formulaires AI adressent le rapport à l'office AI *du canton de
+# traitement* : le gabarit porte un `switch` sur le canton qui réécrit tout le
+# bloc destinataire. Sans lui, un dossier neuchâtelois partait à l'office de
+# Berne — l'adresse par défaut du PDF vierge. On lit la table à la génération
+# plutôt que de la recopier à la main : elle vient du formulaire, elle suit ses
+# mises à jour.
+_CANTON_CASE = re.compile(r"case\s*'([A-Z]{2})'\s*:\s*\{(.*?)\}\s*break", re.S)
+_CANTON_ASSIGN = re.compile(r"\.(\w+)\.rawValue\s*=\s*(\"((?:[^\"\\]|\\.)*)\"|blockAddress)")
+_CANTON_BLOCKVAR = re.compile(r"var\s+blockAddress\s*=\s*\"((?:[^\"\\]|\\.)*)\"")
+
+
+def _canton_recipients(template_xml: str) -> dict[str, dict[str, str]]:
+    """
+    Destinataire complet par canton, tel que le formulaire le définit.
+
+    Returns:
+        {code canton: {nom de champ: valeur}}. Les `\\r` du script deviennent des
+        sauts de ligne ; un champ mis à la chaîne vide est conservé tel quel,
+        c'est ainsi que le gabarit choisit le bloc gauche ou droit.
+    """
+    script = html.unescape(re.sub(r"<[^>]+>", " ", template_xml))
+    table: dict[str, dict[str, str]] = {}
+    for canton, corps in _CANTON_CASE.findall(script):
+        bloc = _CANTON_BLOCKVAR.search(corps)
+        bloc_value = bloc.group(1) if bloc else ""
+        champs: dict[str, str] = {}
+        for nom, brut, litteral in _CANTON_ASSIGN.findall(corps):
+            valeur = bloc_value if brut == "blockAddress" else litteral
+            champs[nom] = valeur.replace("\\r", "\n").replace("\\n", "\n").strip()
+        if champs:
+            table[canton] = champs
+    return table
+
+
+def _derive_recipient_block(entries: list[dict[str, Any]], par_canton: bool = False) -> None:
+    """
+    Compose le bloc adresse destinataire depuis les champs structurés.
+
+    `par_canton` : le formulaire porte sa propre table par canton, qui fait
+    autorité et sera appliquée au remplissage. On se contente alors de retirer
+    ces champs de l'extraction — composer une valeur figée reviendrait à graver
+    l'office de Berne sur un dossier neuchâtelois.
+    """
     sources = [e for e in entries
                if e.get("preset")
                and any(b in (e.get("xml_path") or "") for b in _RECIPIENT_SOURCES)]
@@ -722,9 +766,10 @@ def _derive_recipient_block(entries: list[dict[str, Any]]) -> None:
         if not (entry.get("name") or "").startswith(_RECIPIENT_BLOCK):
             continue
         entry.pop("question", None)
-        # Le droit reste vide : `computed` vide le marque comme « ni demandé au
-        # modèle, ni écrit », sans le compter parmi les questions à rédiger.
-        entry["computed"] = "\n".join(lignes) if entry["name"].endswith("Left") else ""
+        # `computed` vide = « ni demandé au modèle, ni écrit », sans compter
+        # parmi les questions à rédiger.
+        entry["computed"] = ("" if par_canton
+                             else "\n".join(lignes) if entry["name"].endswith("Left") else "")
 
 
 def build_template(pdf_path: Path, keep_technical: bool = False,
@@ -850,7 +895,8 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
             entry["preset"] = preset
         entries.append(entry)
 
-    _derive_recipient_block(entries)
+    recipients = _canton_recipients(packets["template"])
+    _derive_recipient_block(entries, par_canton=bool(recipients))
 
     orphans = {q for q in (f.get("question") for f in prior.values()) if q} - reused_keys
     for q in sorted(orphans):
@@ -863,11 +909,16 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
         pdf_path.name, len(fillable), len(skipped), len(unmatched),
         reused, len(fillable) - reused,
     )
-    return {
+    template: dict[str, Any] = {
         "_generated_from": pdf_path.name,
         "_reviewed": False,
         "fields": entries,
     }
+    if recipients:
+        template["_recipient_by_canton"] = recipients
+        logger.info("%s : destinataire dérivé du canton (%d cantons)",
+                    pdf_path.name, len(recipients))
+    return template
 
 
 # ---------------------------------------------------------------------------

@@ -899,5 +899,142 @@
       "xml_path": "topmostSubform/page1/unemployabilityS1Struct[3]/input",
       "acroform_name": "topmostSubform[0].page1[0].unemployabilityS1Struct[3].input[0]"
     }
-  ]
+  ],
+  "_recipient_by_canton": {
+    "AG": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 4 (AG,BL,BS,LU,SO)\nPostfach 8715\n3001 Bern",
+      "input": "exaddress#@#7601003005042#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 4 (AG,BL,BS,LU,SO)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005042"
+    },
+    "AI": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "AR": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "BL": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 4 (AG,BL,BS,LU,SO)\nPostfach 8715\n3001 Bern",
+      "input": "exaddress#@#7601003005042#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 4 (AG,BL,BS,LU,SO)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005042"
+    },
+    "BS": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 4 (AG,BL,BS,LU,SO)\nPostfach 8715\n3001 Bern",
+      "input": "exaddress#@#7601003005042#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 4 (AG,BL,BS,LU,SO)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005042"
+    },
+    "BE": {
+      "blockAddress": "Suva Genève Assurance Militaire\nSect. 2 (BE,JU,NE,VD)\nCase postale 3949\n1211 Genève",
+      "input": "exaddress#@#7601003005035#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 3 (BE,FR,VS)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005035"
+    },
+    "FR": {
+      "blockAddress": "Suva Genève Assurance Militaire\nSect. 1 (FR,GE,VS)\nCase postale 3949\n1211 Genève",
+      "input": "exaddress#@#7601003005035#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 3 (BE,FR,VS)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005035"
+    },
+    "GE": {
+      "blockAddress": "Suva Genève Assurance Militaire\nSect. 1 (FR,GE,VS)\nCase postale 3949\n1211 Genève",
+      "input": "exaddress#@#7601003005004#@##@##@##@##@#company#@#Suva Genève Assurance Militaire#@#Sect. 1 (FR,GE,VS)#@##@#Case postale 3949#@##@#1211#@#Genève#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005004"
+    },
+    "GL": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "GR": {
+      "blockAddress": "Suva Assicurazione Militare\nSeczione 7 (GR,TI)\nCase postale 1069\n6500 Bellinzona",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "JU": {
+      "blockAddress": "Suva Genève Assurance Militaire\nSect. 2 (BE,JU,NE,VD)\nCase postale 3949\n1211 Genève",
+      "input": "exaddress#@#7601003005059#@##@##@##@##@#company#@#Suva Genève Assurance Militaire#@#Sect. 2 (BE,JU,NE,VD)#@##@#Case postale 3949#@##@#1211#@#Genève#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005059"
+    },
+    "LU": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 4 (AG,BL,BS,LU,SO)\nPostfach 8715\n3001 Bern",
+      "input": "exaddress#@#7601003005042#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 4 (AG,BL,BS,LU,SO)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005042"
+    },
+    "NE": {
+      "blockAddress": "Suva Genève Assurance Militaire\nSect. 2 (BE,JU,NE,VD)\nCase postale 3949\n1211 Genève",
+      "input": "exaddress#@#7601003005059#@##@##@##@##@#company#@#Suva Genève Assurance Militaire#@#Sect. 2 (BE,JU,NE,VD)#@##@#Case postale 3949#@##@#1211#@#Genève#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005059"
+    },
+    "NW": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "OW": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "SG": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "SH": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 5 (SH,TG,ZH)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005066#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 5 (SH,TG,ZH)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005066"
+    },
+    "SO": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 4 (AG,BL,BS,LU,SO)\nPostfach 8715\n3001 Bern",
+      "input": "exaddress#@#7601003005042#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 4 (AG,BL,BS,LU,SO)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005042"
+    },
+    "SZ": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "TG": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 5 (SH,TG,ZH)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005066#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 5 (SH,TG,ZH)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005066"
+    },
+    "TI": {
+      "blockAddress": "Suva Assicurazione Militare\nSeczione 7 (GR,TI)\nCase postale 1069\n6500 Bellinzona",
+      "input": "exaddress#@#7601003005080#@##@##@##@##@#company#@#Suva Assicurazione Militare#@#Seczione 7 (GR,TI)#@##@#Case postale 1069#@##@#6500#@#Bellinzona#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005080"
+    },
+    "UR": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "VD": {
+      "blockAddress": "Suva Genève Assurance Militaire\nSect. 2 (BE,JU,NE,VD)\nCase postale 3949\n1211 Genève",
+      "input": "exaddress#@#7601003005059#@##@##@##@##@#company#@#Suva Genève Assurance Militaire#@#Sect. 2 (BE,JU,NE,VD)#@##@#Case postale 3949#@##@#1211#@#Genève#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005059"
+    },
+    "VS": {
+      "blockAddress": "Suva Genève Assurance Militaire\nSect. 1 (FR,GE,VS)\nCase postale 3949\n1211 Genève",
+      "input": "exaddress#@#7601003005035#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 3 (BE,FR,VS)#@##@#Postfach 8715#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005035"
+    },
+    "ZG": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005073#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 6 (AI,AR,GL,GR,NW,OW,SG,SZ,UR,ZG)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005073"
+    },
+    "ZH": {
+      "blockAddress": "Suva Militärversicherung\nSekt. 5 (SH,TG,ZH)\nPostfach 1461\n9001 St. Gallen",
+      "input": "exaddress#@#7601003005066#@##@##@##@##@#company#@#Suva Militärversicherung#@#Sekt. 5 (SH,TG,ZH)#@##@#Postfach 1461#@##@#9001#@#St. Gallen#@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003005066"
+    },
+    "LI": {
+      "blockAddress": "",
+      "input": "",
+      "ean": ""
+    }
+  }
 }

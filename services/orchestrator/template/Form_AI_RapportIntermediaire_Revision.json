@@ -550,5 +550,223 @@
       "xml_path": "mutter_dok/Seite3/formRemark",
       "acroform_name": "mutter_dok[0].Seite3[0].formRemark[0]"
     }
-  ]
+  ],
+  "_recipient_by_canton": {
+    "AG": {
+      "recipientBlockAddressRight": "SVA Aargau\nIV-Stelle\nKyburgerstrasse 15\n5001 Aarau",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "SVA Aargau, IV-Stelle, Kyburgerstrasse 15, 5001 Aarau, Telefon  062 836 81 81, Telefax  062 836 81 99\nÖffnungszeiten: Montag-Freitag 08:00 - 12:00 Uhr & 13:00 - 16:30 Uhr, Donnerstag 08:00 - 12:00 Uhr & 13:00 - 17:30 Uhr",
+      "blockAddress": "SVA Aargau\nIV-Stelle\nKyburgerstrasse 15\n5001 Aarau",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#SVA Aargau#@#IV-Stelle#@##@##@#Kyburgerstrasse 15#@#5001#@#Aarau#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "AI": {
+      "recipientBlockAddressRight": "IV-Stelle Appenzell I.Rh.\nPoststrasse 9\nPostfach 62\n9050 Appenzell",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Appenzell I.Rh., Poststrasse 9, Postfach 62, 9050 Appenzell, Telefon 071 788 18 30, Telefax 071 788 18 40\nÖffnungszeiten: Montag-Freitag (oder nach tel. Vereinbarung), 08.00 h - 11.45 h & 14.00 h - 17.00 h",
+      "blockAddress": "IV-Stelle Appenzell I.Rh.\nPoststrasse 9\nPostfach 62\n9050 Appenzell",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Appenzell I.Rh.#@##@##@#Postfach 62#@#Poststrasse 9#@#9050#@#Appenzell#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "AR": {
+      "recipientBlockAddressRight": "Ausgleichskasse und IV-Stelle\nAppenzell Ausserrhoden\nKasernenstrasse 4\nPostfach 1254\n9102 Herisau 2",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Ausgleichskasse und IV-Stelle, Appenzell Ausserrhoden, Kasernenstrasse 4, Postfach 1254, 9102 Herisau 2\nTelefon  071 354 51 51, Telefax  071 354 51 52, info@ahv-iv-ar.ch",
+      "blockAddress": "Ausgleichskasse und IV-Stelle\nAppenzell Ausserrhoden\nKasernenstrasse 4\nPostfach 1254\n9102 Herisau 2",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Ausgleichskasse und IV-Stelle#@#Appenzell Ausserrhoden#@##@#Postfach 1254#@#Kasernenstrasse 4#@#9102#@#Herisau#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "BL": {
+      "recipientBlockAddressRight": "Sozialversicherungsanstalt\nBasel-Landschaft\nHauptstrasse 109\n4102 Binningen",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Sozialversicherungsanstalt Basel-Landschaft, Hauptstrasse 109, 4102 Binningen\nTelefon 061 425 25 25, Telefax 061 425 25 00, www.sva-bl.ch, info@sva-bl.ch",
+      "blockAddress": "Sozialversicherungsanstalt\nBasel-Landschaft\nHauptstrasse 109\n4102 Binningen",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Sozialversicherungsanstalt#@#Basel-Landschaft#@##@##@#Hauptstrasse 109#@#4102#@#Binningen#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "BS": {
+      "recipientBlockAddressRight": "",
+      "recipientBlockAddressLeft": "IV-Stelle Basel-Stadt\nLange Gasse 7\nPostfach\n4052 Basel",
+      "recipientBlockAddressFooter": "IV-Stelle Basel-Stadt, Lange Gasse 7, Postfach, 4052 Basel, Telefon 061 225 25 25, Telefax 061 225 25 00\nE-Mail: ivbasel@ivbs.ch, www.iv-stelle.ch/bs, Öffnungszeiten Montag-Freitag: 8.30 - 11.00 Uhr / 14.00 - 16.30 Uhr",
+      "blockAddress": "IV-Stelle Basel-Stadt\nLange Gasse 7\nPostfach\n4052 Basel",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Basel-Stadt#@##@##@##@#Lange Gasse 7#@#4052#@#Basel#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "BE": {
+      "recipientBlockAddressRight": "",
+      "recipientBlockAddressLeft": "IV-Stelle Kanton Bern\nOffice AI Canton de Berne\nPostfach / case postale\n3001 Bern",
+      "recipientBlockAddressFooter": "IV-Stelle Kanton Bern - Office AI Canton de Berne, Chutzenstrasse 10, Postfach/case postale, 3001 Bern\nT 031 379 71 11, F 031 379 72 72, info@ivbe.ch/info@aibe.ch, www.ivbe.ch/www.aibe.ch",
+      "blockAddress": "IV-Stelle Kanton Bern\nOffice AI Canton de Berne\nPostfach / case postale\n3001 Bern",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Kanton Bern#@##@##@#rPostfach#@##@#3001#@#Bern#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "FR": {
+      "recipientBlockAddressRight": "Office de l’assurance-invalidité\nCANTON DE FRIBOURG\nInvalidenversicherungs-Stelle\nKANTON FREIBURG\n\nCase postale / Postfach\n1762 Givisiez",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Office de l’assurance-invalidité, Rte du Mont Carmel 5, 1762 Givisiez\nTel: 026 305 52 37, Fax: 026 305 52 01, Internet: www.aifr.ch, Mail: info@aifr.ch",
+      "blockAddress": "Office de l’assurance-invalidité\nCANTON DE FRIBOURG\nInvalidenversicherungs-Stelle\nKANTON FREIBURG\n\nCase postale / Postfach\n1762 Givisiez",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Office de l’assurance-invalidité#@#CANTON DE FRIBOURG#@##@#Case postale#@##@#1762#@#Givisiez#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "GE": {
+      "recipientBlockAddressRight": "Office cantonal des assurances sociales\nAssurance-invalidité\nCase postale 425\n1211 Genève 13",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Office cantonal des assurances sociales, Rue de Lyon 97, Case postale 425, 1211 Genève 13\nTél. 022 809 53 11, Fax 022 809 53 22, rwww.ai-ge.ch",
+      "blockAddress": "Office cantonal des assurances sociales\nAssurance-invalidité\nCase postale 425\n1211 Genève 13",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Office cantonal des assurances sociales#@#Assurance-invalidité#@##@#Case postale 425#@##@#1211#@#Genève 13#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "GL": {
+      "recipientBlockAddressRight": "Sozialversicherungen Glarus\nIV-Stelle\nBurgstrasse 6\nPostfach\n8750 Glarus",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Sozialversicherungen Glarus, IV-Stelle. Burgstrasse 6, Postfach, 8750 Glarus\nTelefon 055 648 11 11, Telefax  055 648 11 99, info@svgl.ch, www.svgl.ch",
+      "blockAddress": "Sozialversicherungen Glarus\nIV-Stelle\nBurgstrasse 6\nPostfach\n8750 Glarus",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Sozialversicherungen Glarus#@#IV-Stelle#@##@#Postfach#@#Burgstrasse 6#@#8750#@#Glarus#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "GR": {
+      "recipientBlockAddressRight": "Sozialversicherungsanstalt\ndes Kantons Graubünden\nIV-Stelle\nPostfach\n7001 Chur",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Sozialversicherungsanstalt GR, Ottostrasse 24, 7001 Chur\nTelefon 081 257 41 11, Fax 081 257 43 16, iv@sva.gr.ch, www.sva.gr.ch",
+      "blockAddress": "Sozialversicherungsanstalt\ndes Kantons Graubünden\nIV-Stelle\nPostfach\n7001 Chur",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Sozialversicherungsanstalt des Kantons Graubünden#@#IV-Stelle#@##@#rPostfach#@##@#7001#@#Chur#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "JU": {
+      "recipientBlockAddressRight": "Office de l'assurance invalidité du Jura\nRue Bel-Air 3\nCH-2350 Saignelégier",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Office de l'assurance invalidité du Jura, Rue Bel-Air 3, CH-2350 Saignelégier\nTél. 032 952 11 11, Fax 032 952 11 01, ai@ccju.ch\nHeures d'ouverture: Lundi au jeudi de 8:15 à 11:45 et de 13:30 à 17:00, Vendredi de 8:15 à 11:45 et de 13:30 à 16:30",
+      "blockAddress": "Office de l'assurance invalidité du Jura\nRue Bel-Air 3\nCH-2350 Saignelégier",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Office de l'assurance invalidité du Jura#@##@##@##@#Rue Bel-Air 3#@#2350#@#Saignelégier#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "LU": {
+      "recipientBlockAddressRight": "IV-Stelle Luzern\nLandenbergstrasse 35\nPostfach\n6002 Luzern",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Luzern, Landenbergstrasse 35, Postfach, 6002 Luzern, Telefon  041 369 05 00, Telefax  041 369 07 77\nÖffnungszeiten: Montag-Freitag 08.00 h - 12.00 h / 13.30 h - 17.00 h",
+      "blockAddress": "IV-Stelle Luzern\nLandenbergstrasse 35\nPostfach\n6002 Luzern",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Luzern#@##@##@#Postfach#@#Landenbergstrasse 35#@#6002#@#Luzern#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "NE": {
+      "recipientBlockAddressRight": "OFFICE DE L’ASSURANCE-INVALIDITE\nDU CANTON DE NEUCHATEL\nEspacité 4\nCase postale 2183\n2302 La Chaux-de-Fonds",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "OFFICE DE L’ASSURANCE-INVALIDITE NE, Espacité 4, Case postale 2183, 2302 La Chaux-de-Fonds\nTél. 032 910 71 00, Fax 032 910 71 99, office.ai@ne.oai.ch",
+      "blockAddress": "OFFICE DE L’ASSURANCE-INVALIDITE\nDU CANTON DE NEUCHATEL\nEspacité 4\nCase postale 2183\n2302 La Chaux-de-Fonds",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#OFFICE DE L’ASSURANCE-INVALIDITE#@#DU CANTON DE NEUCHATEL#@##@#Case postale 2183#@#Espacité 4#@#2302#@#La Chaux-de-Fonds#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "NW": {
+      "recipientBlockAddressRight": "IV-Stelle Nidwalden\nStansstaderstrasse 88\n6371 Stans",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Nidwalden, Stansstaderstr. 88, 6371 Stans\nTelefon 041-618 51 00, Fax 041-618 51 01, info@aknw.ch, www.ausgleichskasse.ch",
+      "blockAddress": "IV-Stelle Nidwalden\nStansstaderstrasse 88\n6371 Stans",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Nidwalden#@##@##@##@#Stansstaderstrasse 88#@#6371#@#Stans#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "OW": {
+      "recipientBlockAddressRight": "IV-Stelle Obwalden\nBrünigstrasse 144\nPostfach 1161\n6061 Sarnen",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Obwalden, Brünigstrasse 144, Postfach 1161, 6061 Sarnen\nTelefon 041 666 27 40, Telefax 041 666 27 51, info@akow.ch, www.akow.ch",
+      "blockAddress": "IV-Stelle Obwalden\nBrünigstrasse 144\nPostfach 1161\n6061 Sarnen",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Obwalden#@# xxxxxxxxxx #@##@#Postfach 1161#@#Brünigstrasse 144#@#6061#@#Sarnen#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "SG": {
+      "recipientBlockAddressRight": "SVA St.Gallen\nIV-Stelle\nPostfach\n9016 St.Gallen",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "SVA St.Gallen, Brauerstrasse 54, 9016 St.Gallen\nTel. 071 282 66 33, Fax 071 282 69 10, www.svasg.ch, info@svasg.ch",
+      "blockAddress": "SVA St.Gallen\nIV-Stelle\nPostfach\n9016 St.Gallen",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#SVA St.Gallen#@#IV-Stelle#@##@#Postfach#@##@#9016#@#St.Gallen#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "SH": {
+      "recipientBlockAddressRight": "",
+      "recipientBlockAddressLeft": "SVA Schaffhausen\nIV-Stelle\nOberstadt 9\n8200 Schaffhausen",
+      "recipientBlockAddressFooter": "SVA Schaffhausen, IV-Stelle, Oberstadt 9, 8200 Schaffhausen\nTelefon 052 632 61 50, Fax  052 632 61 99, info@svash.ch, www.svash.ch",
+      "blockAddress": "SVA Schaffhausen\nIV-Stelle\nOberstadt 9\n8200 Schaffhausen",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#SVA Schaffhausen#@#IV-Stelle#@##@##@#Oberstadt 9#@#8200#@#Schaffhausen#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "SO": {
+      "recipientBlockAddressRight": "IV-Stelle Solothurn\nPostfach\n4501 Solothurn",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Solothurn, Postfach, 4501 Solothurn, Telefon 032 686 24 00, Telefax 032 686 25 41\nÖffnungszeiten: Montag bis Mittwoch, Freitag, 08.30-11.30/13.30-16.30, Donnerstag: 08:30-12:00/13:00-16:30",
+      "blockAddress": "IV-Stelle Solothurn\nPostfach\n4501 Solothurn",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Solothurn#@##@##@#Postfach#@##@#4501#@#Solothurn#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "SZ": {
+      "recipientBlockAddressRight": "IV-Stelle Schwyz\nPostfach 53\n6431 Schwyz",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Schwyz, Rubiswilstrasse 8, Postfach 53, Rubiswilstrasse 8, 6431 Schwyz\nTelefon: 041 819 04 25, Telefax: 041 819 05 25",
+      "blockAddress": "IV-Stelle Schwyz\nPostfach 53\n6431 Schwyz",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Schwyz#@##@##@#Postfach 53#@##@#6431#@#Schwyz#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "TG": {
+      "recipientBlockAddressRight": "",
+      "recipientBlockAddressLeft": "Amt für AHV und IV\nIV-Stelle\nPostfach\n8501 Frauenfeld",
+      "recipientBlockAddressFooter": "Amt für AHV und IV, St. Gallerstrasse 13, Postfach, 8501 Frauenfeld\nT 052 724 71 71, F 052 724 72 23, info@svztg.ch, www.iv-stelle.ch",
+      "blockAddress": "Amt für AHV und IV\nIV-Stelle\nPostfach\n8501 Frauenfeld",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Amt für AHV und IV#@#IV-Stelle#@##@#Postfach#@##@#8501#@#Frauenfeld#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "TI": {
+      "recipientBlockAddressRight": "Istituto delle assicurazioni sociali\nUfficio dell'assicurazione invalidità\nVia dei Gaggini 3\nCasella postale\n6501 Bellinzona",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Istituto delle assicurazioni sociali, Ufficio dell'assicurazione invalidità, Casella postale, 6501 Bellinzona\nTelefono 091 821 91 11, Fax 091 821 92 99, ias@ias.ti.ch, www.iasticino.ch",
+      "blockAddress": "Istituto delle assicurazioni sociali\nUfficio dell'assicurazione invalidità\nVia dei Gaggini 3\nCasella postale\n6501 Bellinzona",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Istituto delle assicurazioni sociali#@#Ufficio dell'assicurazione invalidità#@##@#Casella postale#@#Via dei Gaggini 3#@#6501#@#Bellinzona#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "UR": {
+      "recipientBlockAddressRight": "IV-Stelle Uri\nDätwylerstrasse 11\nPostfach 30\n6460 Altdorf",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Uri, Dätwylerstrasse 11, Postfach 30, 6460 Altdorf\nTelefon 041-874 50 20, Telefax 041-874 50 15, E-Mail: info@ak-ur.ahv-iv.ch, Internet: www.ausgleichskasse.ch     www.iv-stelle.ch",
+      "blockAddress": "IV-Stelle Uri\nDätwylerstrasse 11\nPostfach 30\n6460 Altdorf",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Uri#@##@##@#Postfach 30#@#Dätwylerstrasse 11#@#6460#@#Altdorf#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "VD": {
+      "recipientBlockAddressRight": "Office de l'assurance-invalidité\npour le canton de Vaud\nAvenue du Géneral-Guisan 8\n1800 Vevey",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Office de l'assurance-invalidité pour le canton de Vaud, Avenue du Général-Guisan 8, 1800 Vevey\nTéléphone: 021.925.24.24, Fax: 021.925.24.25, info@aivd.ch, www.aivd.ch",
+      "blockAddress": "Office de l'assurance-invalidité\npour le canton de Vaud\nAvenue du Géneral-Guisan 8\n1800 Vevey",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Office de l'assurance-invalidité pour le canton de Vaud#@# #@##@##@#Avenue du Géneral-Guisan 8#@#1800#@#Vevey#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "VS": {
+      "recipientBlockAddressRight": "Office cantonal AI du Valais\nKantonale IV-Stelle Wallis\nSiège et direction\nSitz und Direktion\nAv. de la Gare 15\nCase postale\n1951 Sion",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Agence de réadaptation, Av. de la Gare 45, 1920 Martigny, Tél: 027 324 96 11 - Fax : 027 723 21 34\nEingliederungszweigstelle, Gliserallee 13, 3902 Brig-Glis Tél: 027 324 96 11 - Fax : 027 924 47 12",
+      "blockAddress": "Office cantonal AI du Valais\nKantonale IV-Stelle Wallis\nSiège et direction\nSitz und Direktion\nAv. de la Gare 15\nCase postale\n1951 Sion",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#Office cantonal AI du Valais#@#Siège et direction#@##@#Case postale#@#Av. de la Gare 15#@#1951#@#Sion#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "ZG": {
+      "recipientBlockAddressRight": "IV-Stelle Zug\nBaarerstrasse 11\nPostfach 4032\n6304 Zug",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "IV-Stelle Zug, Baarerstrasse 11, Postfach 4032, 6304 Zug\nTelefon 041 560 47 00, Fax 041 560 47 47, info@akzug.ch, www.akzug.ch",
+      "blockAddress": "IV-Stelle Zug\nBaarerstrasse 11\nPostfach 4032\n6304 Zug",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#IV-Stelle Zug#@##@##@#Postfach 4032#@#Baarerstrasse 11#@#6304#@#Zug#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "ZH": {
+      "recipientBlockAddressRight": "SVA Zürich\nIV-Stelle\nPostfach\n8087 Zürich",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "Sozialversicherungsanstalt des Kantons Zürich, Röntgenstrasse 17, Postfach, 8087 Zürich\nTelefon 044 448 50 00, Fax  044 448 55 55, info@svazurich.ch, www.svazurich.ch",
+      "blockAddress": "SVA Zürich\nIV-Stelle\nPostfach\n8087 Zürich",
+      "input": "exaddress#@#7601003002751#@##@##@##@##@#company#@#SVA Zürich#@#IV-Stelle#@##@#Postfach#@##@#8087#@#Zürich#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002751"
+    },
+    "LI": {
+      "recipientBlockAddressRight": "Liechtensteinische\nInvalidenversicherung\nGerberweg 2\n9490 Vaduz",
+      "recipientBlockAddressLeft": "",
+      "recipientBlockAddressFooter": "AHV-IV-FAK, Gewerbeweg 2, 9490 Vaduz\nTelefon 423 238 16 16, Fax  423 238 16 00, postmaster@ahv.li, www.ahv.li",
+      "blockAddress": "Liechtensteinische\nInvalidenversicherung\nGerberweg 2\n9490 Vaduz",
+      "input": "exaddress#@#7601003002737#@##@##@##@##@#company#@#Liechtensteinische Invalidenversicherung#@##@##@##@#Gerberweg 2#@#9490#@#Vaduz#@##@##@##@##@##@##@##@##@##@##@#",
+      "ean": "7601003002737"
+    }
+  }
 }
