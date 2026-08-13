@@ -252,8 +252,13 @@ def _page_at(pages: list[tuple[int, int]], offset: int) -> int | None:
 
 
 def _flatten(text: str) -> str:
-    """Réduit un fragment à une ligne lisible."""
-    return re.sub(r"\s+", " ", text).strip()
+    """
+    Réduit un fragment à une ligne lisible.
+
+    Les marqueurs de titre du markdown OCR (« ## Page 1 ») sont retirés : ils
+    n'apportent rien au clinicien et parasitaient le début de chaque extrait.
+    """
+    return re.sub(r"\s+", " ", re.sub(r"#{1,6}\s+", "", text)).strip()
 
 
 def _excerpt(text: str, start: int, end: int) -> str:
