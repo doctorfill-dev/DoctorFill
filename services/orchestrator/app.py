@@ -95,6 +95,12 @@ DEBUG_LOG_DIR.mkdir(parents=True, exist_ok=True)
 # demande explicite pour une session de mise au point.
 KEEP_DEBUG_LOGS = os.getenv("KEEP_DEBUG_LOGS", "false").lower() == "true"
 
+# Fichiers d'un job (PDF uploadés, formulaire rempli), un sous-dossier par job.
+# Un répertoire dédié plutôt que /tmp/<job_id> : la purge des orphelins peut
+# alors tout y supprimer sans risquer de toucher à autre chose.
+JOBS_DIR = Path(os.getenv("JOBS_DIR", "/tmp/doctorfill_jobs"))
+JOBS_DIR.mkdir(parents=True, exist_ok=True)
+
 JOBS: Dict[str, Dict[str, Any]] = {}
 JOB_RETENTION_SECONDS = int(os.getenv("JOB_RETENTION_SECONDS", "3600"))
 
@@ -244,6 +250,9 @@ async def startup_tasks():
     # [SEC-03] Scanner les templates disponibles
     VALID_FORM_IDS.update(_scan_templates())
     logger.info(f"Form IDs valides: {sorted(VALID_FORM_IDS)}")
+    # Les jobs d'avant un redémarrage ne sont plus en mémoire : leurs fichiers
+    # ne seraient jamais purgés par la boucle ci-dessous.
+    _purge_orphan_files()
 
     asyncio.create_task(_cleanup_expired_jobs())
 
@@ -269,7 +278,7 @@ def _purge_expired_jobs() -> None:
         and now - data.get("completed_at", now) > JOB_RETENTION_SECONDS
     ]
     for jid in expired:
-        tmp_dir = Path(f"/tmp/{jid}")
+        tmp_dir = JOBS_DIR / jid
         if tmp_dir.exists():
             shutil.rmtree(tmp_dir, ignore_errors=True)
             logger.info(f"Cleanup: fichiers temporaires supprimés pour job {jid}")
@@ -283,6 +292,37 @@ def _purge_expired_jobs() -> None:
         JOBS.pop(jid, None)
     if expired:
         logger.info(f"Cleanup: {len(expired)} job(s) expiré(s) purgé(s)")
+    _purge_orphan_files(now)
+
+
+def _purge_orphan_files(now: float | None = None) -> None:
+    """
+    Supprime les fichiers de jobs que plus aucune entrée de JOBS ne référence.
+
+    JOBS vit en mémoire : après un redémarrage de l'orchestrateur, les PDF
+    uploadés et les journaux de debug (texte intégral des dossiers) des jobs
+    précédents n'étaient plus rattachés à rien, donc jamais supprimés. On purge
+    tout sous-dossier plus ancien que la rétention qui n'appartient pas à un
+    job connu.
+    """
+    now = time.time() if now is None else now
+    known = {str(JOBS_DIR / jid) for jid in JOBS}
+    known |= {str(job.get("_debug_dir")) for job in JOBS.values() if job.get("_debug_dir")}
+    roots = [JOBS_DIR] + ([] if KEEP_DEBUG_LOGS else [DEBUG_LOG_DIR])
+    removed = 0
+    for root in roots:
+        for entry in root.iterdir() if root.exists() else []:
+            try:
+                if not entry.is_dir() or str(entry) in known:
+                    continue
+                if now - entry.stat().st_mtime <= JOB_RETENTION_SECONDS:
+                    continue
+            except OSError:
+                continue
+            shutil.rmtree(entry, ignore_errors=True)
+            removed += 1
+    if removed:
+        logger.info(f"Cleanup: {removed} dossier(s) orphelin(s) supprimé(s)")
 
 
 # ---------------------------------------------------
@@ -531,7 +571,16 @@ async def _extract_fields(client: httpx.AsyncClient, job_id: str, form_id: str, 
         logger.info(f"[{job_id[:8]}] {len(fields)} champs, {len(batches)} lots — dossier intégral "
                     f"(~{extraction.estimate_tokens(docs_text)} tokens)")
     else:
-        field_chunk_map, field_score_map = await _retrieve(client, col, n_chunks, form_id, fields)
+        try:
+            field_chunk_map, field_score_map = await _retrieve(client, col, n_chunks, form_id, fields)
+        except Exception as exc:
+            # Encodage des questions ou recherche indisponible : on bascule sur le
+            # repli prévu plus bas (début du dossier) plutôt que d'échouer.
+            logger.error(f"[{job_id[:8]}] Retrieval indisponible : {type(exc).__name__}: {exc}")
+            JOBS.get(job_id, {}).setdefault("warnings", []).append(
+                "Recherche sémantique indisponible : extraction faite sur le début du dossier, "
+                "à relire attentivement.")
+            field_chunk_map, field_score_map = {}, {}
         logger.info(f"[{job_id[:8]}] {len(fields)} champs, {len(batches)} lots — extraits "
                     f"(budget {rag_budget} tokens/lot)")
 
@@ -1055,7 +1104,7 @@ async def process_form(
     # --- [SEC-07] Job ID complet (128 bits) + token secret
     job_id = uuid.uuid4().hex
     download_token = secrets.token_urlsafe(32)
-    tmp_dir = Path(f"/tmp/{job_id}")
+    tmp_dir = JOBS_DIR / job_id
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
     saved_report_paths = []
@@ -1383,7 +1432,7 @@ async def _rerun_pipeline(job_id: str):
     form_id = JOBS[job_id].get("_form_id")
     synthesis = JOBS[job_id].get("_debug_synthesis")
     collection_name = f"col_{job_id}"
-    tmp_dir = Path(JOBS[job_id].get("_tmp_dir", f"/tmp/{job_id}"))
+    tmp_dir = Path(JOBS[job_id].get("_tmp_dir") or JOBS_DIR / job_id)
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
     try:

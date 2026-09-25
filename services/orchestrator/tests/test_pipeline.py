@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 
 import app as orchestrator
 import medical_synthesis
+from tests import fakes
 from tests.pdf_factory import make_acroform, read_fields
 
 DOCS = {
@@ -83,14 +84,6 @@ class FakeServices:
         self.extraction_prompts: list[str] = []
         self.ocr_calls: dict[str, int] = {}
 
-    @staticmethod
-    def _vector(text: str) -> list[float]:
-        vec = [0.0] * 32
-        for word in re.findall(r"\w+", text.lower()):
-            vec[hash(word) % 32] += 1.0
-        norm = sum(v * v for v in vec) ** 0.5 or 1.0
-        return [v / norm for v in vec]
-
     def handler(self, request: httpx.Request) -> httpx.Response:
         path = request.url.path
         if path.endswith("/extract"):
@@ -101,14 +94,9 @@ class FakeServices:
                 return httpx.Response(500, json={"detail": "Erreur lors de l'extraction du PDF."})
             return httpx.Response(200, json={"markdown": DOCS[name], "status": "success"})
         if path.endswith("/embed"):
-            texts = json.loads(request.content)["texts"]
-            return httpx.Response(200, json={"embeddings": [self._vector(t) for t in texts]})
+            return fakes.embed_response(request)
         if path.endswith("/rerank"):
-            payload = json.loads(request.content)
-            q = set(re.findall(r"\w+", payload["query"].lower()))
-            scored = [{"document": d, "score": len(q & set(re.findall(r"\w+", d.lower()))) / 10}
-                      for d in payload["documents"]]
-            return httpx.Response(200, json={"results": sorted(scored, key=lambda r: -r["score"])})
+            return fakes.rerank_response(request)
         if path.endswith("/chat/completions"):
             body = json.loads(request.content)
             system = body["messages"][0]["content"]
@@ -143,19 +131,8 @@ def workspace(tmp_path, monkeypatch):
         (uploads / name).write_bytes(b"%PDF-1.4 " + name.encode())
 
     services = FakeServices()
-    real_client = httpx.AsyncClient
-
-    class MockedClient(real_client):
-        def __init__(self, *args, **kwargs):
-            kwargs.pop("limits", None)
-            kwargs["transport"] = httpx.MockTransport(services.handler)
-            super().__init__(*args, **kwargs)
-
-    monkeypatch.setattr(httpx, "AsyncClient", MockedClient)
-
-    async def _no_sleep(*_a, **_k):
-        return None
-    monkeypatch.setattr(asyncio, "sleep", _no_sleep)
+    # Résolu à chaque requête : un test peut remplacer services.handler en cours de route.
+    fakes.install(monkeypatch, lambda request: services.handler(request))
     monkeypatch.setattr(orchestrator, "VALID_FORM_IDS", {"Test"})
     return tmp_path, uploads, services
 
@@ -321,3 +298,41 @@ def test_field_error_warning_is_recomputed_on_each_pass():
     assert job["warnings"][-1].startswith("1 champ(s)")
     orchestrator._record_field_errors(job, [{"id": "1.1", "result": {}}])
     assert job["warnings"] == ["Document illisible, ignoré : x.pdf"]
+
+
+def test_retrieval_outage_on_large_dossier_degrades(workspace, monkeypatch):
+    """Dossier au-delà du mode intégral, TEI tombé au moment d'encoder les questions."""
+    tmp_path, uploads, services = workspace
+    import extraction
+    monkeypatch.setattr(extraction, "FULL_CONTEXT_MAX_TOKENS", 10)
+
+    async def _down(*_a, **_k):
+        raise httpx.ConnectError("TEI down")
+    monkeypatch.setattr(orchestrator, "fetch_question_embeddings", _down)
+
+    job_id = _start_job(tmp_path, uploads)
+    job = orchestrator.JOBS[job_id]
+    assert job["status"] == "completed", job.get("message")
+    assert any("début du dossier" in w for w in job["warnings"])
+    assert "EXTRAITS DE DOCUMENTS" in services.extraction_prompts[0]
+    assert read_fields(Path(job["file_path"]))["lastName"]["V"] == "DUPONT"
+
+
+def test_orphan_files_from_before_a_restart_are_purged(tmp_path, monkeypatch):
+    import os
+    jobs_dir, debug_dir = tmp_path / "jobs", tmp_path / "debug"
+    monkeypatch.setattr(orchestrator, "JOBS_DIR", jobs_dir)
+    monkeypatch.setattr(orchestrator, "DEBUG_LOG_DIR", debug_dir)
+    old = time.time() - orchestrator.JOB_RETENTION_SECONDS - 60
+    stale = [jobs_dir / ("a" * 32), debug_dir / "20260101_000000_aaaaaaaa"]
+    fresh = jobs_dir / ("b" * 32)
+    active = debug_dir / "20260101_000000_cccccccc"
+    for d in stale + [fresh, active]:
+        (d / "markdown").mkdir(parents=True)
+    for d in stale + [active]:
+        os.utime(d, (old, old))
+    monkeypatch.setitem(orchestrator.JOBS, "c" * 32, {"status": "processing", "_debug_dir": str(active)})
+
+    orchestrator._purge_orphan_files()
+    assert not any(d.exists() for d in stale)
+    assert fresh.exists() and active.exists()

@@ -402,7 +402,9 @@ async def extract_batch(client: httpx.AsyncClient, url: str, model: str,
         return [{"id": f["id"], "error": "extraction_failed"} for f in fields]
 
     missing = [f for f in fields if str(f["id"]) not in data]
-    if missing and len(missing) < len(fields) and _depth == 0:
+    if missing and _depth == 0:
+        # Une fois, y compris quand la réponse ne contient aucun ID ({} valide) :
+        # le modèle s'est écarté de la consigne, pas forcément du dossier.
         logger.info("IDs absents de la réponse, redemandés : %s", [f["id"] for f in missing])
         retry = await extract_batch(client, url, model, missing, build_messages, llm_sem, 1, _shrink)
         for r in retry:

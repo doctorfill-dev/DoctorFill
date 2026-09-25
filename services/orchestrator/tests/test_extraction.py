@@ -224,3 +224,29 @@ def test_context_overflow_shrinks_instead_of_splitting():
     assert all("result" in r for r in results)
     assert [ids for ids, _ in seen] == [["1.1", "1.2"]] * 3
     assert [scale for _, scale in seen] == [1.0, 0.5, 0.25]
+
+
+def test_empty_response_is_asked_again():
+    calls = []
+
+    def handler(request):
+        calls.append(_ids(request))
+        if len(calls) == 1:
+            return _completion({})
+        return _completion({i: {"value": "v", "source_quote": ""} for i in calls[-1]})
+
+    results = _run(handler, FIELDS[:2])
+    assert calls == [["1.1", "1.2"], ["1.1", "1.2"]]
+    assert all("result" in r for r in results)
+
+
+def test_persistently_empty_response_is_reported_not_looped():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return _completion({})
+
+    results = _run(handler, FIELDS[:2])
+    assert len(calls) == 2
+    assert all(r["error"] == "field_missing_in_response" for r in results)
