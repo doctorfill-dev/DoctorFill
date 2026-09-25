@@ -432,7 +432,9 @@
       "acroform_name": "topmostSubform[0].page1[0].insuranceSelector[0]",
       "type": "choice",
       "options": [
-        "Sélectionner l'assureur...",
+        "Sélectionner l'assureur..."
+      ],
+      "option_values": [
         "0"
       ],
       "preset": "0"

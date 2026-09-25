@@ -619,7 +619,9 @@
         "Unfallversicherung Stadt Zürich",
         "Vaudoise Générale",
         "Visana Services AG (UVG)",
-        "Zürich Versicherungsgesellschaft AG",
+        "Zürich Versicherungsgesellschaft AG"
+      ],
+      "option_values": [
         "0",
         "1",
         "2",
