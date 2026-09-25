@@ -270,67 +270,6 @@ def build_batch_extraction_messages(
 
 
 # ---------------------------------------------------------------------------
-# Ancienne interface, encore importée par app.py jusqu'à sa migration
-# ---------------------------------------------------------------------------
-
-# Mapping section → clés de la synthèse pertinentes
-# La clé est le préfixe de l'ID du champ (avant le premier '.')
-SECTION_SYNTHESIS_KEYS: Dict[str, List[str]] = {
-    "1":  ["canton_traitement", "patient"],
-    "2":  ["patient", "medecins"],
-    "3":  ["incapacites_travail", "dates_cles"],
-    "4":  ["diagnostics", "traitements"],
-    "5":  ["incapacites_travail", "pronostic"],
-    "6":  ["incapacites_travail", "traitements"],
-    "7":  ["medecins"],
-    "8":  ["diagnostics", "traitements"],
-    "9":  ["medecins"],
-    "10": ["pronostic"],
-}
-
-
-def build_batch_extraction_prompt(
-    fields: List[Dict],
-    synthesis_json: str | None,
-    chunks_context: str | None,
-) -> str:
-    """
-    Construit le prompt pour extraire plusieurs champs en un seul appel LLM.
-    La synthèse est déjà pré-filtrée sur la section pertinente.
-    """
-    import json as _json
-
-    parts = []
-
-    if synthesis_json:
-        parts.append(f"SYNTHÈSE MÉDICALE (source principale) :\n{synthesis_json}")
-
-    if chunks_context:
-        parts.append(f"EXTRAITS DE DOCUMENTS (source secondaire) :\n{chunks_context}")
-
-    # Les options d'un groupe de boutons radio doivent être reprises telles quelles :
-    # le remplissage les apparie au libellé exact pour choisir le bouton à cocher.
-    def _line(f: Dict) -> str:
-        line = f'• [{f["id"]}] {f["question"]}'
-        options = f.get("options")
-        if options and f.get("type") == "choice":
-            line += " (réponds exactement par l'une de ces valeurs : " + " | ".join(options) + ")"
-        return line
-
-    field_lines = "\n".join(_line(f) for f in fields)
-    parts.append(f"CHAMPS À EXTRAIRE :\n{field_lines}")
-
-    # Fournir un exemple JSON avec tous les IDs pour guider le modèle
-    example = {str(f["id"]): {"value": "...", "source_quote": "..."} for f in fields}
-    parts.append(
-        f"RÉPONDS UNIQUEMENT avec ce JSON (tous les IDs sont obligatoires) :\n"
-        + _json.dumps(example, ensure_ascii=False, indent=2)
-    )
-
-    return "\n\n".join(parts)
-
-
-# ---------------------------------------------------------------------------
 # 4. CHAT MÉDICAL INTERACTIF
 # ---------------------------------------------------------------------------
 

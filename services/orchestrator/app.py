@@ -28,11 +28,13 @@ from core.fill import update_datasets
 from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 from core.acroform import detect_form_type, fill_acroform
+from core.fields import batch_fields, collect_form_values, normalize_value, prepare_fields
 from core.provenance import SourceIndex, ground_value
+import extraction
 import stats
 from medical_synthesis import run_medical_synthesis
-from prompts import (SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_prompt,
-                     SECTION_SYNTHESIS_KEYS, build_chat_messages, build_synthesis_refine_messages)
+from prompts import (SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_messages,
+                     build_chat_messages, build_synthesis_refine_messages)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -88,6 +90,10 @@ chroma_client = chromadb.EphemeralClient()
 # --- Dossier de logs de debug (markdown OCR, chunks, résultats LLM)
 DEBUG_LOG_DIR = Path(os.getenv("DEBUG_LOG_DIR", "/tmp/doctorfill_debug"))
 DEBUG_LOG_DIR.mkdir(parents=True, exist_ok=True)
+# Ces journaux contiennent le texte intégral des dossiers patients. Ils étaient
+# conservés sans limite ; ils suivent désormais la rétention des jobs, sauf
+# demande explicite pour une session de mise au point.
+KEEP_DEBUG_LOGS = os.getenv("KEEP_DEBUG_LOGS", "false").lower() == "true"
 
 JOBS: Dict[str, Dict[str, Any]] = {}
 JOB_RETENTION_SECONDS = int(os.getenv("JOB_RETENTION_SECONDS", "3600"))
@@ -157,11 +163,16 @@ APP_BUILD_ID = _build_id()
 # retrouvable dans le texte des documents, et où ? Le seuil de rerank qui tenait
 # ce rôle notait la source secondaire du prompt et flaggait 94 champs sur 112,
 # dont 76 correctement remplis — voir l'en-tête de core/provenance.py.
+#
+# Budget de tokens, délais et reprises de l'appel d'extraction : voir extraction.py.
 
-# Plafond de génération pour un batch d'extraction (~7 champs × valeur + citation).
-MAX_TOKENS_EXTRACT = int(os.getenv("MAX_TOKENS_EXTRACT", "2048"))
-# Retries sur un appel LLM d'extraction (l'OCR en a 5, le rerank 3, celui-ci n'en avait aucun).
-MAX_LLM_RETRIES = 3
+# Extraits retenus par champ après rerank, parmi les candidats de la recherche vectorielle.
+RETRIEVAL_CANDIDATES = int(os.getenv("RETRIEVAL_CANDIDATES", "30"))
+RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "8"))
+# Taille d'un lot d'extraction ; les occurrences d'une structure répétée restent
+# groupées jusqu'à MAX_FAMILY_SIZE (voir core/fields.batch_fields).
+MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE", "8"))
+MAX_FAMILY_SIZE = int(os.getenv("MAX_FAMILY_SIZE", "32"))
 
 # Requêtes LLM en vol. À garder aligné sur --max-num-seqs de vLLM (docker-compose) :
 # en dessous, le batch continu de vLLM tourne à vide ; au-dessus, les requêtes
@@ -241,89 +252,50 @@ async def _cleanup_expired_jobs():
     """Tâche de fond qui purge les jobs terminés et leurs fichiers temporaires."""
     while True:
         await asyncio.sleep(300)
-        now = time.time()
-        expired = [
-            jid for jid, data in JOBS.items()
-            if data.get("status") in ("completed", "failed")
-            and now - data.get("completed_at", now) > JOB_RETENTION_SECONDS
-        ]
-        for jid in expired:
-            tmp_dir = Path(f"/tmp/{jid}")
-            if tmp_dir.exists():
-                shutil.rmtree(tmp_dir, ignore_errors=True)
-                logger.info(f"Cleanup: fichiers temporaires supprimés pour job {jid}")
-            try:
-                chroma_client.delete_collection(name=f"col_{jid}")
-            except Exception:
-                pass
-            JOBS.pop(jid, None)
-        if expired:
-            logger.info(f"Cleanup: {len(expired)} job(s) expiré(s) purgé(s)")
+        try:
+            _purge_expired_jobs()
+        except Exception as exc:
+            # Une exception ici arrêtait la tâche pour de bon : plus aucun job,
+            # ni aucun dossier patient sur disque, n'était purgé ensuite.
+            logger.error(f"Cleanup: échec de la purge ({type(exc).__name__}: {exc})")
+
+
+def _purge_expired_jobs() -> None:
+    """Purge les jobs terminés depuis plus de JOB_RETENTION_SECONDS et leurs fichiers."""
+    now = time.time()
+    expired = [
+        jid for jid, data in JOBS.items()
+        if data.get("status") in ("completed", "failed")
+        and now - data.get("completed_at", now) > JOB_RETENTION_SECONDS
+    ]
+    for jid in expired:
+        tmp_dir = Path(f"/tmp/{jid}")
+        if tmp_dir.exists():
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            logger.info(f"Cleanup: fichiers temporaires supprimés pour job {jid}")
+        debug_dir = JOBS[jid].get("_debug_dir")
+        if debug_dir and not KEEP_DEBUG_LOGS:
+            shutil.rmtree(debug_dir, ignore_errors=True)
+        try:
+            chroma_client.delete_collection(name=f"col_{jid}")
+        except Exception:
+            pass
+        JOBS.pop(jid, None)
+    if expired:
+        logger.info(f"Cleanup: {len(expired)} job(s) expiré(s) purgé(s)")
 
 
 # ---------------------------------------------------
 # --- UTILS ---
 
-def markdown_semantic_chunking(md_text: str, max_words: int = 800) -> List[str]:
-    raw_chunks = re.split(r'(?=\n#{1,3} )', md_text)
-    final_chunks = []
-    for chunk in raw_chunks:
-        chunk = chunk.strip()
-        if not chunk:
-            continue
-        words = chunk.split()
-        if len(words) > max_words:
-            for i in range(0, len(words), max_words - 100):
-                final_chunks.append(" ".join(words[i:i + max_words]))
-        else:
-            final_chunks.append(chunk)
-    return final_chunks
-
-
-def _normalize_field_value(value: str, field_type: str | None) -> str:
-    """Normalise la valeur extraite selon le type du champ déclaré dans le template."""
-    if not value or not field_type:
-        return value
-    if field_type == "sex":
-        # Normalise vers M ou F
-        v = value.strip().upper()
-        if v in ("M", "MASCULIN", "HOMME", "MALE", "H"):
-            return "M"
-        if v in ("F", "FÉMININ", "FEMININ", "FEMME", "FEMALE"):
-            return "F"
-        # Cas où le LLM a renvoyé "M (masculin)" ou "F (féminin)"
-        if v.startswith("M"):
-            return "M"
-        if v.startswith("F"):
-            return "F"
-        return value  # Valeur non reconnue : on laisse passer
-    if field_type == "percent":
-        # Garde uniquement les chiffres (et éventuellement une virgule/point décimale)
-        match = re.search(r'\d+(?:[.,]\d+)?', value.replace("%", ""))
-        if match:
-            return match.group(0).replace(",", ".")
-        return value
-    return value
-
-
-def _resolve_option_value(value: str, f_def: Dict) -> str:
+class UserFacingError(Exception):
     """
-    Traduit le libellé choisi par le LLM en valeur d'export du formulaire.
+    Échec dont la cause peut être dite à l'utilisateur sans rien exposer.
 
-    Les groupes de boutons radio medForms exportent un index (« 0 », « 1 », …)
-    et non le libellé affiché ; `option_values` porte la correspondance, dérivée
-    du XFA par tools/gen_template. Un libellé inconnu est laissé tel quel : le
-    remplissage laissera alors le groupe vide plutôt que de cocher au hasard.
+    [SEC-10] garde les erreurs internes derrière un message générique ; celles-ci
+    décrivent le dossier soumis (« aucun document lisible ») et lui permettent
+    d'agir plutôt que de « réessayer » en vain.
     """
-    options = f_def.get("options")
-    option_values = f_def.get("option_values")
-    if not options or not option_values or len(options) != len(option_values):
-        return value
-    target = value.strip().casefold()
-    for label, exported in zip(options, option_values):
-        if label.strip().casefold() == target:
-            return exported
-    return value
 
 
 def _sanitize_filename(filename: str, index: int) -> str:
@@ -343,10 +315,37 @@ def _sanitize_filename(filename: str, index: int) -> str:
     return safe
 
 
+_TEI_TRANSIENT = (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError)
+
+
+async def _tei_post(client: httpx.AsyncClient, route: str, payload: Dict, timeout: float) -> Dict:
+    """
+    Appel TEI avec reprises sur erreur transitoire.
+
+    L'embedding n'en avait aucune : un seul hoquet du service pendant l'OCR
+    faisait échouer tout le job, après plusieurs minutes de traitement.
+    """
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            resp = await client.post(f"{TEI_URL}{route}", json=payload, timeout=timeout)
+            resp.raise_for_status()
+            return resp.json()
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code < 500 or attempt == max_retries:
+                raise
+            err: Exception = e
+        except _TEI_TRANSIENT as e:
+            if attempt == max_retries:
+                raise
+            err = e
+        logger.warning(f"TEI {route} retry {attempt}/{max_retries}: {type(err).__name__}: {err}")
+        await asyncio.sleep(2 * attempt)
+    raise RuntimeError(f"TEI {route} sans réponse")
+
+
 async def fetch_embeddings(client: httpx.AsyncClient, texts: List[str]):
-    resp = await client.post(f"{TEI_URL}/embed", json={"texts": texts}, timeout=120.0)
-    resp.raise_for_status()
-    return resp.json()["embeddings"]
+    return (await _tei_post(client, "/embed", {"texts": texts}, timeout=120.0))["embeddings"]
 
 
 async def fetch_embeddings_batched(client: httpx.AsyncClient, texts: List[str], batch_size: int = 64) -> List:
@@ -379,107 +378,22 @@ async def fetch_question_embeddings(client: httpx.AsyncClient, form_id: str,
 
 async def fetch_rerank(client: httpx.AsyncClient, query: str, docs: List[str],
                        rerank_sem: asyncio.Semaphore = None):
-    """Rerank avec semaphore + retry sur PoolTimeout/ReadError/ConnectError."""
-    MAX_RETRIES = 3
-
-    async def _call():
-        resp = await client.post(f"{TEI_URL}/rerank", json={"query": query, "documents": docs}, timeout=300.0)
-        resp.raise_for_status()
-        return resp.json()["results"]
-
-    async def _call_with_retry():
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                return await _call()
-            except (httpx.PoolTimeout, httpx.ReadError, httpx.ConnectError) as e:
-                if attempt == MAX_RETRIES:
-                    raise
-                logger.warning(f"Rerank retry {attempt}/{MAX_RETRIES}: {type(e).__name__}: {e}")
-                await asyncio.sleep(2 * attempt)
-
+    """Rerank avec semaphore + retry sur erreur transitoire."""
     if rerank_sem:
         async with rerank_sem:
-            return await _call_with_retry()
+            data = await _tei_post(client, "/rerank", {"query": query, "documents": docs}, timeout=300.0)
     else:
-        return await _call_with_retry()
-
-
-def _filter_synthesis_for_section(synthesis: Dict | None, section_id: str) -> str | None:
-    """Retourne uniquement les clés de synthèse pertinentes pour la section donnée."""
-    if not synthesis:
-        return None
-    keys = SECTION_SYNTHESIS_KEYS.get(section_id, list(synthesis.keys()))
-    filtered = {k: synthesis[k] for k in keys if k in synthesis and synthesis[k]}
-    return json.dumps(filtered, ensure_ascii=False) if filtered else None
-
-
-def _extractable_fields(template: Dict) -> List[Dict]:
-    """
-    Champs à soumettre au modèle.
-
-    Écarte les champs `preset` : l'éditeur du formulaire les a déjà renseignés
-    (adresse de l'office destinataire, code EAN, données de routage) et ils font
-    autorité. Les extraire produisait des documents incohérents — un formulaire
-    AI adressé à « Helvetia Santé SA » parce que le dossier mentionnait cette
-    caisse, à l'adresse de l'Office AI restée en dessous. Ça allège aussi le
-    budget LLM de 112 questions sur l'ensemble du catalogue.
-    """
-    return [f for f in template["fields"]
-            if f.get("question", "").strip()
-            and not f.get("preset") and not f.get("computed")]
-
-
-def _computed_values(template: Dict) -> List[tuple[Dict, str]]:
-    """
-    Champs dont la valeur se déduit du formulaire lui-même.
-
-    Le bloc adresse du destinataire en est le seul cas aujourd'hui : il est la
-    version visible de champs structurés déjà renseignés par l'éditeur, mais
-    masqués dans la mise en page. Le demander au modèle produisait des adresses
-    inventées — un numéro de rue emprunté au patient, un code postal fabriqué.
-    """
-    return [(f, f["computed"]) for f in template["fields"] if f.get("computed")]
-
-
-def _canton_recipient(template: Dict, results: List[Dict]) -> Dict[str, str]:
-    """
-    Destinataire correspondant au canton de traitement extrait.
-
-    Un formulaire AI s'adresse à l'office AI *du canton du patient*. Le gabarit
-    porte cette table et la applique par script — mais le script ne s'exécute
-    que dans un lecteur XFA, jamais dans le PDF qu'on livre. Sans ça, un dossier
-    neuchâtelois partait à l'office de Berne, l'adresse par défaut du vierge.
-
-    Canton absent ou inconnu : on ne renvoie rien et le formulaire garde ses
-    valeurs d'origine — mieux vaut le défaut du gabarit qu'un office arbitraire.
-
-    Returns:
-        nom de champ → valeur, à écrire tel quel.
-    """
-    table = template.get("_recipient_by_canton")
-    if not table:
-        return {}
-    canton_ids = {str(f["id"]) for f in template["fields"]
-                  if f.get("name") == "treatmentCanton"}
-    for res in results:
-        if str(res.get("id")) not in canton_ids:
-            continue
-        valeur = str((res.get("result") or {}).get("value") or "").strip().upper()
-        if valeur in table:
-            logger.info("Destinataire dérivé du canton %s", valeur)
-            return table[valeur]
-        if valeur:
-            logger.warning("Canton %r hors de la table du formulaire", valeur)
-    return {}
+        data = await _tei_post(client, "/rerank", {"query": query, "documents": docs}, timeout=300.0)
+    return data["results"]
 
 
 def _synthesis_as_source(synthesis: Dict | None) -> List[Dict]:
     """
     Expose la synthèse médicale comme source indexable, marquée comme dérivée.
 
-    C'est la source *principale* du prompt d'extraction : sans elle dans l'index,
-    toute valeur citée depuis la synthèse plutôt que depuis un document brut
-    était déclarée non tracée. Le drapeau `derived` évite l'excès inverse — la
+    C'est une source du prompt d'extraction : sans elle dans l'index, toute
+    valeur citée depuis la synthèse plutôt que depuis un document brut était
+    déclarée non tracée. Le drapeau `derived` évite l'excès inverse — la
     synthèse est une production du modèle, s'y adosser ne vaut pas preuve.
     """
     if not synthesis:
@@ -491,96 +405,287 @@ def _synthesis_as_source(synthesis: Dict | None) -> List[Dict]:
     }]
 
 
+# Réponses choisies plutôt que recopiées : les retrouver dans le texte ne prouve rien.
+_NON_LITERAL_TYPES = {"bool", "choice"}
+
+
 def _annotate_confidence(results: List[Dict], source_index: SourceIndex,
-                         field_score_map: Dict[str, float]) -> None:
+                         field_score_map: Dict[str, float], fields_by_id: Dict[str, Dict]) -> None:
     """
-    Rattache chaque valeur extraite au texte dont elle provient.
+    Normalise chaque valeur extraite et la rattache au texte dont elle provient.
+
+    La normalisation (date au format JJ.MM.AAAA, « non mentionné » → vide, oui/non
+    canonique…) a lieu ici plutôt qu'au remplissage : le clinicien voit dans
+    l'application exactement ce qui sera écrit dans le formulaire. La valeur
+    brute du modèle reste disponible dans `raw_value` quand elle diffère.
 
     Aucun appel LLM supplémentaire, aucun seuil : la valeur se retrouve dans les
     documents ou elle ne s'y retrouve pas. Le résultat porte le verdict
     (`grounding`), et l'ancrage quand il existe — document, page, extrait — de
     quoi vérifier d'un coup d'œil plutôt que d'avoir à croire le modèle.
 
-    `rerank_score` reste renseigné à titre de diagnostic, mais ne déclenche plus
-    rien : voir l'en-tête de core/provenance.py.
-
-    On ne supprime jamais une valeur — c'est au clinicien de trancher.
+    On ne supprime jamais une valeur réelle — c'est au clinicien de trancher.
     """
     for res in results:
         payload = res.get("result")
         if not isinstance(payload, dict):
             continue
-        payload["rerank_score"] = round(field_score_map.get(str(res["id"]), 0.0), 4)
+        fid = str(res["id"])
+        f_def = fields_by_id.get(fid, {})
+        score = field_score_map.get(fid)
+        payload["rerank_score"] = round(score, 4) if score is not None else None
 
-        value = str(payload.get("value") or "").strip()
+        raw = str(payload.get("value") or "").strip()
+        value = normalize_value(raw, f_def)
+        if value != raw:
+            payload["raw_value"] = raw
+        payload["value"] = value
         if not value:
+            payload["source_quote"] = ""
             continue
-        payload.update(ground_value(value, str(payload.get("source_quote") or ""), source_index))
+        payload.update(ground_value(value, str(payload.get("source_quote") or ""), source_index,
+                                    literal=f_def.get("type") not in _NON_LITERAL_TYPES))
 
 
-def _group_fields_into_batches(fields: List[Dict], max_batch_size: int = 7) -> List[List[Dict]]:
-    """Groupe les champs par section (préfixe de l'ID), max max_batch_size par batch."""
-    from collections import defaultdict
-    by_section: Dict[str, List[Dict]] = defaultdict(list)
-    for f in fields:
-        section = str(f["id"]).split(".")[0]
-        by_section[section].append(f)
-    batches = []
-    for section_fields in by_section.values():
-        for i in range(0, len(section_fields), max_batch_size):
-            batches.append(section_fields[i:i + max_batch_size])
-    return batches
+async def _retrieve(client: httpx.AsyncClient, col, n_chunks: int, form_id: str,
+                    fields: List[Dict]) -> tuple[Dict[str, List[str]], Dict[str, float]]:
+    """
+    Extraits pertinents de chaque champ : recherche vectorielle puis rerank.
+
+    La requête est la question débarrassée de ses consignes de format, enrichie
+    du contexte de structure (voir core/fields.contextualize). Un rerank en
+    échec ne fait plus échouer le job : le champ garde l'ordre de la recherche
+    vectorielle, moins fin mais exploitable.
+    """
+    if n_chunks == 0 or not fields:
+        return {}, {}
+    queries = [f.get("retrieval_query") or f["question"] for f in fields]
+    q_embs = await fetch_question_embeddings(client, form_id, queries)
+
+    async def _one(query: str, q_emb) -> tuple[List[str], float | None]:
+        hits = col.query(query_embeddings=[q_emb],
+                         n_results=min(RETRIEVAL_CANDIDATES, n_chunks))["documents"][0]
+        try:
+            reranked = await fetch_rerank(client, query, hits, rerank_sem=_RERANK_SEM)
+        except Exception as exc:
+            logger.warning(f"Rerank indisponible, ordre vectoriel conservé : {type(exc).__name__}: {exc}")
+            return hits[:RETRIEVAL_TOP_K], None
+        top = reranked[:RETRIEVAL_TOP_K]
+        # Le meilleur score sert d'indice de pertinence du retrieval pour ce champ.
+        best = float(top[0].get("score", 0.0)) if top else 0.0
+        return [r["document"] for r in top], best
+
+    retrieved = await asyncio.gather(*[_one(q, e) for q, e in zip(queries, q_embs)])
+    chunk_map = {str(f["id"]): cks for f, (cks, _) in zip(fields, retrieved)}
+    score_map = {str(f["id"]): s for f, (_, s) in zip(fields, retrieved) if s is not None}
+    return chunk_map, score_map
 
 
-async def extract_fields_batch_vllm(
-    client: httpx.AsyncClient,
-    fields: List[Dict],
-    chunks_context: str,
-    synthesis_json: str | None,
-    llm_sem: asyncio.Semaphore,
-) -> List[Dict]:
-    """Extrait plusieurs champs en un seul appel LLM (mode batch)."""
-    prompt = build_batch_extraction_prompt(fields, synthesis_json, chunks_context)
-    payload = {
-        "model": VLLM_MODEL,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT_BATCH_EXTRACT},
-            {"role": "user", "content": prompt},
-        ],
-        "temperature": 0.05,
-        "response_format": {"type": "json_object"},
-        "max_tokens": MAX_TOKENS_EXTRACT,
-    }
+async def _extract_fields(client: httpx.AsyncClient, job_id: str, form_id: str, template: Dict,
+                          col, n_chunks: int, synthesis: Dict | None, documents: List[Dict],
+                          on_progress) -> List[Dict]:
+    """
+    Extraction de tous les champs d'un formulaire. Partagée par le pipeline et le re-run.
 
-    async def _call_with_retry() -> Dict:
-        """Un JSON tronqué ou un pic de charge ne doit pas condamner les 7 champs du batch."""
-        for attempt in range(1, MAX_LLM_RETRIES + 1):
-            try:
-                async with llm_sem:
-                    resp = await client.post(f"{VLLM_URL}/chat/completions", json=payload, timeout=180.0)
-                    resp.raise_for_status()
-                    return json.loads(resp.json()["choices"][0]["message"]["content"])
-            except (httpx.PoolTimeout, httpx.ReadError, httpx.ConnectError,
-                    httpx.ReadTimeout, httpx.HTTPStatusError, json.JSONDecodeError) as e:
-                if attempt == MAX_LLM_RETRIES:
-                    raise
-                logger.warning(f"LLM retry {attempt}/{MAX_LLM_RETRIES} "
-                               f"({[f['id'] for f in fields]}): {type(e).__name__}: {e}")
-                await asyncio.sleep(2 * attempt)
+    Deux modes de contexte :
+    - dossier intégral, quand il tient dans la fenêtre du modèle — le cas des
+      dossiers usuels. Aucune information ne dépend alors de la qualité du
+      retrieval, et vLLM ne calcule qu'une fois le préfixe commun à tous les lots ;
+    - extraits choisis par retrieval + rerank, au-delà.
 
-    try:
-        data = await _call_with_retry()
-        results = []
-        for field in fields:
-            fid = str(field["id"])
-            if fid in data and isinstance(data[fid], dict):
-                results.append({"id": field["id"], "result": data[fid]})
+    La synthèse médicale est transmise en entier à chaque lot. Elle était filtrée
+    par numéro de section selon une table écrite pour la mise en page du seul
+    formulaire AVS : sur les autres formulaires, les champs d'incapacité de
+    travail, de diagnostic ou de médecin ne recevaient pas la partie de la
+    synthèse qui les concernait.
+    """
+    fields = prepare_fields(template)
+    fields_by_id = {str(f["id"]): f for f in fields}
+    batches = batch_fields(fields, max_batch_size=MAX_BATCH_SIZE, max_family_size=MAX_FAMILY_SIZE)
+    if not batches:
+        return []
+
+    source_index = SourceIndex(documents, _synthesis_as_source(synthesis))
+    docs_text = extraction.full_documents_text(documents)
+    synthesis_json = json.dumps(synthesis, ensure_ascii=False) if synthesis else None
+
+    # Budget : fenêtre du modèle − génération − marge − parties fixes du prompt.
+    fields_tokens = max(
+        extraction.estimate_tokens("\n".join(
+            (f.get("prompt_question") or f["question"]) + " ".join(f.get("options") or []) + " " * 40
+            for f in batch))
+        for batch in batches)
+    prompt_budget = (extraction.LLM_MAX_MODEL_LEN - extraction.MAX_TOKENS_EXTRACT
+                     - extraction.PROMPT_SAFETY_TOKENS
+                     - extraction.estimate_tokens(SYSTEM_PROMPT_BATCH_EXTRACT) - fields_tokens)
+    docs_budget = prompt_budget - (extraction.estimate_tokens(synthesis_json) if synthesis_json else 0)
+    if synthesis_json and docs_budget < 3000:
+        logger.warning(f"[{job_id[:8]}] Synthèse trop volumineuse pour le prompt d'extraction — omise")
+        synthesis_json, docs_budget = None, prompt_budget
+
+    full_mode = extraction.estimate_tokens(docs_text) <= min(extraction.FULL_CONTEXT_MAX_TOKENS, docs_budget)
+    rag_budget = max(1000, min(extraction.RAG_CONTEXT_TOKENS, docs_budget))
+
+    if full_mode:
+        field_chunk_map, field_score_map = {}, {}
+        logger.info(f"[{job_id[:8]}] {len(fields)} champs, {len(batches)} lots — dossier intégral "
+                    f"(~{extraction.estimate_tokens(docs_text)} tokens)")
+    else:
+        field_chunk_map, field_score_map = await _retrieve(client, col, n_chunks, form_id, fields)
+        logger.info(f"[{job_id[:8]}] {len(fields)} champs, {len(batches)} lots — extraits "
+                    f"(budget {rag_budget} tokens/lot)")
+
+    def build_messages(batch: List[Dict], scale: float) -> List[Dict]:
+        if full_mode and scale >= 1.0:
+            return build_batch_extraction_messages(batch, synthesis_json, docs_text, full_documents=True)
+        if full_mode:
+            # Repli rare : l'estimation a sous-évalué le dossier. On tronque plutôt
+            # que d'abandonner le champ.
+            limit = int(docs_budget * scale) * 3
+            return build_batch_extraction_messages(batch, synthesis_json, docs_text[:limit])
+        if not field_chunk_map:
+            # Index vide (embeddings indisponibles) : le début du dossier plutôt
+            # que rien.
+            return build_batch_extraction_messages(batch, synthesis_json,
+                                                   docs_text[:int(rag_budget * scale) * 3])
+        context = extraction.build_rag_context(batch, field_chunk_map, int(rag_budget * scale))
+        return build_batch_extraction_messages(batch, synthesis_json, context)
+
+    done = 0
+
+    async def _run_batch(batch: List[Dict]) -> List[Dict]:
+        nonlocal done
+        result = await extraction.extract_batch(client, VLLM_URL, VLLM_MODEL, batch,
+                                                build_messages, _LLM_SEM)
+        _annotate_confidence(result, source_index, field_score_map, fields_by_id)
+        done += 1
+        on_progress(done, len(batches))
+        return result
+
+    batch_results = await asyncio.gather(*[_run_batch(b) for b in batches])
+    results = [item for batch in batch_results for item in batch]
+    failed = sum(1 for r in results if "error" in r)
+    if failed:
+        logger.warning(f"[{job_id[:8]}] {failed}/{len(results)} champs en erreur d'extraction")
+    return results
+
+
+_FIELD_ERRORS_WARNING = "champ(s) n'ont pas pu être extraits — à compléter à la main."
+
+
+def _record_field_errors(job: Dict, results: List[Dict]) -> None:
+    """Avertissement sur les champs en erreur, recalculé à chaque passage (re-run compris)."""
+    warnings = [w for w in job.setdefault("warnings", []) if not w.endswith(_FIELD_ERRORS_WARNING)]
+    failed = sum(1 for r in results if "error" in r)
+    if failed:
+        warnings.append(f"{failed} {_FIELD_ERRORS_WARNING}")
+    job["warnings"] = warnings
+
+
+def _template_fields_view(template: Dict) -> List[Dict]:
+    """Description des champs extraits, pour /fields et le chat."""
+    return [
+        {"id": f["id"], "label": f.get("label", str(f["id"])),
+         "question": f.get("question", ""), "section": str(f["id"]).split(".")[0]}
+        for f in prepare_fields(template)
+    ]
+
+
+def _fill_pdf(job_id: str, form_id: str, template: Dict, results: List[Dict],
+              tmp_dir: Path, suffix: str = "") -> tuple[Path, str]:
+    """
+    Écrit les valeurs dans le formulaire PDF. Partagé par le pipeline et le re-run.
+
+    Supporte XFA, AcroForm pur et formulaires hybrides. Le re-run en avait une
+    copie qui ignorait les champs calculés et le destinataire cantonal : après
+    un re-run, un formulaire AI repartait à l'office AI par défaut du gabarit.
+
+    Returns:
+        (chemin du PDF rempli, type de formulaire)
+    """
+    source_template_path = Path(f"forms/Form_{form_id}.pdf")
+    if not source_template_path.exists():
+        raise FileNotFoundError(f"Template introuvable pour form_id={form_id}")
+    empty_form_path = tmp_dir / f"empty{suffix}.pdf"
+    shutil.copy(source_template_path, empty_form_path)
+
+    form_type = detect_form_type(empty_form_path)
+    logger.info(f"[{job_id[:8]}] Type de formulaire détecté : {form_type}")
+
+    xfa_values, acro_values = collect_form_values(template, results)
+    output_pdf = tmp_dir / f"output{suffix}.pdf"
+    if output_pdf.exists():
+        output_pdf.unlink()
+
+    if form_type in ("xfa", "hybrid"):
+        base_xml = tmp_dir / f"base{suffix}.xml"
+        try:
+            extract_xfa_datasets(empty_form_path, base_xml)
+            checkbox_paths = discover_checkbox_paths(base_xml)
+            normalize_checkboxes(xfa_values, checkbox_paths)
+            filled_xml = tmp_dir / f"filled{suffix}.xml"
+            update_datasets(base_xml, xfa_values, filled_xml, template["fields"])
+            inject_datasets(empty_form_path, filled_xml, output_pdf)
+        except PDFNoXFAError:
+            logger.warning(f"[{job_id[:8]}] XFA introuvable malgré détection hybrid — fallback AcroForm")
+            form_type = "acroform"
+
+    if form_type == "acroform" or (form_type == "hybrid" and acro_values):
+        # Pour un hybride : repartir du PDF XFA déjà rempli si disponible, sinon template
+        acro_source = output_pdf if (form_type == "hybrid" and output_pdf.exists()) else empty_form_path
+        fill_acroform(acro_source, acro_values, output_pdf)
+
+    if form_type == "none" or not output_pdf.exists():
+        raise ValueError(f"Impossible de remplir le formulaire (type={form_type})")
+    return output_pdf, form_type
+
+
+def _load_template(form_id: str) -> Dict:
+    with open(f"template/Form_{form_id}.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+MAX_OCR_RETRIES = 5
+
+
+async def _ocr_document(client: httpx.AsyncClient, path: Path) -> str:
+    """
+    Texte d'un PDF via le service OCR, avec reprises proportionnées à la cause.
+
+    Service injoignable (redémarrage) : jusqu'à 5 tentatives espacées. Délai
+    dépassé ou erreur 5xx : une seule reprise — un OCR de dix minutes rejoué
+    cinq fois, c'est une heure perdue. Erreur 4xx : le PDF est refusé, inutile
+    d'insister.
+    """
+    content = path.read_bytes()
+    last_err: Exception | None = None
+    for attempt in range(1, MAX_OCR_RETRIES + 1):
+        try:
+            resp = await client.post(
+                f"{MARKER_URL}/extract",
+                files={'file': (path.name, content, 'application/pdf')},
+                timeout=httpx.Timeout(600.0, connect=15.0))
+            resp.raise_for_status()
+            return resp.json().get("markdown", "") or ""
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code < 500 or attempt >= 2:
+                raise
+            last_err, delay = e, 5
+        except (httpx.TimeoutException, httpx.RemoteProtocolError) as e:
+            if isinstance(e, httpx.ConnectTimeout):
+                last_err, delay = e, 10 * attempt
+            elif attempt >= 2:
+                raise
             else:
-                results.append({"id": field["id"], "error": "field_missing_in_response"})
-        return results
-    except Exception as e:
-        logger.error(f"Erreur batch vLLM ({[f['id'] for f in fields]}): {e}")
-        return [{"id": f["id"], "error": "extraction_failed"} for f in fields]
+                last_err, delay = e, 5
+        except httpx.NetworkError as e:
+            last_err = e
+            delay = 10 * attempt if isinstance(e, httpx.ConnectError) else 2 * attempt
+        logger.warning(f"OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: "
+                       f"{type(last_err).__name__} (retry in {delay}s)")
+        if attempt < MAX_OCR_RETRIES:
+            await asyncio.sleep(delay)
+    raise last_err or RuntimeError("OCR sans réponse")
 
 
 async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
@@ -593,17 +698,22 @@ async def run_pipeline_task(job_id: str, form_id: str, tmp_dir: Path, report_pat
     produire de plus vite. Le chronomètre court pendant l'attente — c'est bien le
     temps que l'utilisateur subit.
     """
-    if _PIPELINE_SEM.locked():
-        attente = stats.summary().get("recent_average_seconds")
-        repere = f" — environ {attente / 60:.0f} min" if attente else ""
-        logger.info(f"[{job_id[:8]}] En file d'attente ({MAX_PARALLEL_JOBS} exécutions en cours)")
-        JOBS[job_id].update({
-            "status": "processing",
-            "message": f"⏳ En file d'attente{repere}…",
-            "progress": 2,
-        })
+    _announce_queue(job_id)
     async with _PIPELINE_SEM:
         await _run_pipeline(job_id, form_id, tmp_dir, report_paths)
+
+
+def _announce_queue(job_id: str) -> None:
+    if not _PIPELINE_SEM.locked():
+        return
+    attente = stats.summary().get("recent_average_seconds")
+    repere = f" — environ {attente / 60:.0f} min" if attente else ""
+    logger.info(f"[{job_id[:8]}] En file d'attente ({MAX_PARALLEL_JOBS} exécutions en cours)")
+    JOBS[job_id].update({
+        "status": "processing",
+        "message": f"⏳ En file d'attente{repere}…",
+        "progress": 2,
+    })
 
 
 async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: List[Path]):
@@ -611,13 +721,16 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
     Pipeline avec streaming OCR→embed, synthèse médicale globale et semaphores rerank/LLM.
     - STEP 1 : OCR et embedding en parallèle via asyncio.Queue
     - STEP 2 : Synthèse médicale globale (LLM lit tous les documents, produit un JSON structuré)
-    - STEP 3 : RAG hybride (synthèse + chunks reranked) pour chaque champ
-    - STEP 4 : Injection XFA
+    - STEP 3 : Extraction des champs (dossier intégral ou RAG, selon sa taille)
+    - STEP 4 : Injection XFA / AcroForm
     """
     collection_name = f"col_{job_id}"
     debug_dir = DEBUG_LOG_DIR / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{job_id[:8]}"
     debug_dir.mkdir(parents=True, exist_ok=True)
     (debug_dir / "markdown").mkdir(exist_ok=True)
+    # Connu dès le départ : un job en échec doit lui aussi voir ses journaux purgés.
+    JOBS[job_id]["_debug_dir"] = str(debug_dir)
+    warnings: List[str] = JOBS[job_id].setdefault("warnings", [])
 
     timings: Dict[str, float] = {}
     # Résultats OCR bruts (nécessaires pour la synthèse)
@@ -638,100 +751,101 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
 
             t_ocr_start = time.perf_counter()
             ocr_done = 0
-            ocr_sem = _OCR_SEM
-            MAX_OCR_RETRIES = 5
             col = chroma_client.get_or_create_collection(name=collection_name)
             chunk_index = 0
-            all_chunks: List[str] = []
 
-            # Queue pour le pipeline OCR → embed
+            # Queue pour le pipeline OCR → embed ; None marque la fin du flux.
             ocr_queue: asyncio.Queue = asyncio.Queue()
-            embed_done = asyncio.Event()
 
-            async def _ocr_one(path: Path) -> tuple:
+            async def _ocr_one(path: Path) -> None:
                 """OCR un PDF et envoie le résultat dans la queue pour embedding."""
                 nonlocal ocr_done
-                async with ocr_sem:
-                    with open(path, "rb") as f:
-                        content = f.read()
-                    last_err = None
-                    for attempt in range(1, MAX_OCR_RETRIES + 1):
-                        try:
-                            resp = await client.post(
-                                f"{MARKER_URL}/extract",
-                                files={'file': (path.name, content, 'application/pdf')},
-                                timeout=600.0)
-                            resp.raise_for_status()
-                            md_text = resp.json().get("markdown", "")
-                            ocr_done += 1
-                            JOBS[job_id].update({
-                                "message": f"📄 OCR {ocr_done}/{total_files} documents...",
-                                "progress": 5 + int(35 * ocr_done / total_files)
-                            })
-                            # Debug : sauvegarder le markdown OCR
-                            md_filename = path.stem + ".md"
-                            (debug_dir / "markdown" / md_filename).write_text(md_text, encoding="utf-8")
-                            # Accumuler pour la synthèse médicale
-                            ocr_raw_results.append({"filename": path.name, "markdown": md_text})
-                            # Envoyer dans la queue pour embedding immédiat
-                            await ocr_queue.put((path.name, md_text))
-                            return path.name, md_text
-                        except (httpx.ReadError, httpx.ConnectError, httpx.RemoteProtocolError) as e:
-                            last_err = e
-                            delay = 10 * attempt if isinstance(e, httpx.ConnectError) else 2 * attempt
-                            logger.warning(f"[{job_id[:8]}] OCR retry {attempt}/{MAX_OCR_RETRIES} pour {path.name}: {type(e).__name__} (retry in {delay}s)")
-                            if attempt < MAX_OCR_RETRIES:
-                                await asyncio.sleep(delay)
-                    raise last_err
+                async with _OCR_SEM:
+                    try:
+                        md_text = await _ocr_document(client, path)
+                    except Exception as e:
+                        # Un document illisible ne condamne plus tout le dossier : il est
+                        # écarté, et l'utilisateur en est averti.
+                        logger.error(f"[{job_id[:8]}] OCR abandonné pour {path.name}: "
+                                     f"{type(e).__name__}: {e}")
+                        warnings.append(f"Document illisible, ignoré : {path.name}")
+                        md_text = None
+                ocr_done += 1
+                JOBS[job_id].update({
+                    "message": f"📄 OCR {ocr_done}/{total_files} documents...",
+                    "progress": 5 + int(35 * ocr_done / total_files)
+                })
+                if md_text is None:
+                    return
+                if not md_text.strip():
+                    warnings.append(f"Aucun texte trouvé dans : {path.name}")
+                    return
+                # Debug : sauvegarder le markdown OCR
+                (debug_dir / "markdown" / (path.stem + ".md")).write_text(md_text, encoding="utf-8")
+                ocr_raw_results.append({"filename": path.name, "markdown": md_text})
+                await ocr_queue.put((path.name, md_text))
 
             async def _embed_consumer():
                 """Consomme la queue OCR, chunk et embed au fil de l'eau."""
                 nonlocal chunk_index
                 pending_chunks: List[str] = []
+                embed_failed = False
 
-                while True:
+                async def _flush():
+                    nonlocal chunk_index, pending_chunks, embed_failed
+                    if not pending_chunks or embed_failed:
+                        pending_chunks = []
+                        return
                     try:
-                        name, md_text = await asyncio.wait_for(ocr_queue.get(), timeout=2.0)
-                    except asyncio.TimeoutError:
-                        if ocr_queue.empty() and embed_done.is_set():
-                            break
-                        continue
-
-                    doc_md = f"\n\n--- SOURCE: {name} ---\n\n" + md_text
-                    doc_chunks = markdown_semantic_chunking(doc_md)
-                    pending_chunks.extend(doc_chunks)
-                    all_chunks.extend(doc_chunks)
-
-                    # Embed quand on a accumulé assez de chunks
-                    if len(pending_chunks) >= 64 or (embed_done.is_set() and ocr_queue.empty()):
-                        if pending_chunks:
-                            embeds = await fetch_embeddings_batched(client, pending_chunks)
-                            ids = [f"{job_id}_{chunk_index + i}" for i in range(len(pending_chunks))]
-                            col.add(documents=pending_chunks, embeddings=embeds, ids=ids)
-                            chunk_index += len(pending_chunks)
-                            logger.info(f"[{job_id[:8]}] Embedded {chunk_index} chunks so far...")
-                            pending_chunks = []
-
-                # Flush les chunks restants
-                if pending_chunks:
-                    embeds = await fetch_embeddings_batched(client, pending_chunks)
+                        embeds = await fetch_embeddings_batched(client, pending_chunks)
+                    except Exception as e:
+                        # L'index ne sert qu'au retrieval des gros dossiers, au chat et au
+                        # re-run : son absence dégrade, elle ne justifie pas d'échouer.
+                        logger.error(f"[{job_id[:8]}] Embeddings indisponibles : {type(e).__name__}: {e}")
+                        warnings.append("Recherche sémantique indisponible : le chat sur le dossier "
+                                        "sera limité.")
+                        embed_failed, pending_chunks = True, []
+                        return
                     ids = [f"{job_id}_{chunk_index + i}" for i in range(len(pending_chunks))]
                     col.add(documents=pending_chunks, embeddings=embeds, ids=ids)
                     chunk_index += len(pending_chunks)
+                    logger.info(f"[{job_id[:8]}] Embedded {chunk_index} chunks so far...")
+                    pending_chunks = []
+
+                while True:
+                    item = await ocr_queue.get()
+                    if item is None:
+                        break
+                    name, md_text = item
+                    pending_chunks.extend(extraction.chunk_document(name, md_text))
+                    if len(pending_chunks) >= 64:
+                        await _flush()
+                await _flush()
 
             # Lancer OCR et embedding en parallèle (pipeline)
             embed_task = asyncio.create_task(_embed_consumer())
-            await asyncio.gather(*[_ocr_one(p) for p in report_paths])
-            embed_done.set()
+            try:
+                await asyncio.gather(*[_ocr_one(p) for p in report_paths])
+            finally:
+                # Toujours clore le flux : sans ce marqueur, le consommateur
+                # attendait indéfiniment après une erreur d'OCR.
+                await ocr_queue.put(None)
             await embed_task
+
+            # Ordre stable : l'OCR rend les documents dans l'ordre où il les finit.
+            ocr_raw_results.sort(key=lambda d: d["filename"])
+            if not ocr_raw_results:
+                raise UserFacingError(
+                    "Aucun texte n'a pu être extrait des documents fournis. "
+                    "Vérifiez qu'il s'agit bien de rapports lisibles (PDF non vides, non protégés).")
 
             t_ocr_end = time.perf_counter()
             timings["ocr_embed_pipeline"] = t_ocr_end - t_ocr_start
-            chunks = all_chunks
-            logger.info(f"[{job_id[:8]}] Pipeline OCR+embed terminé: {len(chunks)} chunks en {timings['ocr_embed_pipeline']:.1f}s")
+            logger.info(f"[{job_id[:8]}] Pipeline OCR+embed terminé: {chunk_index} chunks "
+                        f"en {timings['ocr_embed_pipeline']:.1f}s")
 
             # ============================================================
-            # STEP 2 : Synthèse médicale globale (nouveau)
+            # STEP 2 : Synthèse médicale globale
             # ============================================================
             JOBS[job_id].update({
                 "status": "processing",
@@ -741,19 +855,11 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
             t_synthesis_start = time.perf_counter()
             synthesis = await run_medical_synthesis(ocr_raw_results, VLLM_URL, VLLM_MODEL)
             timings["medical_synthesis"] = time.perf_counter() - t_synthesis_start
-
-            # Index de provenance : construit sur le texte OCR complet, pas sur
-            # les chunks retenus. Une citation exacte tirée d'un document classé
-            # hors du top-24 passait sinon pour inventée.
-            derived_sources = _synthesis_as_source(synthesis)
-            source_index = SourceIndex(ocr_raw_results, derived_sources)
             JOBS[job_id]["_source_documents"] = ocr_raw_results
 
-            synthesis_json: str | None = None
             if synthesis:
-                synthesis_json = json.dumps(synthesis, ensure_ascii=False)
-                nb_dx = len(synthesis.get("diagnostics", []))
-                nb_it = len(synthesis.get("incapacites_travail", []))
+                nb_dx = len(synthesis.get("diagnostics") or [])
+                nb_it = len(synthesis.get("incapacites_travail") or [])
                 logger.info(
                     f"[{job_id[:8]}] Synthèse OK en {timings['medical_synthesis']:.1f}s "
                     f"— {nb_dx} diagnostics, {nb_it} périodes d'incapacité"
@@ -763,96 +869,33 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
                     json.dumps(synthesis, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
             else:
-                logger.warning(f"[{job_id[:8]}] Synthèse échouée — mode RAG pur activé")
+                logger.warning(f"[{job_id[:8]}] Synthèse échouée — extraction sur les seuls documents")
+                warnings.append("Synthèse médicale indisponible : extraction faite sur les seuls documents.")
 
             # ============================================================
-            # STEP 3 : RAG hybride — rerank par champ + batch LLM par section
-            # Phase A : retrieval + rerank en parallèle (sem=5), top-8 chunks/champ
-            # Phase B : batch LLM par section (sem=10), ~7 champs par appel
+            # STEP 3 : Extraction des champs
             # ============================================================
             t_rag_start = time.perf_counter()
             JOBS[job_id].update({"status": "processing",
                                  "message": "🤖 Analyse LLM et extraction des entités...", "progress": 50})
-            with open(f"template/Form_{form_id}.json", "r") as f:
-                template = json.load(f)
+            template = _load_template(form_id)
 
-            # Une question vide ne produit qu'un embedding parasite : les templates
-            # générés par tools/gen_template.py la laissent à "" tant qu'elle n'est
-            # pas rédigée.
-            fields_with_q = _extractable_fields(template)
-            n_fields = len(fields_with_q)
-            logger.info(f"[{job_id[:8]}] Step 3: {n_fields} champs — phase A rerank, phase B batch-LLM...")
-
-            all_q_embs = await fetch_question_embeddings(
-                client, form_id, [f["question"] for f in fields_with_q])
-
-            rerank_sem, llm_sem = _RERANK_SEM, _LLM_SEM
-
-            # --- Phase A : retrieval + rerank par champ (top-12 chunks) ---
-            async def _retrieve_for_field(field: Dict, q_emb) -> tuple[List[str], float]:
-                hits = col.query(query_embeddings=[q_emb], n_results=min(30, len(chunks)))["documents"][0]
-                reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
-                top = reranked[:12]
-                # Le meilleur score sert d'indice de pertinence du retrieval pour ce champ.
-                best_score = float(top[0].get("score", 0.0)) if top else 0.0
-                return [r["document"] for r in top], best_score
-
-            retrieved: List[tuple[List[str], float]] = await asyncio.gather(*[
-                _retrieve_for_field(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
-            ])
-            field_chunk_map: Dict[str, List[str]] = {
-                str(f["id"]): cks for f, (cks, _) in zip(fields_with_q, retrieved)
-            }
-            field_score_map: Dict[str, float] = {
-                str(f["id"]): score for f, (_, score) in zip(fields_with_q, retrieved)
-            }
-
-            # --- Phase B : batch LLM par section ---
-            batches = _group_fields_into_batches(fields_with_q, max_batch_size=7)
-            batches_done = 0
-
-            async def _extract_batch(batch_fields: List[Dict]) -> List[Dict]:
-                nonlocal batches_done
-                # Fusionner les chunks uniques du batch (max 16 chunks fusionnés)
-                seen: set = set()
-                merged_chunks: List[str] = []
-                for bf in batch_fields:
-                    for c in field_chunk_map.get(str(bf["id"]), []):
-                        if c not in seen:
-                            seen.add(c)
-                            merged_chunks.append(c)
-                chunks_ctx = "\n---\n".join(merged_chunks[:24])
-
-                # Filtrer la synthèse sur la section de ce batch
-                section = str(batch_fields[0]["id"]).split(".")[0]
-                filtered_synthesis = _filter_synthesis_for_section(synthesis, section)
-
-                result = await extract_fields_batch_vllm(
-                    client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem
-                )
-                _annotate_confidence(result, source_index, field_score_map)
-                batches_done += 1
+            def _progress(done: int, total: int) -> None:
                 JOBS[job_id].update({
-                    "message": f"🤖 Extraction {batches_done}/{len(batches)} sections...",
-                    "progress": 50 + int(40 * batches_done / len(batches))
+                    "message": f"🤖 Extraction {done}/{total} sections...",
+                    "progress": 50 + int(40 * done / total),
                 })
-                return result
 
-            batch_results = await asyncio.gather(*[_extract_batch(b) for b in batches])
-            results = [item for batch in batch_results for item in batch]
-            t_rag_end = time.perf_counter()
-            timings["rag_extraction"] = t_rag_end - t_rag_start
+            results = await _extract_fields(client, job_id, form_id, template, col, chunk_index,
+                                            synthesis, ocr_raw_results, _progress)
+            timings["rag_extraction"] = time.perf_counter() - t_rag_start
 
             # Stocker les résultats bruts pour le debug/eval + chat
             JOBS[job_id]["_debug_results"] = results
-            JOBS[job_id]["_debug_chunks_count"] = len(chunks)
+            JOBS[job_id]["_debug_chunks_count"] = chunk_index
             JOBS[job_id]["_debug_synthesis"] = synthesis
             # Stocker les définitions de champs pour l'endpoint /fields
-            JOBS[job_id]["_template_fields"] = [
-                {"id": f["id"], "label": f.get("label", str(f["id"])),
-                 "question": f.get("question", ""), "section": str(f["id"]).split(".")[0]}
-                for f in fields_with_q
-            ]
+            JOBS[job_id]["_template_fields"] = _template_fields_view(template)
 
             # Debug : sauvegarder les résultats LLM
             results_debug = []
@@ -860,7 +903,9 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
                 entry = {"field_id": r.get("id")}
                 if "result" in r:
                     entry["value"] = r["result"].get("value")
+                    entry["raw_value"] = r["result"].get("raw_value")
                     entry["source_quote"] = r["result"].get("source_quote")
+                    entry["grounding"] = r["result"].get("grounding")
                 if "error" in r:
                     entry["error"] = r["error"]
                 results_debug.append(entry)
@@ -869,85 +914,11 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
 
             # ============================================================
             # STEP 4 : Injection des valeurs dans le formulaire PDF
-            #          Supporte XFA, AcroForm pur et formulaires hybrides
             # ============================================================
             t_xfa_start = time.perf_counter()
             JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le formulaire PDF...",
                             "progress": 90})
-            empty_form_path = tmp_dir / "empty.pdf"
-
-            source_template_path = Path(f"forms/Form_{form_id}.pdf")
-            if not source_template_path.exists():
-                raise FileNotFoundError(f"Template introuvable pour form_id={form_id}")
-            shutil.copy(source_template_path, empty_form_path)
-
-            # Détecter le type de formulaire
-            form_type = detect_form_type(empty_form_path)
-            logger.info(f"[{job_id[:8]}] Type de formulaire détecté : {form_type}")
-
-            # Construire les valeurs extraites par champ
-            xfa_values: Dict[str, str] = {}    # xml_path → valeur
-            acro_values: Dict[str, str] = {}   # acroform_name → valeur
-
-            for res in results:
-                if "result" not in res or not res["result"].get("value"):
-                    continue
-                value = str(res["result"]["value"])
-                f_def = next((f for f in template["fields"] if f.get("id") == res["id"]), None)
-                if f_def is None:
-                    continue
-                # Normalisation selon le type déclaré dans le template
-                value = _normalize_field_value(value, f_def.get("type"))
-                value = _resolve_option_value(value, f_def)
-                # XFA path
-                if f_def.get("xml_path"):
-                    xfa_values[f_def["xml_path"]] = value
-                # AcroForm name (champ optionnel dans le template JSON)
-                if f_def.get("acroform_name"):
-                    acro_values[f_def["acroform_name"]] = value
-
-            for f_def, value in _computed_values(template):
-                if f_def.get("xml_path"):
-                    xfa_values[f_def["xml_path"]] = value
-                if f_def.get("acroform_name"):
-                    acro_values[f_def["acroform_name"]] = value
-
-            # Le destinataire dépend du canton : il écrase aussi bien les valeurs
-            # par défaut du gabarit que ce que le modèle aurait pu produire.
-            for nom, value in _canton_recipient(template, results).items():
-                for f_def in template["fields"]:
-                    if f_def.get("name") != nom:
-                        continue
-                    if f_def.get("xml_path"):
-                        xfa_values[f_def["xml_path"]] = value
-                    if f_def.get("acroform_name"):
-                        acro_values[f_def["acroform_name"]] = value
-
-            output_pdf = tmp_dir / "output.pdf"
-
-            if form_type in ("xfa", "hybrid"):
-                # --- Injection XFA ---
-                base_xml = tmp_dir / "base.xml"
-                try:
-                    extract_xfa_datasets(empty_form_path, base_xml)
-                    checkbox_paths = discover_checkbox_paths(base_xml)
-                    normalize_checkboxes(xfa_values, checkbox_paths)
-                    filled_xml = tmp_dir / "filled.xml"
-                    update_datasets(base_xml, xfa_values, filled_xml, template["fields"])
-                    # Pour un hybride, on part du template pour la base XFA
-                    inject_datasets(empty_form_path, filled_xml, output_pdf)
-                except PDFNoXFAError:
-                    logger.warning(f"[{job_id[:8]}] XFA introuvable malgré détection hybrid — fallback AcroForm")
-                    form_type = "acroform"
-
-            if form_type == "acroform" or (form_type == "hybrid" and acro_values):
-                # --- Injection AcroForm ---
-                # Pour un hybride : repartir du PDF XFA déjà rempli si disponible, sinon template
-                acro_source = output_pdf if (form_type == "hybrid" and output_pdf.exists()) else empty_form_path
-                fill_acroform(acro_source, acro_values, output_pdf)
-
-            if form_type == "none" or not output_pdf.exists():
-                raise ValueError(f"Impossible de remplir le formulaire (type={form_type})")
+            output_pdf, form_type = _fill_pdf(job_id, form_id, template, results, tmp_dir)
 
             t_xfa_end = time.perf_counter()
             timings["xfa_injection"] = t_xfa_end - t_xfa_start
@@ -957,24 +928,26 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
             ok_count = sum(1 for r in results if "result" in r and r["result"].get("value"))
             err_count = sum(1 for r in results if "error" in r)
             empty_count = sum(1 for r in results if "result" in r and not r["result"].get("value"))
-            synthesis_info = "Non disponible (fallback RAG pur)"
+            _record_field_errors(JOBS[job_id], results)
+            synthesis_info = "Non disponible (extraction sur les seuls documents)"
             if synthesis:
-                nb_dx = len(synthesis.get("diagnostics", []))
-                nb_it = len(synthesis.get("incapacites_travail", []))
+                nb_dx = len(synthesis.get("diagnostics") or [])
+                nb_it = len(synthesis.get("incapacites_travail") or [])
                 synthesis_info = f"{nb_dx} diagnostics, {nb_it} périodes d'incapacité"
             summary = (
                 f"Job: {job_id}\nForm: {form_id}\nDate: {datetime.now().isoformat()}\n"
-                f"Fichiers: {total_files}\nChunks: {len(chunks)}\n"
+                f"Fichiers: {total_files} (lus: {len(ocr_raw_results)})\nChunks: {chunk_index}\n"
                 f"Type formulaire: {form_type}\n"
                 f"Synthèse médicale: {synthesis_info}\n"
-                f"Champs: {n_fields} (OK: {ok_count}, Erreurs: {err_count}, Vides: {empty_count})\n"
+                f"Champs: {len(results)} (OK: {ok_count}, Erreurs: {err_count}, Vides: {empty_count})\n"
                 f"Timings: OCR+embed={timings['ocr_embed_pipeline']:.1f}s, "
                 f"Synthèse={timings.get('medical_synthesis', 0):.1f}s, "
-                f"RAG={timings['rag_extraction']:.1f}s, Injection={timings['xfa_injection']:.1f}s, "
+                f"Extraction={timings['rag_extraction']:.1f}s, Injection={timings['xfa_injection']:.1f}s, "
                 f"Total={timings['total']:.1f}s\n"
             )
             (debug_dir / "summary.txt").write_text(summary, encoding="utf-8")
-            logger.info(f"[{job_id[:8]}] Pipeline terminé en {timings['total']:.1f}s — Debug: {debug_dir}")
+            logger.info(f"[{job_id[:8]}] Pipeline terminé en {timings['total']:.1f}s — "
+                        f"{ok_count}/{len(results)} champs remplis — Debug: {debug_dir}")
 
             # Durée vécue par l'utilisateur : de la soumission au formulaire prêt,
             # transfert et attente comprises. `timings["total"]` ne couvre que le
@@ -993,9 +966,16 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
                 "duration_s": round(elapsed, 1),
                 "_form_id": form_id,
                 "_tmp_dir": str(tmp_dir),
-                "_debug_dir": str(debug_dir),
             })
 
+    except UserFacingError as e:
+        logger.warning(f"Job {job_id} refusé : {e}")
+        JOBS[job_id].update({
+            "status": "failed",
+            "message": str(e),
+            "progress": 0,
+            "completed_at": time.time()
+        })
     except Exception as e:
         # [SEC-10] Log complet côté serveur, message générique côté client
         logger.error(f"Erreur Job {job_id}: {e}", exc_info=True)
@@ -1132,6 +1112,9 @@ async def get_status(job_id: str):
         "progress": job.get("progress"),
         "elapsed_s": round(time.time() - started, 1) if started else None,
         "duration_s": job.get("duration_s"),
+        # Ce que l'utilisateur doit savoir sans que le job échoue : document
+        # illisible écarté, champs à compléter à la main.
+        "warnings": job.get("warnings", []),
     }
 
 
@@ -1144,7 +1127,7 @@ async def get_fields(job_id: str, token: str = ""):
     if job_id not in JOBS or JOBS[job_id].get("status") != "completed":
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
     expected_token = JOBS[job_id].get("token", "")
-    if expected_token and token != expected_token:
+    if expected_token and not secrets.compare_digest(token, expected_token):
         raise HTTPException(status_code=403, detail="Token invalide.")
 
     template_fields = JOBS[job_id].get("_template_fields", [])
@@ -1168,6 +1151,9 @@ async def get_fields(job_id: str, token: str = ""):
             "source_page": payload.get("source_page"),
             "source_excerpt": payload.get("source_excerpt"),
             "source_match": payload.get("source_match"),
+            # Réponse du modèle avant normalisation, quand elle diffère.
+            "raw_value": payload.get("raw_value"),
+            "error": r.get("error"),
         })
     return {"fields": fields_out}
 
@@ -1178,6 +1164,7 @@ async def get_fields(job_id: str, token: str = ""):
 class ChatRequest(BaseModel):
     job_id: str
     message: str
+    token: str = ""
     history: List[Dict[str, Any]] = []
 
 
@@ -1193,6 +1180,11 @@ async def chat_endpoint(request: ChatRequest):
     job = JOBS.get(request.job_id)
     if not job or job.get("status") != "completed":
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
+    # Le chat lit le dossier patient : même contrôle que /fields et /download,
+    # qui l'exigeaient déjà alors que celui-ci s'en passait.
+    expected_token = job.get("token", "")
+    if expected_token and not secrets.compare_digest(request.token, expected_token):
+        raise HTTPException(status_code=403, detail="Token invalide.")
 
     synthesis = job.get("_debug_synthesis")
     synthesis_json = json.dumps(synthesis, ensure_ascii=False) if synthesis else None
@@ -1309,24 +1301,23 @@ async def get_synthesis(job_id: str, token: str = ""):
 
 @app.post("/synthesis/{job_id}/generate")
 async def generate_synthesis(job_id: str, token: str = ""):
-    """(Re)génère la synthèse médicale depuis les fichiers OCR sauvegardés sur disque."""
+    """(Re)génère la synthèse médicale depuis le texte OCR conservé avec le job."""
     job = _validate_job_token(job_id, token)
-    debug_dir = Path(job.get("_debug_dir", ""))
-    markdown_dir = debug_dir / "markdown"
-    if not markdown_dir.exists():
-        raise HTTPException(status_code=404, detail="Fichiers OCR introuvables (session expirée ou trop ancienne).")
-
-    ocr_results = []
-    for md_file in sorted(markdown_dir.glob("*.md")):
-        try:
-            ocr_results.append({"filename": md_file.name, "markdown": md_file.read_text(encoding="utf-8")})
-        except Exception:
-            pass
+    # Le texte OCR vit avec le job ; les journaux de debug, purgés avec lui, ne
+    # servent plus que de secours pour un job antérieur à ce changement.
+    ocr_results = list(job.get("_source_documents") or [])
+    if not ocr_results:
+        markdown_dir = Path(job.get("_debug_dir", "")) / "markdown"
+        for md_file in sorted(markdown_dir.glob("*.md")) if markdown_dir.exists() else []:
+            try:
+                ocr_results.append({"filename": md_file.name, "markdown": md_file.read_text(encoding="utf-8")})
+            except OSError:
+                pass
 
     if not ocr_results:
-        raise HTTPException(status_code=404, detail="Aucun fichier OCR trouvé pour régénérer la synthèse.")
+        raise HTTPException(status_code=404, detail="Texte OCR introuvable (session expirée ou trop ancienne).")
 
-    logger.info(f"[{job_id[:8]}] Régénération synthèse depuis {len(ocr_results)} fichiers OCR...")
+    logger.info(f"[{job_id[:8]}] Régénération synthèse depuis {len(ocr_results)} documents...")
     synthesis = await run_medical_synthesis(ocr_results, VLLM_URL, VLLM_MODEL)
     if synthesis is None:
         raise HTTPException(status_code=502, detail="Le LLM n'a pas pu générer la synthèse. Vérifiez les logs.")
@@ -1381,6 +1372,13 @@ async def refine_synthesis(job_id: str, request: SynthesisRefineRequest):
 
 
 async def rerun_pipeline_task(job_id: str):
+    """Re-run sous le même portier que le pipeline : il sollicite autant le GPU."""
+    _announce_queue(job_id)
+    async with _PIPELINE_SEM:
+        await _rerun_pipeline(job_id)
+
+
+async def _rerun_pipeline(job_id: str):
     """Re-run rapide : saute l'OCR/embedding, réutilise le ChromaDB existant avec la synthèse mise à jour."""
     form_id = JOBS[job_id].get("_form_id")
     synthesis = JOBS[job_id].get("_debug_synthesis")
@@ -1393,127 +1391,31 @@ async def rerun_pipeline_task(job_id: str):
 
         col = chroma_client.get_collection(name=collection_name)
         col_count = col.count()
-        if col_count == 0:
-            raise ValueError("ChromaDB vide — session expirée, impossible de relancer sans re-OCR.")
+        documents = JOBS[job_id].get("_source_documents") or []
+        if not documents:
+            raise ValueError("Contexte du job vide — session expirée, impossible de relancer sans re-OCR.")
 
-        with open(f"template/Form_{form_id}.json", "r") as f:
-            template = json.load(f)
-
-        fields_with_q = _extractable_fields(template)
-        n_fields = len(fields_with_q)
-        logger.info(f"[{job_id[:8]}] Re-run: {n_fields} champs, {col_count} chunks en ChromaDB.")
-
-        # Le re-run ne repasse pas par l'OCR : il réutilise le texte conservé
-        # avec le job. Sans lui, aucune valeur ne pourrait être rattachée.
-        source_index = SourceIndex(JOBS[job_id].get("_source_documents", []),
-                                   _synthesis_as_source(synthesis))
+        template = _load_template(form_id)
+        logger.info(f"[{job_id[:8]}] Re-run: {col_count} chunks en ChromaDB.")
 
         limits = httpx.Limits(max_connections=50, max_keepalive_connections=10, keepalive_expiry=30)
         async with httpx.AsyncClient(limits=limits) as client:
-            JOBS[job_id].update({"message": "🔄 Re-run : re-encodage des questions...", "progress": 15})
-            all_q_embs = await fetch_question_embeddings(
-                client, form_id, [f["question"] for f in fields_with_q])
+            JOBS[job_id].update({"message": "🔄 Re-run : extraction...", "progress": 30})
 
-            rerank_sem, llm_sem = _RERANK_SEM, _LLM_SEM
-
-            async def _retrieve_field(field: Dict, q_emb) -> tuple[List[str], float]:
-                hits = col.query(query_embeddings=[q_emb], n_results=min(30, col_count))["documents"][0]
-                reranked = await fetch_rerank(client, field["question"], hits, rerank_sem=rerank_sem)
-                top = reranked[:12]
-                best_score = float(top[0].get("score", 0.0)) if top else 0.0
-                return [r["document"] for r in top], best_score
-
-            JOBS[job_id].update({"message": "🔄 Re-run : retrieval + reranking...", "progress": 30})
-            retrieved: List[tuple[List[str], float]] = await asyncio.gather(*[
-                _retrieve_field(f, emb) for f, emb in zip(fields_with_q, all_q_embs)
-            ])
-            field_chunk_map: Dict[str, List[str]] = {
-                str(f["id"]): cks for f, (cks, _) in zip(fields_with_q, retrieved)
-            }
-            field_score_map: Dict[str, float] = {
-                str(f["id"]): score for f, (_, score) in zip(fields_with_q, retrieved)
-            }
-
-            batches = _group_fields_into_batches(fields_with_q, max_batch_size=7)
-            batches_done = 0
-
-            async def _extract_batch_rerun(batch_fields: List[Dict]) -> List[Dict]:
-                nonlocal batches_done
-                seen: set = set()
-                merged: List[str] = []
-                for bf in batch_fields:
-                    for c in field_chunk_map.get(str(bf["id"]), []):
-                        if c not in seen:
-                            seen.add(c)
-                            merged.append(c)
-                chunks_ctx = "\n---\n".join(merged[:24])
-                section = str(batch_fields[0]["id"]).split(".")[0]
-                filtered_synthesis = _filter_synthesis_for_section(synthesis, section)
-                result = await extract_fields_batch_vllm(client, batch_fields, chunks_ctx, filtered_synthesis, llm_sem)
-                _annotate_confidence(result, source_index, field_score_map)
-                batches_done += 1
+            def _progress(done: int, total: int) -> None:
                 JOBS[job_id].update({
-                    "message": f"🔄 Re-run : extraction {batches_done}/{len(batches)}...",
-                    "progress": 40 + int(45 * batches_done / len(batches))
+                    "message": f"🔄 Re-run : extraction {done}/{total}...",
+                    "progress": 30 + int(55 * done / total),
                 })
-                return result
 
-            batch_results = await asyncio.gather(*[_extract_batch_rerun(b) for b in batches])
-            results = [item for batch in batch_results for item in batch]
-
+            results = await _extract_fields(client, job_id, form_id, template, col, col_count,
+                                            synthesis, documents, _progress)
             JOBS[job_id]["_debug_results"] = results
-            JOBS[job_id]["_template_fields"] = [
-                {"id": f["id"], "label": f.get("label", str(f["id"])),
-                 "question": f.get("question", ""), "section": str(f["id"]).split(".")[0]}
-                for f in fields_with_q
-            ]
+            JOBS[job_id]["_template_fields"] = _template_fields_view(template)
+            _record_field_errors(JOBS[job_id], results)
 
-            # Step 4: PDF fill
             JOBS[job_id].update({"message": "✍️ Re-run : injection dans le formulaire...", "progress": 88})
-            empty_form_path = tmp_dir / "empty_rerun.pdf"
-            source_template_path = Path(f"forms/Form_{form_id}.pdf")
-            if not source_template_path.exists():
-                raise FileNotFoundError(f"Template PDF introuvable pour form_id={form_id}")
-            shutil.copy(source_template_path, empty_form_path)
-
-            form_type = detect_form_type(empty_form_path)
-            xfa_values: Dict[str, str] = {}
-            acro_values: Dict[str, str] = {}
-
-            for res in results:
-                if "result" not in res or not res["result"].get("value"):
-                    continue
-                value = str(res["result"]["value"])
-                f_def = next((f for f in template["fields"] if f.get("id") == res["id"]), None)
-                if f_def is None:
-                    continue
-                value = _normalize_field_value(value, f_def.get("type"))
-                value = _resolve_option_value(value, f_def)
-                if f_def.get("xml_path"):
-                    xfa_values[f_def["xml_path"]] = value
-                if f_def.get("acroform_name"):
-                    acro_values[f_def["acroform_name"]] = value
-
-            output_pdf = tmp_dir / "output_rerun.pdf"
-
-            if form_type in ("xfa", "hybrid"):
-                base_xml = tmp_dir / "base_rerun.xml"
-                try:
-                    extract_xfa_datasets(empty_form_path, base_xml)
-                    checkbox_paths = discover_checkbox_paths(base_xml)
-                    normalize_checkboxes(xfa_values, checkbox_paths)
-                    filled_xml = tmp_dir / "filled_rerun.xml"
-                    update_datasets(base_xml, xfa_values, filled_xml, template["fields"])
-                    inject_datasets(empty_form_path, filled_xml, output_pdf)
-                except PDFNoXFAError:
-                    form_type = "acroform"
-
-            if form_type == "acroform" or (form_type == "hybrid" and acro_values):
-                acro_source = output_pdf if (form_type == "hybrid" and output_pdf.exists()) else empty_form_path
-                fill_acroform(acro_source, acro_values, output_pdf)
-
-            if not output_pdf.exists():
-                raise ValueError(f"Impossible de générer le formulaire re-run (type={form_type})")
+            output_pdf, _ = _fill_pdf(job_id, form_id, template, results, tmp_dir, suffix="_rerun")
 
         JOBS[job_id].update({
             "status": "completed",
@@ -1542,6 +1444,9 @@ async def trigger_rerun(job_id: str, background_tasks: BackgroundTasks, token: s
         raise HTTPException(status_code=409, detail="Un traitement est déjà en cours.")
     if not job.get("_form_id"):
         raise HTTPException(status_code=400, detail="Métadonnées de re-run manquantes (job trop ancien ?).")
+    # Marqué tout de suite : sinon un second clic, avant le démarrage de la tâche
+    # de fond, lançait un second re-run concurrent sur le même job.
+    job.update({"status": "processing", "message": "🔄 Re-run en préparation...", "progress": 2})
     background_tasks.add_task(rerun_pipeline_task, job_id)
     return {"ok": True, "job_id": job_id}
 
@@ -1587,6 +1492,7 @@ async def debug_results(job_id: str, token: str = ""):
                 "value": r.get("result", {}).get("value") if "result" in r else None,
                 "source_quote": r.get("result", {}).get("source_quote") if "result" in r else None,
                 "quote_verified": r.get("result", {}).get("quote_verified") if "result" in r else None,
+                "raw_value": r.get("result", {}).get("raw_value") if "result" in r else None,
                 "rerank_score": r.get("result", {}).get("rerank_score") if "result" in r else None,
                 "grounding": r.get("result", {}).get("grounding") if "result" in r else None,
                 "source_document": r.get("result", {}).get("source_document") if "result" in r else None,
