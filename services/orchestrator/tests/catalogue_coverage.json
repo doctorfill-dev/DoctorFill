@@ -1,0 +1,26 @@
+{
+  "_comment": "Champs soumis au modèle par formulaire. Une baisse fait échouer tests/test_catalogue.py : à mettre à jour seulement si elle est voulue.",
+  "extractable": {
+    "AI_MoyensAuxiliaires": 22,
+    "AI_RapportIntermediaire_Actualisation": 34,
+    "AI_RapportIntermediaire_Revision": 47,
+    "AI_ReadaptationRente": 81,
+    "Adressage_Angiologie": 81,
+    "Adressage_Cardiologie": 64,
+    "Gyneco_AnnonceMaternite": 22,
+    "LAA_CertificatMedical_Suva": 77,
+    "LAA_MoyensAuxiliaires": 67,
+    "LAA_Physiotherapie": 58,
+    "LAA_Physiotherapie_LongueDuree": 67,
+    "LAA_PremierDiagnostic_MTBI": 62,
+    "LAA_PriseEnChargeHospitaliere": 53,
+    "LAA_RapportAbrege": 36,
+    "LAA_RapportInitial": 94,
+    "LAA_RapportIntermediaire_Suva": 58,
+    "LAM_FeuilleMaladieAccident": 77,
+    "LAM_RapportIntermediaire": 54,
+    "LAMal_RapportInitial": 107,
+    "LCA_IncapaciteTravail": 110,
+    "Prescription_EnseignementDiabete": 70
+  }
+}
