@@ -27,8 +27,15 @@ services/orchestrator/uploads/
 services/orchestrator/results/
 
 # ── eval & logs
-eval
+# Seuls les sorties et les documents générés sont ignorés : une règle `eval`
+# entière rendait inertes les scripts et dossiers de test versionnés, et faisait
+# échouer tout `git add` sur eux.
+eval/results/
+eval/test_docs/
 services/logs/*.md
+
+# ── tests
+.pytest_cache
 
 # ── Formulaires medForms récupérés par tools/gen_catalog.py ──
 # Les PDF vierges appartiennent à medForms et pèsent ~2 Mo pièce : on versionne

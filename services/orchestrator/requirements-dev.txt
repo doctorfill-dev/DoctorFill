@@ -1,0 +1,4 @@
+# Dépendances de test de l'orchestrateur (hors image Docker).
+#   pip install -r requirements-dev.txt && python -m pytest tests
+-r requirements.txt
+pytest>=8.0,<10.0

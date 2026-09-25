@@ -103,6 +103,16 @@ doctorfill/
 └── docs/wiki/                # Documentation wiki
 ```
 
+## Tests
+
+```bash
+cd services/orchestrator
+pip install -r requirements-dev.txt
+python -m pytest tests      # sans GPU : OCR, TEI et vLLM sont simulés
+```
+
+Exécutés en CI avec le build du frontend (`.github/workflows/tests.yml`).
+
 ## Évaluation RAG
 
 ```bash

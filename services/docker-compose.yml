@@ -8,7 +8,10 @@ services:
     # est un lot de requêtes d'extraction simultanées, donc c'est le débit agrégé qui
     # compte, pas la latence par flux — d'où max-num-seqs relevé de 8 à 24.
     # --enable-prefix-caching : tous les batchs d'un job partagent le même prompt
-    # système et le même bloc de synthèse, préfilé une seule fois.
+    # système, la même synthèse et — pour un dossier qui tient dans la fenêtre —
+    # le même texte intégral des documents, préfilés une seule fois.
+    # --max-model-len : à garder aligné sur LLM_MAX_MODEL_LEN de l'orchestrateur,
+    # qui y dimensionne le contexte de chaque prompt.
     command: >
       vllm serve Qwen/Qwen2.5-14B-Instruct-AWQ
       --max-model-len 32768
