@@ -1,0 +1,48 @@
+name: eval
+
+# Non-régression de la qualité d'extraction contre le vrai modèle.
+#
+# Les runners GitHub n'ont pas de GPU : ce workflow tourne sur un runner
+# auto-hébergé enregistré sur le DGX Spark avec le label `dgx`, et vise le
+# backend déployé sur cette machine. Lancement manuel (onglet Actions →
+# eval → Run workflow), typiquement sur la branche d'une PR qui touche aux
+# prompts, au modèle, au découpage ou aux templates.
+#
+# La référence (eval/baseline.json) se met à jour par PR, après validation :
+#   python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      api:
+        description: URL du backend à évaluer
+        default: http://localhost:8080
+      forms:
+        description: Formulaires (séparés par des espaces, vide = les 21)
+        default: ""
+
+jobs:
+  regression:
+    runs-on: [self-hosted, dgx]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      # truth.py n'importe que la partie pure de l'orchestrateur (core/fields, core/provenance).
+      - run: python3 -m pip install --user "httpx>=0.27.0,<1.0"
+      - name: Dossiers de test contre le backend
+        env:
+          API_KEY: ${{ secrets.DOCTORFILL_API_KEY }}
+          API_URL: ${{ inputs.api }}
+          FORMS: ${{ inputs.forms }}
+        run: |
+          python3 eval/regression.py --api "$API_URL" --api-key "$API_KEY" \
+            ${FORMS:+--forms $FORMS} --report report.md --json results.json
+      - if: always()
+        run: cat report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: |
+            report.md
+            results.json

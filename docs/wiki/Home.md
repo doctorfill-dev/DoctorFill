@@ -11,6 +11,7 @@ Bienvenue sur le wiki de **DoctorFill**, l'application d'auto-remplissage de for
 | [Déploiement Frontend (Cloudflare)](Deploiement-Frontend-Cloudflare) | Déploiement du frontend sur Cloudflare Pages + Tunnel |
 | [Pipeline RAG](Pipeline-RAG) | Fonctionnement du pipeline RAG (OCR → Embedding → Retrieval → LLM) |
 | [Templates](Templates) | Documentation des templates de formulaires (AVS, Cardio, LAA) |
+| [Tests](Tests) | Tests en CI et non-régression de la qualité d'extraction |
 
 ## Stack technique
 

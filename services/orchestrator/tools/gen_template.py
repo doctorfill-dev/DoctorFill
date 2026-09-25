@@ -523,10 +523,29 @@ def _ui_kind(elem: ET.Element) -> str:
     return _tag(ui[0][0])
 
 
+def _item_groups(elem: ET.Element) -> tuple[list[str], list[str]]:
+    """
+    (libellés, valeurs enregistrées) des <items> d'un champ.
+
+    Une liste XFA peut porter deux groupes <items> : les libellés affichés, et
+    les valeurs enregistrées (`save="1"`). Les concaténer donnait des options
+    comme ['non', 'oui', '0', '1'] : le modèle pouvait répondre « 0 », et « oui »
+    n'était jamais traduit en « 1 », donc jamais coché.
+    """
+    shown: list[str] = []
+    saved: list[str] = []
+    for group in _children(elem, "items"):
+        texts = [t.text for t in _children(group, "text") if t.text]
+        (saved if group.get("save") == "1" else shown).extend(texts)
+    if not shown:
+        # Un seul groupe, marqué `save` : il sert aussi de libellé.
+        return saved, []
+    return shown, saved if len(saved) == len(shown) else []
+
+
 def _items(elem: ET.Element) -> list[str]:
-    """Valeurs proposées par le champ (états d'une case, options d'une liste)."""
-    return [t.text for group in _children(elem, "items")
-            for t in _children(group, "text") if t.text]
+    """Valeurs proposées par le champ (états d'une case, libellés d'une liste)."""
+    return _item_groups(elem)[0]
 
 
 # Texte indicatif du gabarit Designer, pas une valeur : « <TT.MM.JJJJ> ».
@@ -613,7 +632,7 @@ def parse_xfa_fields(template_xml: str) -> list[dict[str, Any]]:
         ui = _ui_kind(elem)
         segments = [s.split("[")[0] for s in som_path]
         question, vocab_type = _describe(segments[-1], segments[:-1])
-        options, option_values = _items(elem), []
+        options, option_values = _item_groups(elem)
         field_type = UI_TO_TYPE.get(ui)
         if _tag(elem) == "exclGroup":
             options, option_values = _exclgroup_options(elem)
@@ -833,11 +852,11 @@ def build_template(pdf_path: Path, keep_technical: bool = False,
     entries: list[dict[str, Any]] = []
     reused_keys: set[str | None] = set()
 
-    # Les sections d'un template rédigé encodent un découpage métier que
-    # SECTION_SYNTHESIS_KEYS (prompts.py) exploite pour cibler la synthèse
-    # injectée dans chaque prompt. Une numérotation dérivée des pages XFA le
-    # détruirait : on repart donc du numéro de section existant, et les champs
-    # nouveaux vont dans une section créée après la dernière connue.
+    # Les sections d'un template rédigé encodent un découpage métier : elles
+    # déterminent les lots d'extraction (core/fields.batch_fields), et les IDs
+    # de champs en dérivent. Une numérotation dérivée des pages XFA les
+    # bouleverserait : on repart donc du numéro de section existant, et les
+    # champs nouveaux vont dans une section créée après la dernière connue.
     prior_sections = {
         int(str(f["id"]).split(".")[0])
         for f in prior.values()

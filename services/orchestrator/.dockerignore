@@ -1,0 +1,6 @@
+# Hors de l'image : tests, caches, et les PDF medForms bruts (forms/ suffit).
+tests/
+**/__pycache__
+.pytest_cache
+.ruff_cache
+.medforms_cache

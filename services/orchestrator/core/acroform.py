@@ -233,6 +233,31 @@ def _fill_radio(field_obj: pikepdf.Object, value: Any) -> bool:
     return True
 
 
+def _choice_option(field_obj: pikepdf.Object, value: Any) -> tuple[str, str]:
+    """
+    (valeur d'export, libellé affiché) d'une liste de choix pour `value`.
+
+    Une liste /Ch peut déclarer ses options en paires [export, libellé] : le
+    formulaire attend l'export dans /V (« 1 »), le lecteur affiche le libellé
+    (« oui »). Écrire le libellé dans /V, ou dessiner l'export dans l'apparence,
+    donnait un champ incohérent ou un « 1 » à l'écran. On accepte l'un comme
+    l'autre en entrée.
+    """
+    text = "" if value is None else str(value).strip()
+    options = field_obj.get("/Opt")
+    if options is None:
+        return text, text
+    target = text.casefold()
+    for option in options:
+        if isinstance(option, pikepdf.Array) and len(option) >= 2:
+            export, display = str(option[0]), str(option[1])
+        else:
+            export = display = str(option)
+        if target in (export.strip().casefold(), display.strip().casefold()):
+            return export, display
+    return text, text
+
+
 def _fill_fields_recursive(
     pdf: pikepdf.Pdf,
     acroform: pikepdf.Object,
@@ -272,7 +297,11 @@ def _fill_fields_recursive(
         if full_name in values_by_name and full_name not in filled:
             value = values_by_name[full_name]
             on_state = _checkbox_on_state(obj) if _is_checkbox(obj) else None
-            obj["/V"] = _normalize_acroform_value(value, on_state)
+            if str(obj.get("/FT") or "") == "/Ch":
+                export, value = _choice_option(obj, value)
+                obj["/V"] = pikepdf.String(export)
+            else:
+                obj["/V"] = _normalize_acroform_value(value, on_state)
             # On construit l'apparence nous-mêmes : PDFium n'honore pas /NeedAppearances.
             try:
                 build_appearance(pdf, acroform, obj, value, on_state)

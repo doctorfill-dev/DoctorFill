@@ -1,6 +1,6 @@
 """Scénarios LAMal, assurance militaire, LCA, adressages et prescriptions."""
 
-from .praticiens import BRUNNER, FAVRE, MORAND, ROSSIER, SCHMID, VERNET
+from .praticiens import BRUNNER, FAVRE, MORAND, ROSSIER, VERNET
 from .render import Patient, Scenario
 
 SCENARIOS = [

@@ -490,7 +490,7 @@
       "id": "2.7",
       "name": "name",
       "label": "name",
-      "question": "Quel est le libellé du diagnostic posé ?",
+      "question": "Quelle est l'intervention ou l'opération réalisée (libellé) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/name",
       "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].name[0]"
@@ -499,7 +499,7 @@
       "id": "2.8",
       "name": "code",
       "label": "code",
-      "question": "Quel est le code CIM-10 du diagnostic ? Reprendre le code exactement tel qu'il figure dans les documents, sans le reformuler.",
+      "question": "Quel est le code CHOP de l'intervention ? Reprendre le code exactement tel qu'il figure dans les documents, sans le reformuler.",
       "required": false,
       "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/code",
       "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].code[0]"
@@ -523,7 +523,7 @@
       "id": "3.4",
       "name": "input",
       "label": "input",
-      "question": "Y a-t-il une précision à apporter sur le diagnostic ?",
+      "question": "Y a-t-il une précision à apporter sur l'intervention ?",
       "required": false,
       "xml_path": "topmostSubform/page1/ddiagnosisS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].ddiagnosisS1Struct[0].input[0]"
@@ -532,7 +532,7 @@
       "id": "2.9",
       "name": "name",
       "label": "name",
-      "question": "Quel est le libellé du diagnostic posé ?",
+      "question": "Quelle est l'intervention ou l'opération réalisée (libellé) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/ediagnosisS1Struct/name",
       "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].name[0]"
@@ -541,7 +541,7 @@
       "id": "2.10",
       "name": "code",
       "label": "code",
-      "question": "Quel est le code CIM-10 du diagnostic ? Reprendre le code exactement tel qu'il figure dans les documents, sans le reformuler.",
+      "question": "Quel est le code CHOP de l'intervention ? Reprendre le code exactement tel qu'il figure dans les documents, sans le reformuler.",
       "required": false,
       "xml_path": "topmostSubform/page1/ediagnosisS1Struct/code",
       "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].code[0]"
@@ -565,7 +565,7 @@
       "id": "3.5",
       "name": "input",
       "label": "input",
-      "question": "Y a-t-il une précision à apporter sur le diagnostic ?",
+      "question": "Y a-t-il une précision à apporter sur l'intervention ?",
       "required": false,
       "xml_path": "topmostSubform/page1/ediagnosisS1Struct/input",
       "acroform_name": "topmostSubform[0].page1[0].ediagnosisS1Struct[0].input[0]"
@@ -619,7 +619,9 @@
         "Unfallversicherung Stadt Zürich",
         "Vaudoise Générale",
         "Visana Services AG (UVG)",
-        "Zürich Versicherungsgesellschaft AG",
+        "Zürich Versicherungsgesellschaft AG"
+      ],
+      "option_values": [
         "0",
         "1",
         "2",

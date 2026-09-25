@@ -190,106 +190,83 @@ Ajoute un champ "document_source" à chaque diagnostic et chaque période d'inca
 # 3. EXTRACTION BATCH (remplissage du formulaire — plusieurs champs par appel)
 # ---------------------------------------------------------------------------
 
-# Mapping section → clés de la synthèse pertinentes
-# La clé est le préfixe de l'ID du champ (avant le premier '.')
-SECTION_SYNTHESIS_KEYS: Dict[str, List[str]] = {
-    "1":  ["canton_traitement", "patient"],
-    "2":  ["patient", "medecins"],
-    "3":  ["incapacites_travail", "dates_cles"],
-    "4":  ["diagnostics", "traitements"],
-    "5":  ["incapacites_travail", "pronostic"],
-    "6":  ["incapacites_travail", "traitements"],
-    "7":  ["medecins"],
-    "8":  ["diagnostics", "traitements"],
-    "9":  ["medecins"],
-    "10": ["pronostic"],
-}
-
-
 SYSTEM_PROMPT_BATCH_EXTRACT = """\
-Tu es un assistant spécialisé dans l'extraction précise de données depuis des dossiers médicaux suisses.
-On te fournit une SYNTHÈSE MÉDICALE structurée et/ou des EXTRAITS de documents, \
-ainsi qu'une liste de CHAMPS à remplir pour un formulaire administratif.
+Tu es un assistant spécialisé dans l'extraction précise de données depuis des dossiers médicaux suisses, \
+pour remplir un formulaire administratif d'assurance (AI, LAA, LAMal, LAM, LCA).
+
+On te fournit :
+- une SYNTHÈSE MÉDICALE structurée du dossier, produite automatiquement : elle aide à s'orienter \
+mais peut contenir des erreurs ;
+- les DOCUMENTS du dossier (texte intégral ou extraits les plus pertinents), chacun précédé de sa source ;
+- la liste des CHAMPS à remplir, chacun identifié par son ID entre crochets.
 
 RÈGLES STRICTES :
-1. Cherche la réponse de chaque champ EN PRIORITÉ dans la SYNTHÈSE MÉDICALE si elle est fournie.
-2. Si la synthèse ne contient pas l'information, cherche dans les EXTRAITS DE DOCUMENTS.
-3. Si l'information est introuvable dans toutes les sources, retourne exactement "" (chaîne vide).
+1. Réponds pour TOUS les IDs demandés, en reprenant exactement ces IDs comme clés du JSON.
+2. Les DOCUMENTS font foi. En cas de désaccord entre la synthèse et les documents, suis les documents.
+3. Si l'information est introuvable, "value" vaut "" (chaîne vide). N'écris jamais « non mentionné », \
+« inconnu », « N/A », « ... » ni un exemple de format à la place d'une valeur.
 4. NE JAMAIS inventer, déduire ou supposer une valeur absente des sources.
-5. Réponds UNIQUEMENT en JSON valide, sans texte avant ou après.
-6. Réponds à TOUS les IDs demandés, même si la valeur est "".
-7. Pour les dates, utilise le format DD.MM.YYYY.
-8. Pour les listes (ex: diagnostics), liste TOUTES les entrées séparées par des sauts de ligne.
-9. "source_quote" doit être la citation EXACTE du texte source (max 100 caractères).
-   Si valeur vide, mettre "" pour source_quote aussi.
-10. Les clés techniques de la synthèse ("document_source", noms de fichiers .pdf)
-    désignent la provenance interne d'une information : ne les utilise JAMAIS comme
-    valeur d'un champ.
-11. Ne complète JAMAIS une adresse ou une coordonnée partielle avec des éléments
-    provenant d'une autre personne ou d'une autre entité. Une adresse de cabinet
-    sans rue reste sans rue.
+5. Distingue les personnes et les entités : patient, médecin traitant, médecin de famille, employeur, \
+assureur, destinataire. Une coordonnée n'appartient qu'à la personne ou l'entité à laquelle le document \
+l'attribue. Ne complète JAMAIS une adresse ou une coordonnée partielle avec des éléments d'une autre \
+personne ou entité : une adresse de cabinet sans rue reste sans rue.
+6. Dates au format JJ.MM.AAAA. Nombres et pourcentages : le nombre seul, sans unité ni symbole.
+7. Question fermée (oui/non) : réponds seulement si les sources permettent de trancher, sinon "".
+8. Si le champ propose une liste de valeurs, reprends exactement l'une d'elles.
+9. Champs répétés (« n°2 sur 4 ») : attribue les éléments dans l'ordre indiqué, un élément différent \
+par occurrence. S'il y a moins d'éléments que d'occurrences, laisse "" les occurrences en surnombre \
+plutôt que de répéter une valeur.
+10. Pour les listes (ex : diagnostics), liste TOUTES les entrées séparées par des sauts de ligne.
+11. "source_quote" : citation EXACTE et courte (100 caractères au plus) du passage des DOCUMENTS qui \
+justifie la valeur, recopiée mot pour mot. "" si la valeur est vide.
+12. Les clés techniques de la synthèse ("document_source", noms de fichiers .pdf) désignent la \
+provenance interne d'une information : ne les utilise JAMAIS comme valeur d'un champ.
+13. Réponds UNIQUEMENT par l'objet JSON demandé, sans texte avant ou après.
 """
 
 
-def build_batch_extraction_prompt(
+def build_batch_extraction_messages(
     fields: List[Dict],
     synthesis_json: str | None,
-    chunks_context: str | None,
-) -> str:
+    documents: str | None,
+    full_documents: bool = False,
+) -> List[Dict]:
     """
-    Construit le prompt pour extraire plusieurs champs en un seul appel LLM.
-    La synthèse est déjà pré-filtrée sur la section pertinente.
-    """
-    import json as _json
+    Messages d'extraction pour un lot de champs.
 
+    L'ordre compte pour vLLM (--enable-prefix-caching) : prompt système, synthèse
+    puis documents forment un préfixe identique pour tous les lots d'un job
+    lorsque les documents sont transmis en entier — il n'est calculé qu'une fois.
+    Seule la liste des champs, placée en dernier, varie d'un lot à l'autre.
+    """
     parts = []
-
     if synthesis_json:
-        parts.append(f"SYNTHÈSE MÉDICALE (source principale) :\n{synthesis_json}")
+        parts.append("SYNTHÈSE MÉDICALE (aide à l'orientation — les documents font foi) :\n"
+                     + synthesis_json)
+    if documents:
+        title = ("DOCUMENTS DU DOSSIER (texte intégral)" if full_documents
+                 else "EXTRAITS DE DOCUMENTS (les plus pertinents pour ces champs)")
+        parts.append(f"{title} :\n{documents}")
 
-    if chunks_context:
-        parts.append(f"EXTRAITS DE DOCUMENTS (source secondaire) :\n{chunks_context}")
-
-    # Les options d'un groupe de boutons radio doivent être reprises telles quelles :
-    # le remplissage les apparie au libellé exact pour choisir le bouton à cocher.
+    # Les options d'une liste doivent être reprises telles quelles : le remplissage
+    # les apparie au libellé exact pour choisir le bouton à cocher.
     def _line(f: Dict) -> str:
-        line = f'• [{f["id"]}] {f["question"]}'
+        line = f'• [{f["id"]}] {f.get("prompt_question") or f["question"]}'
         options = f.get("options")
         if options and f.get("type") == "choice":
             line += " (réponds exactement par l'une de ces valeurs : " + " | ".join(options) + ")"
         return line
 
-    field_lines = "\n".join(_line(f) for f in fields)
-    parts.append(f"CHAMPS À EXTRAIRE :\n{field_lines}")
-
-    # Fournir un exemple JSON avec tous les IDs pour guider le modèle
-    example = {str(f["id"]): {"value": "...", "source_quote": "..."} for f in fields}
+    parts.append("CHAMPS À EXTRAIRE :\n" + "\n".join(_line(f) for f in fields))
+    ids = ", ".join(f'"{f["id"]}"' for f in fields)
     parts.append(
-        f"RÉPONDS UNIQUEMENT avec ce JSON (tous les IDs sont obligatoires) :\n"
-        + _json.dumps(example, ensure_ascii=False, indent=2)
+        "RÉPONDS UNIQUEMENT par un objet JSON dont les clés sont exactement : " + ids + ".\n"
+        'Chaque clé a pour valeur un objet {"value": <chaîne>, "source_quote": <chaîne>}.'
     )
-
-    return "\n\n".join(parts)
-
-
-# ---------------------------------------------------------------------------
-# Compatibilité ascendante (ancienne interface mono-champ)
-# ---------------------------------------------------------------------------
-
-SYSTEM_PROMPT_EXTRACT = SYSTEM_PROMPT_BATCH_EXTRACT
-
-
-def build_field_extraction_prompt(
-    question: str,
-    synthesis_json: str | None,
-    chunks_context: str | None,
-) -> str:
-    """Interface mono-champ conservée pour compatibilité."""
-    return build_batch_extraction_prompt(
-        fields=[{"id": "result", "question": question}],
-        synthesis_json=synthesis_json,
-        chunks_context=chunks_context,
-    )
+    return [
+        {"role": "system", "content": SYSTEM_PROMPT_BATCH_EXTRACT},
+        {"role": "user", "content": "\n\n".join(parts)},
+    ]
 
 
 # ---------------------------------------------------------------------------
