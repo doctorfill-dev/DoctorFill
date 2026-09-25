@@ -139,6 +139,33 @@ def _struct_of(field: dict) -> str:
     return _canonical_struct(parts[-2]) if len(parts) >= 2 else ""
 
 
+def coding_systems(template: dict) -> dict[str, str]:
+    """
+    Conteneur → système de codage imposé par le formulaire (`type` prérempli).
+
+    Les formulaires d'hospitalisation portent quatre blocs `diagnosisS1Struct`,
+    dont deux réservés aux interventions (codage CHOP). Sans cette distinction,
+    ils étaient numérotés « diagnostic n°3 et n°4 » et recevaient des codes CIM-10.
+    """
+    systems: dict[str, str] = {}
+    for f in template.get("fields", []):
+        preset = str(f.get("preset") or "")
+        parts = _segments(f.get("xml_path"))
+        if f.get("name") == "type" and preset in ("ICD", "CHOP") and len(parts) >= 2:
+            systems["/".join(parts[:-1])] = preset
+    return systems
+
+
+def _context_of(field: dict, coding: dict[str, str]) -> tuple[str, str, str]:
+    """(clé de numérotation, libellé, ordre) de la structure qui porte un champ."""
+    parts = _segments(field.get("xml_path"))
+    key = _container(field)
+    label, order = STRUCT_CONTEXT.get(_struct_of(field), ("", ""))
+    if coding.get("/".join(parts[:-1])) == "CHOP":
+        return key + "#CHOP", "intervention", "ordre chronologique"
+    return key, label, order
+
+
 # Consignes de format dans une question : utiles au modèle, parasites pour la
 # recherche sémantique (« Répondre UNIQUEMENT par … AG, AI, AR, BE… »).
 _BRACKETS = re.compile(r"\[[^\]]*\]")
@@ -151,7 +178,7 @@ def retrieval_text(question: str) -> str:
     return " ".join(text.split()) or question
 
 
-def contextualize(fields: list[dict]) -> list[dict]:
+def contextualize(fields: list[dict], coding: dict[str, str] | None = None) -> list[dict]:
     """
     Rend chaque question univoque au sein du formulaire.
 
@@ -166,10 +193,14 @@ def contextualize(fields: list[dict]) -> list[dict]:
     On ajoute à ces questions le contexte que porte le chemin XFA : la structure
     (« période d'incapacité de travail ») et le rang de l'occurrence.
 
+    Args:
+        coding: système de codage par conteneur (voir `coding_systems`).
+
     Returns:
         copies des champs, enrichies de `prompt_question` (pour le modèle) et
         `retrieval_query` (pour la recherche sémantique).
     """
+    coding = coding or {}
     by_question: dict[str, list[int]] = {}
     for index, field in enumerate(fields):
         by_question.setdefault(fold(field.get("question", "")), []).append(index)
@@ -186,13 +217,13 @@ def contextualize(fields: list[dict]) -> list[dict]:
         # la numérotation des périodes d'incapacité qui ont la même question.
         by_struct: dict[str, list[int]] = {}
         for i in indexes:
-            by_struct.setdefault(_container(prepared[i]), []).append(i)
+            by_struct.setdefault(_context_of(prepared[i], coding)[0], []).append(i)
 
         for members in by_struct.values():
             for rank, i in enumerate(members, start=1):
                 field = prepared[i]
                 question = field.get("question", "")
-                label, order = STRUCT_CONTEXT.get(_struct_of(field), ("", ""))
+                _, label, order = _context_of(field, coding)
                 total = len(members)
                 if label and total > 1:
                     hint = f"{label} n°{rank} sur {total} — {order} ; vide s'il n'y en a pas de n°{rank}"
@@ -210,7 +241,7 @@ def contextualize(fields: list[dict]) -> list[dict]:
 
 def prepare_fields(template: dict) -> list[dict]:
     """Champs à extraire, prêts pour la recherche et le prompt."""
-    return contextualize(extractable_fields(template))
+    return contextualize(extractable_fields(template), coding_systems(template))
 
 
 # ---------------------------------------------------------------------------
@@ -472,6 +503,26 @@ def computed_values(template: dict) -> list[tuple[dict, str]]:
     return [(f, f["computed"]) for f in template.get("fields", []) if f.get("computed")]
 
 
+# Structure que la table cantonale alimente : le bloc de l'office destinataire.
+_RECIPIENT_STRUCTS = {"insuranceS1Address", "recipientS1Address"}
+
+
+def is_recipient_field(field: dict) -> bool:
+    """
+    Le champ appartient-il au destinataire du formulaire ?
+
+    La table cantonale nomme ses champs sans leur structure (`street`, `zip`,
+    `ean`, `input`), et ces noms reviennent dans les blocs patient, médecin ou
+    traitement. Appliquée par nom seul, elle remplaçait l'adresse du patient par
+    celle de l'office AI, le GLN du médecin par celui de l'office, et les
+    remarques libres par une chaîne technique « exaddress#@#… ».
+    """
+    if str(field.get("name") or "").startswith("recipient"):
+        return True
+    parts = _segments(field.get("xml_path"))
+    return len(parts) >= 2 and _INDEX.sub("", parts[-2]) in _RECIPIENT_STRUCTS
+
+
 def canton_recipient(template: dict, results: list[dict]) -> dict[str, str]:
     """
     Destinataire correspondant au canton de traitement extrait.
@@ -550,7 +601,7 @@ def collect_form_values(template: dict, results: list[dict]) -> tuple[dict[str, 
     # défaut du gabarit que ce que le modèle aurait pu produire.
     for nom, value in canton_recipient(template, results).items():
         for f_def in template.get("fields", []):
-            if f_def.get("name") == nom:
+            if f_def.get("name") == nom and is_recipient_field(f_def):
                 _put(f_def, value, value)
 
     return xfa_values, acro_values

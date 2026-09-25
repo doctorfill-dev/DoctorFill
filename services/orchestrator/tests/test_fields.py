@@ -187,7 +187,7 @@ def test_resolve_option(value, expected):
 
 def test_collect_form_values_routes_types_and_recipient():
     template = {
-        "_recipient_by_canton": {"NE": {"recipientBlock": "Office AI NE"}},
+        "_recipient_by_canton": {"NE": {"recipientBlock": "Office AI NE", "street": "Espacité 4"}},
         "fields": [
             {"id": "1.1", "name": "treatmentCanton", "type": "choice", "options": ["NE", "VD"],
              "xml_path": "a/treatmentCanton", "acroform_name": "a.treatmentCanton"},
@@ -200,6 +200,8 @@ def test_collect_form_values_routes_types_and_recipient():
              "acroform_name": "a.recipientBlock"},
             {"id": "1.6", "name": "footer", "computed": "Pied de page", "acroform_name": "a.footer"},
             {"id": "1.7", "name": "remark", "xml_path": "a/remark"},
+            {"id": "1.8", "name": "street", "xml_path": "a/patientS1Address/street"},
+            {"id": "1.9", "name": "street", "xml_path": "a/insuranceS1Address/street", "preset": "Rue BE"},
         ],
     }
     results = [
@@ -208,6 +210,7 @@ def test_collect_form_values_routes_types_and_recipient():
         {"id": "1.3", "result": {"value": "oui"}},
         {"id": "1.4", "result": {"value": "2024-02-01"}},
         {"id": "1.7", "result": {"value": "non mentionné"}},
+        {"id": "1.8", "result": {"value": "Rue du Lac 12"}},
         {"id": "9.9", "error": "extraction_failed"},
     ]
     xfa, acro = collect_form_values(template, results)
@@ -217,3 +220,16 @@ def test_collect_form_values_routes_types_and_recipient():
     assert xfa["a/recipientBlock"] == "Office AI NE"
     assert acro["a.footer"] == "Pied de page"
     assert "a/remark" not in xfa
+    # La table cantonale vise le bloc de l'office, pas l'homonyme du patient.
+    assert xfa["a/insuranceS1Address/street"] == "Espacité 4"
+    assert xfa["a/patientS1Address/street"] == "Rue du Lac 12"
+
+
+def test_procedure_slots_are_not_numbered_as_diagnoses():
+    """Blocs `d`/`e` codés CHOP : interventions, numérotées à part des diagnostics."""
+    template = json.loads((TEMPLATE_DIR / "Form_LAA_PriseEnChargeHospitaliere.json").read_text(encoding="utf-8"))
+    by_path = {f["xml_path"]: f for f in prepare_fields(template)}
+    assert "diagnostic n°2 sur 2" in by_path["topmostSubform/page1/bdiagnosisS1Struct/name"]["prompt_question"]
+    procedure = by_path["topmostSubform/page1/ediagnosisS1Struct/code"]
+    assert "CHOP" in procedure["question"]
+    assert "intervention n°2 sur 2" in procedure["prompt_question"]
