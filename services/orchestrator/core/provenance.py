@@ -303,12 +303,19 @@ def _locate_quote(quote: str, index: SourceIndex) -> tuple[dict | None, bool]:
     return None, False
 
 
-def ground_value(value: str, quote: str, index: SourceIndex) -> dict[str, Any]:
+def ground_value(value: str, quote: str, index: SourceIndex,
+                 literal: bool = True) -> dict[str, Any]:
     """
     Rattache une valeur extraite à son texte source.
 
     Trois questions, dans cet ordre : la citation existe-t-elle vraiment ? la
     valeur y figure-t-elle ? sinon, figure-t-elle ailleurs dans les documents ?
+
+    Args:
+        literal: False pour une réponse choisie plutôt que recopiée — « oui »,
+            « non », une option de liste, un sigle de canton. La retrouver dans
+            le texte ne prouve rien (« ne » figure dans toute phrase négative) :
+            seule la citation qui la justifie compte.
 
     Returns:
         {grounding, quote_verified, source_document, source_page, source_excerpt}
@@ -330,6 +337,11 @@ def ground_value(value: str, quote: str, index: SourceIndex) -> dict[str, Any]:
     def _grade(strong: str, hit: dict) -> str:
         """Un ancrage dans un texte dérivé ne vaut jamais mieux que « à relire »."""
         return INFERRED if hit.get("derived") else strong
+
+    if not literal:
+        result["grounding"] = INFERRED if quote_hit is not None else UNVERIFIED
+        _locate(quote_hit)
+        return result
 
     # Une valeur d'un seul caractère se retrouve partout par accident : on ne peut
     # ni l'attester ni la démentir, et le prétendre serait pire que se taire.
