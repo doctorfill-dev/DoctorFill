@@ -78,7 +78,19 @@ def _normalize_value(value: Any, kind: str) -> str:
         return ""
 
     if kind == "bool":
-        return "1" if value in {"1", "true", "True", True} else "0"
+        # La valeur arrive déjà sous la forme d'un état de la case (« 1 »/« 0 »,
+        # « On »/« Off », selon ce que déclare le formulaire) : on la garde.
+        # L'ancienne règle ramenait à « 0 » tout ce qui n'était pas « 1 » ou
+        # « true » — « oui », « On » compris : la case restait décochée côté XFA
+        # quand elle était cochée côté AcroForm.
+        if isinstance(value, bool):
+            return "1" if value else "0"
+        text = str(value).strip()
+        if text.casefold() in {"true", "yes", "oui", "vrai"}:
+            return "1"
+        if text.casefold() in {"false", "no", "non", "faux"}:
+            return "0"
+        return text
 
     if kind == "int":
         try:
