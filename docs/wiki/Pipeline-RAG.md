@@ -123,8 +123,9 @@ pip install -r requirements-dev.txt
 python -m pytest tests
 ```
 
-Sans GPU ni service : OCR, TEI et vLLM sont simulés ; le remplissage est vérifié
-sur un vrai PDF AcroForm. Exécutés en CI (`.github/workflows/tests.yml`).
+Sans GPU ni service : OCR, TEI et vLLM sont simulés. Les 21 formulaires et les
+21 dossiers d'évaluation sont vérifiés de bout en bout à chaque PR — voir
+[Tests](Tests.md).
 
 ## Métriques
 
@@ -132,5 +133,5 @@ sur un vrai PDF AcroForm. Exécutés en CI (`.github/workflows/tests.yml`).
 |----------|--------|
 | Précision AVS (26 champs, avant les changements de septembre 2026) | 84.6% (22/26) |
 
-À remesurer avec `eval/run_eval.py` et `eval/check_grounding.py` sur les
-dossiers de `eval/dossiers/`.
+À remesurer avec `eval/regression.py` (21 dossiers, 324 champs de vérité
+terrain) et `eval/check_grounding.py` — voir [Tests](Tests.md).

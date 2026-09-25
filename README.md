@@ -111,7 +111,11 @@ pip install -r requirements-dev.txt
 python -m pytest tests      # sans GPU : OCR, TEI et vLLM sont simulés
 ```
 
-Exécutés en CI avec le build du frontend (`.github/workflows/tests.yml`).
+Exécutés en CI à chaque PR (`.github/workflows/tests.yml`) : les 21 formulaires
+et les 21 dossiers de `eval/dossiers/` de bout en bout. La qualité d'extraction
+du vrai modèle se contrôle avec `eval/regression.py` contre une référence.
+Détails, et réglage de GitHub pour bloquer un merge rouge :
+[docs/wiki/Tests.md](docs/wiki/Tests.md).
 
 ## Évaluation RAG
 
@@ -126,7 +130,10 @@ python generate_docs.py --count 60 --noise 10
 python run_eval.py --api http://localhost:8080 --api-key <KEY>
 ```
 
-Précision actuelle : **84.6%** sur Form_AVS (26 champs) — voir [#21](https://github.com/doctorfill-dev/DoctorFill/issues/21) pour le plan d'amélioration.
+Non-régression sur les 21 dossiers (vérité terrain dérivée des scénarios) :
+`python eval/regression.py --api http://localhost:8080 --api-key <KEY>` — voir [docs/wiki/Tests.md](docs/wiki/Tests.md).
+
+Dernière mesure connue, avant septembre 2026 : **84.6%** sur Form_AVS (26 champs) — voir [#21](https://github.com/doctorfill-dev/DoctorFill/issues/21) pour le plan d'amélioration.
 
 ## Roadmap
 

@@ -1,6 +1,6 @@
 """Scénarios des formulaires de l'assurance-accidents (LAA / Suva)."""
 
-from .praticiens import BRUNNER, KELLER, MORAND, VERNET
+from .praticiens import BRUNNER, KELLER, MORAND
 from .render import Patient, Scenario
 
 SCENARIOS = [

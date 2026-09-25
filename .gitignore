@@ -36,6 +36,7 @@ services/logs/*.md
 
 # ── tests
 .pytest_cache
+.coverage
 
 # ── Formulaires medForms récupérés par tools/gen_catalog.py ──
 # Les PDF vierges appartiennent à medForms et pèsent ~2 Mo pièce : on versionne
