@@ -90,8 +90,9 @@ def discover_checkbox_paths(datasets_xml: str | Path) -> List[str]:
 # Checkbox Normalization
 # ──────────────────────────────────────────────────────────────
 
-_TRUTHY = {"on", "true", "1", "yes", "y", "x", "checked"}
-_FALSY = {"off", "false", "0", "no", "n", ""}
+# Le modèle répond en français : « oui » tombait dans le repli « Off ».
+_TRUTHY = {"on", "true", "1", "yes", "y", "x", "checked", "oui", "vrai", "coché", "coche"}
+_FALSY = {"off", "false", "0", "no", "n", "", "non", "faux"}
 
 
 def _to_on_off(value: Any) -> str:

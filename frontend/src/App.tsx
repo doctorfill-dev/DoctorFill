@@ -40,6 +40,12 @@ const UI_BUILD = {
   builtAt: __APP_BUILT_AT__,
 };
 
+// Erreur de statut définitive : inutile de réinterroger le serveur.
+class PollFatalError extends Error {}
+
+// Coupures tolérées pendant le suivi d'une tâche avant d'abandonner.
+const MAX_POLL_FAILURES = 6;
+
 const apiFetch = (url: string, options: RequestInit = {}) => {
   const headers = new Headers(options.headers || {});
   if (API_KEY) headers.set("X-API-Key", API_KEY);
@@ -291,6 +297,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [progress, setProgress] = useState<number>(0);
@@ -547,6 +554,8 @@ export default function App() {
     // Sauvegarder d'abord si modifié
     if (synthesisDirty) await handleSaveSynthesis();
     setIsRerunning(true);
+    setError(null);
+    setWarnings([]);
     setPdfUrl(null);
     setFormFields([]);
     try {
@@ -588,13 +597,15 @@ export default function App() {
     fetchStats();
   }, []);
 
-  const pollStatus = async (jid: string, token: string) => {
+  const pollStatus = async (jid: string, token: string, failures = 0) => {
     try {
       const res = await apiFetch(`${BASE_URL}/status/${jid}`);
+      if (res.status === 404) throw new PollFatalError("Tâche introuvable ou expirée.");
       if (!res.ok) throw new Error("Impossible de lire le statut de la tâche.");
       const data = await res.json();
       setStatusMessage(data.message);
       setProgress(data.progress);
+      setWarnings(data.warnings ?? []);
       if (data.status === "completed") {
         const pdfRes = await apiFetch(`${BASE_URL}/download/${jid}?token=${encodeURIComponent(token)}`);
         if (!pdfRes.ok) throw new Error("Erreur lors de la récupération du PDF.");
@@ -614,13 +625,22 @@ export default function App() {
       } else if (data.status === "failed") {
         setError(data.message);
         setIsLoading(false);
+        setIsRerunning(false);
         setStartedAt(null);
       } else {
         setTimeout(() => pollStatus(jid, token), 2000);
       }
     } catch (err: any) {
+      // Une coupure passagère (tunnel, Wi-Fi, redémarrage du proxy) ne doit pas
+      // abandonner une tâche qui continue côté serveur : on réessaie en espaçant.
+      if (!(err instanceof PollFatalError) && failures < MAX_POLL_FAILURES) {
+        setTimeout(() => pollStatus(jid, token, failures + 1), Math.min(2000 * 2 ** failures, 15000));
+        return;
+      }
       setError(err.message || "Perte de connexion avec le serveur.");
       setIsLoading(false);
+      setIsRerunning(false);
+      setStartedAt(null);
     }
   };
 
@@ -628,6 +648,7 @@ export default function App() {
     if (reports.length === 0 || !formId) { setError("Il manque le formulaire ou les rapports."); return; }
     setIsLoading(true);
     setError(null);
+    setWarnings([]);
     setPdfUrl(null);
     setProgress(0);
     setStatusMessage("Initialisation de la connexion...");
@@ -683,6 +704,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           job_id: jobId,
+          token: jobToken,
           message: userMsg,
           history: chatMessages.map((m) => ({ role: m.role, content: m.content })),
         }),
@@ -852,6 +874,16 @@ export default function App() {
                 {error && (
                   <div className="text-sm text-red-700 font-medium bg-red-50 border border-red-200 p-3 rounded-sm flex items-start">
                     <span className="mr-2">⚠️</span> {error}
+                  </div>
+                )}
+
+                {!error && warnings.length > 0 && (
+                  <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 p-3 rounded-sm space-y-1">
+                    {warnings.map((w, i) => (
+                      <div key={i} className="flex items-start">
+                        <span className="mr-2">⚠️</span> {w}
+                      </div>
+                    ))}
                   </div>
                 )}
 

@@ -1,0 +1,111 @@
+# CI de DoctorFill. GitLab est le dépôt principal ; GitHub n'en est qu'un
+# miroir, sans workflow.
+#
+# Pour qu'une MR rouge ne puisse pas être fusionnée : Settings → Merge requests
+# → « Pipelines must succeed ». Voir docs/wiki/Tests.md.
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # Une branche avec une MR ouverte : seul le pipeline de la MR tourne.
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "dev"
+
+stages:
+  - test
+  - eval
+
+default:
+  # Un nouveau push annule le pipeline en cours sur la même branche.
+  interruptible: true
+
+lint:
+  stage: test
+  image: python:3.12
+  script:
+    - pip install --quiet "ruff==0.16.9"
+    # Erreurs seulement (noms indéfinis, imports inutiles, syntaxe) : pas de style imposé.
+    - ruff check --select F,E9 services eval
+
+orchestrator:
+  stage: test
+  # Celle de l'image nvcr.io/nvidia/pytorch de l'orchestrateur.
+  image: python:3.12
+  variables:
+    PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
+  cache:
+    key:
+      files:
+        - services/orchestrator/requirements.txt
+        - services/orchestrator/requirements-dev.txt
+    paths:
+      - .cache/pip
+  script:
+    - cd services/orchestrator
+    - pip install --quiet -r requirements-dev.txt
+    # Sans GPU ni service : OCR, TEI et vLLM sont simulés. Couvre les 21
+    # formulaires du catalogue et les 21 dossiers de eval/dossiers/.
+    - python -m pytest tests -q --cov=. --cov-report=term:skip-covered --cov-fail-under=70
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%/'
+
+marker-ocr:
+  stage: test
+  image: python:3.12
+  script:
+    - cd services/marker_ocr
+    # textlayer.py seul : marker et ses modèles ne sont pas nécessaires.
+    - pip install --quiet "pypdfium2>=4.30.0,<6.0" "pikepdf>=9.0.0,<11.0" "pytest>=8.0,<10.0"
+    - python -m pytest tests -q
+
+frontend:
+  stage: test
+  image: node:20
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - .npm
+  script:
+    - cd frontend
+    - npm ci --cache "$CI_PROJECT_DIR/.npm" --prefer-offline
+    - npm run build
+
+# Non-régression de la qualité d'extraction contre le vrai modèle.
+#
+# Les runners partagés de GitLab n'ont pas de GPU : ce job ne tourne que sur un
+# runner enregistré sur le DGX Spark avec le tag `dgx`, et vise le backend
+# déployé sur cette machine. Lancement manuel (« Run job » dans le pipeline de
+# la MR), typiquement sur une MR qui touche aux prompts, au modèle, au
+# découpage ou aux templates. Variables modifiables au lancement : EVAL_API,
+# EVAL_FORMS (séparés par des espaces, vide = les 21).
+#
+# La référence (eval/baseline.json) se met à jour par MR, après validation :
+#   python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
+eval:
+  stage: eval
+  tags:
+    - dgx
+  rules:
+    - when: manual
+      allow_failure: true
+  interruptible: false
+  timeout: 3h
+  variables:
+    EVAL_API: http://localhost:8080
+    EVAL_FORMS: ""
+  script:
+    # truth.py n'importe que la partie pure de l'orchestrateur (core/fields, core/provenance).
+    - python3 -m pip install --user "httpx>=0.27.0,<1.0"
+    - |
+      python3 eval/regression.py --api "$EVAL_API" --api-key "$DOCTORFILL_API_KEY" \
+        ${EVAL_FORMS:+--forms $EVAL_FORMS} --report report.md --json results.json
+  after_script:
+    - cat report.md || true
+  artifacts:
+    when: always
+    name: eval-report
+    paths:
+      - report.md
+      - results.json

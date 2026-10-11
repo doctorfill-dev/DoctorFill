@@ -2,96 +2,136 @@
 
 ## Vue d'ensemble
 
-Le pipeline RAG (Retrieval-Augmented Generation) est le coeur de DoctorFill. Il extrait automatiquement les informations des documents médicaux pour remplir les formulaires.
-
-## Étapes du pipeline
-
-### 1. OCR — Extraction de texte
-
-**Service** : Marker OCR (`:8082`)
-
-- Chaque PDF est envoyé au service Marker OCR
-- Sortie : Markdown structuré (headings, tableaux, listes)
-- Parallélisation : `asyncio.Semaphore(5)` pour limiter les appels GPU concurrents
-- Timeout : 120s par document
-
-### 2. Chunking — Découpage du texte
-
-**Stratégie** : Semi-sémantique
-
-1. **Découpage par headings Markdown** : chaque section `#`, `##`, `###` crée un chunk
-2. **Fallback** : si un chunk dépasse 400 mots, il est découpé avec 50 mots de chevauchement
-
-### 3. Embedding — Vectorisation
-
-**Service** : TEI (`:8081`) — Modèle `BAAI/bge-m3`
-
-- Les chunks sont envoyés par batch de 64 pour éviter les timeouts
-- Les vecteurs sont stockés dans une collection ChromaDB éphémère (en mémoire)
-- Timeout : 120s par batch
-
-### 4. Retrieval — Recherche sémantique
-
-Pour chaque champ du formulaire :
-
-1. **Embedding de la question** : la question du template est vectorisée
-2. **Recherche ChromaDB** : `n_results = min(20, nombre_total_de_chunks)`
-3. **Reranking** : les 20 résultats sont re-classés par le modèle `BAAI/bge-reranker-v2-m3`
-4. **Sélection** : les 7 meilleurs chunks sont conservés
-
-### 5. Extraction LLM
-
-**Service** : vLLM (`:8000`) — Modèle `Qwen/Qwen2.5-14B-Instruct-AWQ`
-
-- Les 7 chunks sélectionnés sont envoyés comme contexte
-- Le LLM extrait la valeur selon des règles strictes (prompt système dédié)
-- Température : 0.05 (quasi-déterministe)
-- Format de réponse : `{"value": "...", "source_quote": "..."}`
-
-### 6. Remplissage PDF
-
-- Les valeurs extraites sont injectées dans le XML/XFA du formulaire PDF
-- Le PDF rempli est disponible en téléchargement
-
-## Prompt système
+Le pipeline extrait les informations des documents médicaux d'un dossier pour
+remplir un formulaire medForms (XFA statique hybride, couche AcroForm comprise).
+Il est piloté par l'orchestrateur (`services/orchestrator/app.py`) et partagé
+par le traitement initial et le re-run (`_extract_fields`, `_fill_pdf`).
 
 ```
-Tu es un assistant spécialisé dans l'extraction de données depuis des documents médicaux.
-On te fournit des EXTRAITS de rapports et une QUESTION.
-
-RÈGLES STRICTES :
-1. Cherche la réponse dans les extraits fournis.
-2. Extrais la valeur EXACTE telle qu'elle apparaît dans le texte.
-3. Ne réponds "Inconnu" que si l'information est RÉELLEMENT ABSENTE.
-4. Réponds UNIQUEMENT en JSON valide.
-5. Pour les dates, conserve le format original du document.
-6. Pour les noms/prénoms, conserve la casse originale.
+PDF ──► OCR (texte natif, sinon marker) ──► découpage + embeddings (ChromaDB)
+                                         └► synthèse médicale (LLM)
+                                                   │
+        champs du template ──► questions univoques ──► lots ──► LLM (JSON contraint)
+                                                                   │
+                           normalisation + provenance ◄────────────┘
+                                                   │
+                                     remplissage XFA + AcroForm
 ```
 
-## Optimisations réalisées
+## Étapes
 
-| Paramètre | Avant | Après | Impact |
-|-----------|-------|-------|--------|
-| MAX_FILES | 10 | 100 | Support de gros dossiers |
-| n_results | 5 | min(20, total) | Meilleure couverture |
-| reranked | top 3 | top 7 | Plus de contexte au LLM |
-| Embedding | 1 appel | Batch de 64 | Pas de timeout |
-| OCR | Séquentiel | Parallèle (sem=5) | ~2x plus rapide |
-| Température | 0.1 | 0.05 | Réponses plus stables |
-| Timeout embed/rerank | 60s | 120s | Pas de timeout sur gros corpus |
+### 1. OCR
 
-## Métriques actuelles
+**Service** : `marker_ocr` (`:8082`). La couche texte native est lue d'abord
+(`textlayer.py`, quelques ms/page) ; l'OCR marker n'est lancé que pour les pages
+scannées. Résultats mis en cache par empreinte SHA-256.
+
+Un document illisible **n'interrompt plus le job** : il est écarté et signalé
+dans `warnings` (`/status`). Reprises proportionnées à la cause : service
+injoignable → 5 tentatives espacées ; délai dépassé ou 5xx → une seule reprise ;
+4xx → aucune. Si aucun document n'est lisible, le job échoue avec un message
+explicite.
+
+### 2. Découpage et embeddings
+
+`extraction.chunk_document` — sections Markdown fusionnées si trop courtes
+(< 40 mots), découpées si trop longues (300 mots, chevauchement 50).
+**Chaque extrait porte sa source** : `[Source : 03_consultations.pdf — page 2 — Médecin traitant]`.
+Embeddings `BAAI/bge-m3` par lots de 64 (TEI `:8081`, reprises sur erreur
+transitoire), stockés dans une collection ChromaDB éphémère par job (réutilisée
+par le chat et le re-run).
+
+### 3. Synthèse médicale
+
+`medical_synthesis.py` — JSON structuré (patient, diagnostics, incapacités,
+traitements, médecins, dates clés). Directe si le dossier tient dans la fenêtre,
+hiérarchique sinon (résumé par document, découpé si besoin, puis fusion).
+Replis : directe → hiérarchique ; fusion LLM → fusion déterministe. En cas
+d'échec complet, l'extraction continue sur les seuls documents.
+
+### 4. Préparation des champs
+
+`core/fields.py` :
+
+- **Champs soumis** : question rédigée, ni `computed` ni `preset` d'éditeur.
+  Un `preset` qui n'est que l'**état vierge** du champ (case « /Off », question
+  oui/non sur « non », compteur à 0) reste à remplir.
+- **Questions univoques** : les occurrences d'une structure répétée reçoivent
+  leur contexte — « (Contexte : période d'incapacité de travail n°2 sur 4 — de la
+  plus ancienne à la plus récente ; vide s'il n'y en a pas de n°2) ».
+- **Lots** : par section, jusqu'à 8 champs ; les occurrences d'une même
+  structure restent dans le même lot (jusqu'à 32) pour être réparties sans doublon.
+
+### 5. Contexte du prompt
+
+Deux modes, choisis par job selon un budget en tokens (`extraction.py`) :
+
+| Mode | Quand | Contexte |
+|------|-------|----------|
+| Dossier intégral | dossier ≤ `FULL_CONTEXT_MAX_TOKENS` (16k) et place dans la fenêtre | texte complet de tous les documents, identique pour tous les lots (préfixe mis en cache par vLLM) |
+| Extraits | au-delà | recherche vectorielle (30 candidats) → rerank `bge-reranker-v2-m3` (top 8) → extraits **entrelacés par rang** entre les champs du lot, dans `RAG_CONTEXT_TOKENS` (9k) |
+
+La synthèse est transmise **en entier** à chaque lot, avant les documents.
+
+### 6. Extraction LLM
+
+**Service** : vLLM (`:8000`) — `Qwen/Qwen2.5-14B-Instruct-AWQ`, fenêtre 32k.
+
+- Réponse contrainte par **schéma JSON** (`response_format: json_schema`) : tous
+  les IDs sont présents, les listes de choix sont des `enum`. Repli automatique
+  sur `json_object` si le serveur refuse le schéma.
+- Température 0, `max_tokens` 4096, délai 600 s.
+- Reprises sur les seules erreurs transitoires (réseau, délai, 5xx, 429).
+- Fenêtre dépassée → contexte réduit de moitié (3 fois au plus) ;
+  réponse tronquée → lot scindé ; IDs absents → redemandés une fois.
+
+### 7. Normalisation et provenance
+
+- Valeurs : « non mentionné », « N/A », « ... », exemples de format → vide ;
+  dates → `JJ.MM.AAAA` ; oui/non canoniques ; nombres seuls ; sexe `M`/`F`.
+  La réponse brute reste dans `raw_value`.
+- Provenance (`core/provenance.py`) : la valeur est-elle retrouvable dans les
+  documents, et où ? Verdict `verified` / `attested` / `inferred` / `unverified`
+  / `not_checkable`, avec document, page et extrait. Pour une réponse choisie
+  (oui/non, option de liste), seule la citation compte.
+
+### 8. Remplissage PDF
+
+`core/fields.collect_form_values` construit les valeurs XFA et AcroForm :
+extraits, champs calculés, puis destinataire dérivé du canton.
+Cases à cocher : état déclaré par le formulaire (`On`/`Off` ou `1`/`0`).
+Listes : libellé choisi → valeur d'export, et libellé affiché dans l'apparence.
+
+## Réglages
+
+| Variable | Défaut | Rôle |
+|----------|--------|------|
+| `LLM_MAX_MODEL_LEN` | 32768 | À aligner sur `--max-model-len` de vLLM |
+| `FULL_CONTEXT_MAX_TOKENS` | 16000 | Seuil du mode dossier intégral |
+| `RAG_CONTEXT_TOKENS` | 9000 | Budget d'extraits par lot |
+| `MAX_TOKENS_EXTRACT` | 4096 | Génération par lot |
+| `LLM_TIMEOUT` / `SYNTHESIS_TIMEOUT` | 600 / 900 s | Délais LLM |
+| `MAX_BATCH_SIZE` / `MAX_FAMILY_SIZE` | 8 / 32 | Taille des lots |
+| `RETRIEVAL_CANDIDATES` / `RETRIEVAL_TOP_K` | 30 / 8 | Retrieval |
+| `KEEP_DEBUG_LOGS` | false | Conserver les journaux de debug au-delà du job |
+
+## Tests
+
+```bash
+cd services/orchestrator
+pip install -r requirements-dev.txt
+python -m pytest tests
+```
+
+Sans GPU ni service : OCR, TEI et vLLM sont simulés. Les 21 formulaires et les
+21 dossiers d'évaluation sont vérifiés de bout en bout à chaque PR — voir
+[Tests](Tests.md).
+
+## Métriques
 
 | Métrique | Valeur |
 |----------|--------|
-| Précision AVS (26 champs) | 84.6% (22/26) |
-| Temps de traitement (70 docs) | ~90s |
-| Temps de traitement (100 docs) | <5 min (estimé) |
+| Précision AVS (26 champs, avant les changements de septembre 2026) | 84.6% (22/26) |
 
-## Problèmes connus
-
-1. **Contamination par bruit** : les documents d'autres patients polluent le retrieval
-2. **Confusion d'entités** : patient/médecin/spécialiste mal distingués
-3. **Retrieval miss** : certains champs ne trouvent pas leur chunk pertinent
-
-→ Voir issue #21 pour le plan d'amélioration.
+À remesurer avec `eval/regression.py` (21 dossiers, 324 champs de vérité
+terrain) et `eval/check_grounding.py` — voir [Tests](Tests.md).

@@ -125,7 +125,7 @@ def run_evaluation(api_url: str, api_key: str = "", form_id: str = "AI_Readaptat
         return
 
     print(f"\n{'='*70}")
-    print(f"  ÉVALUATION DOCTORFILL RAG")
+    print("  ÉVALUATION DOCTORFILL RAG")
     print(f"{'='*70}")
     print(f"  API       : {api_url}")
     print(f"  Formulaire: {form_id}")

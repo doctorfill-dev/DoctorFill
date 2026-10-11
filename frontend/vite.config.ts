@@ -20,7 +20,7 @@ function readVersion(): string {
 // de tag à quoi se raccrocher : sa variable d'environnement fait autorité, et le
 // dépôt local ne sert que de repli pour les builds sur poste.
 function readCommit(): string {
-  const fromCI = process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA
+  const fromCI = process.env.CF_PAGES_COMMIT_SHA || process.env.CI_COMMIT_SHA
   if (fromCI) return fromCI.slice(0, 7)
   try {
     return execSync("git describe --always --dirty --abbrev=7", {
