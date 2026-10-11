@@ -137,7 +137,7 @@ def baseline_from(results: list[dict[str, Any]], meta: dict[str, Any]) -> dict[s
 
 def report_markdown(results: list[dict[str, Any]], problems: list[str],
                     baseline: dict[str, Any] | None) -> str:
-    """Rapport lisible dans le résumé d'un job GitHub Actions ou en commentaire de PR."""
+    """Rapport lisible dans le journal ou les artefacts d'un job de CI, ou en commentaire de MR."""
     reference = (baseline or {}).get("forms", {})
     summary = summarize(results)
     lines = ["## Non-régression de l'extraction", ""]

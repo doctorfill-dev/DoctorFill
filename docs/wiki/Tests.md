@@ -4,10 +4,10 @@ Deux questions différentes, deux dispositifs :
 
 | Question | Où | Quand | Bloque le merge |
 |---|---|---|---|
-| **Le code fait-il toujours ce qu'il doit ?** — chaque champ de chaque formulaire atteint le PDF, les erreurs sont absorbées, les valeurs normalisées | CI GitHub Actions (`.github/workflows/tests.yml`), sans GPU, services simulés | chaque PR et chaque push sur `main`/`dev` | oui, une fois les checks déclarés obligatoires (voir plus bas) |
-| **Le modèle trouve-t-il toujours les bonnes valeurs ?** — un changement de prompt, de modèle, de découpage ou de template ne dégrade pas l'extraction | `eval/regression.py` contre le vrai backend (`.github/workflows/eval.yml` sur le DGX) | à la demande, sur les PR qui touchent l'extraction | par la référence `eval/baseline.json` et la revue |
+| **Le code fait-il toujours ce qu'il doit ?** — chaque champ de chaque formulaire atteint le PDF, les erreurs sont absorbées, les valeurs normalisées | CI GitLab (`.gitlab-ci.yml`), sans GPU, services simulés | chaque MR et chaque push sur `main`/`dev` | oui, une fois « Pipelines must succeed » activé (voir plus bas) |
+| **Le modèle trouve-t-il toujours les bonnes valeurs ?** — un changement de prompt, de modèle, de découpage ou de template ne dégrade pas l'extraction | `eval/regression.py` contre le vrai backend (job `eval` sur le DGX) | à la demande, sur les MR qui touchent l'extraction | par la référence `eval/baseline.json` et la revue |
 
-## 1. CI — à chaque PR
+## 1. CI — à chaque MR
 
 ```bash
 cd services/orchestrator && pip install -r requirements-dev.txt && python -m pytest tests
@@ -33,14 +33,16 @@ Le job `orchestrator` échoue aussi sous 70 % de couverture de code.
 
 ### Rendre la CI bloquante
 
-Sans cette règle, GitHub autorise le merge d'une PR rouge.
-**Settings → Branches → Add branch protection rule** (ou *Rulesets*) sur `main` :
+Sans ces réglages, GitLab autorise la fusion d'une MR rouge.
 
-- *Require a pull request before merging* ;
-- *Require status checks to pass before merging*, avec les checks
-  `lint`, `orchestrator`, `marker-ocr`, `frontend` ;
-- *Require branches to be up to date before merging* : la CI est rejouée sur
-  le résultat du merge, pas seulement sur la branche.
+- **Settings → Repository → Protected branches** : `main` protégée, *Allowed
+  to push* : personne ; les changements passent par une MR.
+- **Settings → Merge requests** : cocher *Pipelines must succeed*. Les jobs
+  `lint`, `orchestrator`, `marker-ocr` et `frontend` doivent alors passer ;
+  `eval`, manuel, ne bloque pas.
+- Même page, *Merge method* : *Merge commit with semi-linear history* ou
+  *Fast-forward merge* : la branche doit être à jour avec `main`, donc la CI a
+  tourné sur le résultat de la fusion.
 
 ## 2. Qualité d'extraction — contre le vrai modèle
 
@@ -65,16 +67,17 @@ champ en erreur de plus, ou une précision globale en baisse de plus de
 Le rapport liste, par formulaire, les champs justes, l'écart à la référence,
 et le détail des champs faux (attendu / obtenu).
 
-### Sur le DGX, depuis GitHub
+### Sur le DGX, depuis GitLab
 
-`.github/workflows/eval.yml` (onglet *Actions → eval → Run workflow*) lance le
-même script sur un runner auto-hébergé portant le label `dgx`, et publie le
-rapport dans le résumé du job. Prérequis, une fois :
+Le job `eval` (bouton *Run job* dans le pipeline d'une MR) lance le même script
+sur un runner portant le tag `dgx`, et garde `report.md` et `results.json` en
+artefacts. Variables modifiables au lancement : `EVAL_API`, `EVAL_FORMS`.
+Prérequis, une fois :
 
-1. enregistrer un runner sur le DGX (*Settings → Actions → Runners → New
-   self-hosted runner*), avec le label `dgx` ;
-2. créer le secret `DOCTORFILL_API_KEY` (*Settings → Secrets and variables →
-   Actions*).
+1. enregistrer un runner GitLab sur le DGX (*Settings → CI/CD → Runners →
+   New project runner*), avec le tag `dgx` ;
+2. créer la variable `DOCTORFILL_API_KEY`, masquée (*Settings → CI/CD →
+   Variables*).
 
-Le workflow est manuel : un runner auto-hébergé ne doit pas exécuter le code
-de n'importe quelle PR automatiquement.
+Le job est manuel : un runner auto-hébergé ne doit pas exécuter le code de
+n'importe quelle MR automatiquement.

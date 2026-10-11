@@ -111,10 +111,10 @@ pip install -r requirements-dev.txt
 python -m pytest tests      # sans GPU : OCR, TEI et vLLM sont simulés
 ```
 
-Exécutés en CI à chaque PR (`.github/workflows/tests.yml`) : les 21 formulaires
-et les 21 dossiers de `eval/dossiers/` de bout en bout. La qualité d'extraction
-du vrai modèle se contrôle avec `eval/regression.py` contre une référence.
-Détails, et réglage de GitHub pour bloquer un merge rouge :
+Exécutés en CI à chaque MR (`.gitlab-ci.yml`) : les 21 formulaires et les 21
+dossiers de `eval/dossiers/` de bout en bout. La qualité d'extraction du vrai
+modèle se contrôle avec `eval/regression.py` contre une référence. Détails, et
+réglage de GitLab pour bloquer une fusion rouge :
 [docs/wiki/Tests.md](docs/wiki/Tests.md).
 
 ## Évaluation RAG
