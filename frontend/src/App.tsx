@@ -33,6 +33,12 @@ interface BackendInfo {
   forms: number;
 }
 
+/**
+ * Disponibilité de l'API. `maintenance` : le Spark sert une autre charge et
+ * répond 503 avec `{"status": "maintenance"}` ; `down` : rien ne répond.
+ */
+type ApiStatus = "unknown" | "ok" | "maintenance" | "down";
+
 /** Identité de ce build de l'interface, figée par vite.config.ts. */
 const UI_BUILD = {
   version: __APP_VERSION__,
@@ -333,12 +339,15 @@ export default function App() {
   const [refineError, setRefineError] = useState<string | null>(null);
   const [isRerunning, setIsRerunning] = useState(false);
   const [backend, setBackend] = useState<BackendInfo | null>(null);
+  const [apiStatus, setApiStatus] = useState<ApiStatus>("unknown");
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
+  // Chargés dès que l'API répond : au démarrage, ou à la fin d'une maintenance.
   useEffect(() => {
+    if (apiStatus !== "ok" || availableForms.length > 0) return;
     const fetchForms = async () => {
       try {
         const res = await apiFetch(`${BASE_URL}/forms`);
@@ -352,20 +361,30 @@ export default function App() {
       }
     };
     fetchForms();
-  }, []);
+  }, [apiStatus]);
 
   // /health est hors authentification : il renseigne la version du backend, à
-  // comparer avec celle de l'interface (déploiements indépendants).
+  // comparer avec celle de l'interface (déploiements indépendants), et dit si
+  // l'API est disponible. Revérifié chaque minute pour lever le bandeau seul.
   useEffect(() => {
     const fetchHealth = async () => {
       try {
         const res = await fetch(`${BASE_URL}/health`);
-        if (res.ok) setBackend(await res.json());
+        if (res.ok) {
+          setBackend(await res.json());
+          setApiStatus("ok");
+          return;
+        }
+        const body = await res.json().catch(() => null);
+        setApiStatus(res.status === 503 && body?.status === "maintenance" ? "maintenance" : "down");
       } catch {
-        setBackend(null);
+        setApiStatus("down");
       }
+      setBackend(null);
     };
     fetchHealth();
+    const timer = setInterval(fetchHealth, 60_000);
+    return () => clearInterval(timer);
   }, []);
 
   const extractZipToPdfs = async (file: File): Promise<File[]> => {
@@ -829,6 +848,22 @@ export default function App() {
             </select>
           </div>
         </header>
+
+        {(apiStatus === "maintenance" || apiStatus === "down") && (
+          <div role="status" className="flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-sm px-4 py-3 text-sm">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium">
+                {apiStatus === "maintenance"
+                  ? "DoctorFill est en maintenance."
+                  : "DoctorFill est momentanément indisponible."}
+              </p>
+              <p className="text-amber-700">
+                Réessayez dans quelques minutes : cette page se met à jour d'elle-même.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* MAIN GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
