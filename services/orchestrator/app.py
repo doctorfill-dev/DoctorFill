@@ -1000,7 +1000,7 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
 
             # Durée vécue par l'utilisateur : de la soumission au formulaire prêt,
             # transfert et attente comprises. `timings["total"]` ne couvre que le
-            # pipeline lui-même et reste au journal de debug.
+            # pipeline lui-même.
             elapsed = time.time() - JOBS[job_id].get("started_at", time.time())
             # Seules les exécutions abouties sont comptées : la durée d'un job en
             # échec ne dit rien du coût d'un dossier traité.
@@ -1013,6 +1013,7 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
                 "file_path": str(output_pdf),
                 "completed_at": time.time(),
                 "duration_s": round(elapsed, 1),
+                "timings": {stage: round(seconds, 1) for stage, seconds in timings.items()},
                 "_form_id": form_id,
                 "_tmp_dir": str(tmp_dir),
             })
@@ -1161,6 +1162,10 @@ async def get_status(job_id: str):
         "progress": job.get("progress"),
         "elapsed_s": round(time.time() - started, 1) if started else None,
         "duration_s": job.get("duration_s"),
+        # Une fois le job terminé : durée de chaque étape (OCR et embeddings,
+        # synthèse, extraction, remplissage), pour expliquer une durée anormale
+        # sans aller lire les journaux du serveur.
+        "timings": job.get("timings"),
         # Ce que l'utilisateur doit savoir sans que le job échoue : document
         # illisible écarté, champs à compléter à la main.
         "warnings": job.get("warnings", []),

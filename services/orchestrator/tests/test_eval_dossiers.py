@@ -135,6 +135,8 @@ def test_perfect_model_scores_perfectly_through_the_api(api, dossier):
     assert not wrong, wrong[:3]
     assert result["invented"] == 0 and result["non_answers"] == 0 and result["non_answers_erased"] == 0
     assert result["pdf_mismatches"] == 0, result["pdf_details"][:3]
+    # Durées par étape, publiées par /status : de quoi expliquer un dossier lent.
+    assert {"ocr_embed_pipeline", "rag_extraction", "xfa_injection", "total"} <= set(result["timings"])
     # Un document illisible est écarté et signalé, sans faire échouer le job.
     for name, _nature in SCENARIOS[dossier].illisibles:
         assert any(name in w for w in result["warnings"]), result["warnings"]
@@ -286,6 +288,17 @@ def test_gate_flags_invented_values_and_written_non_answers():
     # Référence antérieure à ces mesures : pas de comparaison.
     old = {"forms": {"F": {"correct": 10, "truth_fields": 10, "errors": 0}}}
     assert regression.compare([{**ok, "invented": 5, "non_answers": 5}], old) == []
+
+
+def test_report_breaks_a_slow_dossier_down_by_stage():
+    """#50 : LAA_Physiotherapie à 287 s au lieu de 118 s, sans moyen de savoir où."""
+    result = {"form": "LAA_Physiotherapie", "status": "completed", "correct": 15, "truth_fields": 15,
+              "filled": 37, "fields": 58, "invented": 0, "absent_fields": 2, "non_answers": 0,
+              "non_answers_erased": 0, "errors": 0, "pdf_mismatches": 0, "details": [], "seconds": 287.0,
+              "timings": {"ocr_embed_pipeline": 6.0, "medical_synthesis": 201.0, "rag_extraction": 61.0,
+                          "xfa_injection": 2.0, "total": 270.0}}
+    report = regression.report_markdown([result], [], None)
+    assert "| LAA_Physiotherapie | 287 s | 6 s | 201 s | 61 s | 2 s | 17 s |" in report
 
 
 def test_gate_tolerates_one_field_of_noise():
