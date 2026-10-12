@@ -229,6 +229,27 @@ def test_absent_fields_are_extracted_and_never_expected(dossier):
     assert not set(absent) & set(truth.derive_truth(dossier))
 
 
+@pytest.mark.parametrize("dossier, fid", [("LAA_CertificatMedical_Suva", "1.10"),
+                                          ("Prescription_EnseignementDiabete", "1.7")])
+def test_pdf_check_ignores_the_recipient_the_template_fills_itself(dossier, fid):
+    """
+    #50, mesure de main : 3 écarts PDF / /fields, tous des faux positifs. Le bloc
+    du destinataire porte l'adresse officielle de l'assureur, posée par le
+    template (`preset`) et jamais demandée au modèle : /fields n'a rien à dire.
+    """
+    template = truth.load_template(truth.form_of(dossier))
+    field = next(f for f in template["fields"] if str(f.get("id")) == fid)
+    assert "#@#" in field["preset"]
+    acroform = {field["acroform_name"]: field["preset"]}
+    assert truth.pdf_mismatches(dossier, [], acroform) == []
+
+    # La même chaîne dans une remarque extraite reste un défaut.
+    remark = next(f for f in prepare_fields(template) if f.get("name") == "input"
+                  and not truth.is_recipient_field(f))
+    acroform[remark["acroform_name"]] = field["preset"]
+    assert [d["id"] for d in truth.pdf_mismatches(dossier, [], acroform)] == [str(remark["id"])]
+
+
 def test_pdf_check_catches_the_canton_table_overwriting_the_patient(api, monkeypatch):
     """
     Le patient neuchâtelois d'AI_ReadaptationRente : appliquée par nom seul, la
