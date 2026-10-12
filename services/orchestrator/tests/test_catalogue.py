@@ -59,6 +59,31 @@ def test_published_forms_have_every_question_written(form_id):
 
 
 @pytest.mark.parametrize("form_id", sorted(TEMPLATES))
+def test_questions_name_the_right_party(form_id):
+    """
+    Une question ne désigne que la personne dont le bloc porte les coordonnées.
+
+    Retouchées à la main, celles du médecin adresseur d'Adressage_Cardiologie
+    visaient « le destinataire » et « le médecin spécialiste » : le téléphone,
+    présent dans le dossier, restait vide (#50).
+
+    Le canton choisit l'office destinataire, celui du domicile : demandé comme
+    « canton de traitement », il recevait celui du cabinet (#50).
+    """
+    from tools.gen_template import _describe
+
+    for f in _fields(TEMPLATES[form_id]):
+        segments = [re.sub(r"\[\d+\]$", "", s) for s in f["xml_path"].split("/")]
+        question = f.get("question") or ""
+        if len(segments) > 1 and segments[-2] == "providerS1Address":
+            assert not re.search(r"destinataire|spécialiste", question), f"{f['id']} : {question}"
+        if f.get("name") == "treatmentCanton":
+            assert "domicilié" in question, f"{f['id']} : {question}"
+            assert _describe(segments[-1], segments[:-1])[0] == question, \
+                f"{f['id']} : question différente de celle du générateur"
+
+
+@pytest.mark.parametrize("form_id", sorted(TEMPLATES))
 def test_field_types_and_options_are_consistent(form_id):
     for f in _fields(TEMPLATES[form_id]):
         assert f.get("type") in KNOWN_TYPES, f["id"]

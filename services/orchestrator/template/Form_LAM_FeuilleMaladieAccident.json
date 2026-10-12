@@ -607,7 +607,7 @@
       "id": "1.46",
       "name": "treatmentCanton",
       "label": "treatmentCanton",
-      "question": "Dans quel canton suisse le patient est-il traité ? Répondre par le sigle du canton (VD, GE, VS, FR…).",
+      "question": "Dans quel canton suisse le patient est-il domicilié ? Répondre par le sigle du canton (VD, GE, VS, FR…). C'est le canton de son adresse, et non celui du cabinet ou de l'hôpital.",
       "required": false,
       "xml_path": "topmostSubform/page1/treatmentS1Struct/treatmentCanton",
       "acroform_name": "topmostSubform[0].page1[0].treatmentS1Struct[0].treatmentCanton[0]",

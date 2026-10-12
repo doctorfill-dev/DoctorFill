@@ -9,7 +9,7 @@
       "id": "1.1",
       "name": "treatmentCanton",
       "label": "treatmentCanton",
-      "question": "Quel est le canton Suisse de traitement du patient ? Répondre UNIQUEMENT par deux lettres majuscules (ex. : NE, VD, GE, BE, ZH, LU, SG, TI, FR, BS, BL, AG, SO, VS, GR, TG, SH, NW, OW, UR, GL, ZG, SZ, AI, AR, JU).",
+      "question": "Dans quel canton suisse le patient est-il domicilié ? Répondre par le sigle du canton (VD, GE, VS, FR…). C'est le canton de son adresse, et non celui du cabinet ou de l'hôpital.",
       "required": false,
       "xml_path": "mutter_dok/Seite1/treatmentS1Struct/treatmentCanton",
       "acroform_name": "mutter_dok[0].Seite1[0].treatmentS1Struct[0].treatmentCanton[0]",
