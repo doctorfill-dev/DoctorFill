@@ -1,14 +1,16 @@
 """
-Les 21 dossiers d'évaluation, de bout en bout, par l'API HTTP — modèle simulé.
+Les dossiers d'évaluation, de bout en bout, par l'API HTTP — modèle simulé.
 
-Chaque dossier de `eval/dossiers/` (PDF réels, 4 à 7 documents) est soumis à
-/process-form avec le script de non-régression lui-même (`eval/regression.py`),
-contre l'application en mémoire. OCR, embeddings et LLM sont simulés ; le
-« modèle » répond la vérité terrain dérivée des scénarios (`eval/truth.py`).
+Chaque dossier de `eval/dossiers/` (PDF réels, 4 à 12 documents : un par
+formulaire du catalogue, plus quelques variantes) est soumis à /process-form
+avec le script de non-régression lui-même (`eval/regression.py`), contre
+l'application en mémoire. OCR, embeddings et LLM sont simulés ; le « modèle »
+répond la vérité terrain dérivée des scénarios (`eval/truth.py`).
 
-Ce que ça garantit à chaque merge, pour chaque formulaire du catalogue :
+Ce que ça garantit à chaque merge, pour chaque dossier :
 - le dossier traverse tout le pipeline sans erreur (upload, OCR, synthèse,
-  extraction, remplissage, /fields, /download) ;
+  extraction, remplissage, /fields, /download), documents illisibles et
+  dossier trop long pour être transmis en entier compris ;
 - une valeur juste en sortie du modèle arrive juste dans /fields *et* dans le
   PDF livré — normalisation, options, destinataire cantonal compris ;
 - le script de non-régression note 100 % un modèle parfait, et détecte une
@@ -41,22 +43,26 @@ sys.path.insert(0, str(EVAL_DIR))
 import regression  # noqa: E402
 import truth  # noqa: E402
 
-FORMS = sorted(truth.load_scenarios())
+SCENARIOS = truth.load_scenarios()
+DOSSIERS = sorted(SCENARIOS)
+FORMS = sorted({s.form for s in SCENARIOS.values()})
 
 
 class DossierServices:
     """OCR rendant le markdown du dossier, LLM répondant la vérité terrain."""
 
     def __init__(self):
-        self.form_id = ""
+        self.dossier = ""
+        self.texts: dict[str, str] = {}
         self.answers: dict[str, str] = {}
         self.fail_ocr = False
 
-    def use(self, form_id: str, corrupt: set[str] = frozenset(),
+    def use(self, dossier: str, corrupt: set[str] = frozenset(),
             extra: dict[str, str] | None = None) -> None:
         """`corrupt` : champs répondus faux ; `extra` : réponses hors vérité terrain."""
-        self.form_id = form_id
-        expected = truth.derive_truth(form_id)
+        self.dossier = dossier
+        self.texts = {d["filename"]: d["markdown"] for d in truth.dossier_documents(dossier)}
+        expected = truth.derive_truth(dossier)
         self.answers = {fid: ("valeur fausse" if fid in corrupt else exp.expected)
                         for fid, exp in expected.items()}
         self.answers.update(extra or {})
@@ -66,9 +72,10 @@ class DossierServices:
         if path.endswith("/extract"):
             if self.fail_ocr:
                 return httpx.Response(500, json={"detail": "échec"})
-            name = fakes.uploaded_filename(request)
-            md = (truth.DOSSIERS_DIR / self.form_id / name).with_suffix(".md")
-            return httpx.Response(200, json={"markdown": md.read_text(encoding="utf-8")})
+            text = self.texts.get(fakes.uploaded_filename(request))
+            if text is None:                        # document illisible du dossier
+                return httpx.Response(500, json={"detail": "Erreur lors de l'extraction du PDF."})
+            return httpx.Response(200, json={"markdown": text})
         if path.endswith("/embed"):
             return fakes.embed_response(request)
         if path.endswith("/rerank"):
@@ -103,18 +110,23 @@ def _no_wait(_seconds: float) -> None:
     return None
 
 
-@pytest.mark.parametrize("form_id", FORMS)
-def test_dossier_fits_the_full_context_mode(form_id):
-    docs = truth.dossier_documents(form_id)
+@pytest.mark.parametrize("dossier", DOSSIERS)
+def test_dossier_size_selects_the_intended_context_mode(dossier):
+    """Le dossier long doit vraiment passer par les extraits, les autres tenir en entier."""
+    docs = truth.dossier_documents(dossier)
     assert docs, "dossier vide"
-    assert extraction.estimate_tokens(extraction.full_documents_text(docs)) <= extraction.FULL_CONTEXT_MAX_TOKENS
+    tokens = extraction.estimate_tokens(extraction.full_documents_text(docs))
+    if SCENARIOS[dossier].mode == "extraits":
+        assert tokens > extraction.FULL_CONTEXT_MAX_TOKENS * 1.15, tokens
+    else:
+        assert tokens <= extraction.FULL_CONTEXT_MAX_TOKENS, tokens
 
 
-@pytest.mark.parametrize("form_id", FORMS)
-def test_perfect_model_scores_perfectly_through_the_api(api, form_id):
+@pytest.mark.parametrize("dossier", DOSSIERS)
+def test_perfect_model_scores_perfectly_through_the_api(api, dossier):
     client, services = api
-    services.use(form_id)
-    result = regression.run_form(client, form_id, truth.dossier_pdfs(form_id), sleep=_no_wait)
+    services.use(dossier)
+    result = regression.run_form(client, dossier, truth.dossier_pdfs(dossier), sleep=_no_wait)
 
     assert result["status"] == "completed", result.get("message")
     assert result["errors"] == 0
@@ -122,6 +134,10 @@ def test_perfect_model_scores_perfectly_through_the_api(api, form_id):
     assert result["truth_fields"] >= 5
     assert not wrong, wrong[:3]
     assert result["invented"] == 0 and result["non_answers"] == 0 and result["non_answers_erased"] == 0
+    assert result["pdf_mismatches"] == 0, result["pdf_details"][:3]
+    # Un document illisible est écarté et signalé, sans faire échouer le job.
+    for name, _nature in SCENARIOS[dossier].illisibles:
+        assert any(name in w for w in result["warnings"]), result["warnings"]
 
     # Le PDF livré porte les mêmes valeurs que /fields.
     job = orchestrator.JOBS[result["job_id"]]
@@ -129,9 +145,9 @@ def test_perfect_model_scores_perfectly_through_the_api(api, form_id):
     assert pdf.status_code == 200
     out = Path(job["file_path"])
     acro = read_acroform(out)
-    template = truth.load_template(form_id)
+    template = truth.load_template(truth.form_of(dossier))
     by_id = {str(f["id"]): f for f in template["fields"] if "id" in f}
-    for fid, exp in truth.derive_truth(form_id).items():
+    for fid, exp in truth.derive_truth(dossier).items():
         field = by_id[fid]
         written = acro.get(field["acroform_name"])
         assert written is not None and truth.matches(exp.expected, normalize_value(written, field),
@@ -141,7 +157,7 @@ def test_perfect_model_scores_perfectly_through_the_api(api, form_id):
 
 def test_regression_gate_detects_a_wrong_value_and_a_failed_job(api, tmp_path):
     client, services = api
-    form_id = "LCA_IncapaciteTravail"
+    form_id = "LAA_MoyensAuxiliaires"           # un seul dossier pour ce formulaire
     baseline = tmp_path / "baseline.json"
     argv = ["--forms", form_id, "--baseline", str(baseline), "--parallel", "1"]
 
@@ -159,8 +175,9 @@ def test_regression_gate_detects_a_wrong_value_and_a_failed_job(api, tmp_path):
     assert regression.main(argv + ["--report", str(report)], client=client) == 1
     assert "❌" in report.read_text(encoding="utf-8")
 
-    # Des valeurs dans les périodes d'incapacité que le dossier n'atteste pas.
+    # Des valeurs dans des champs que le dossier ne renseigne pas (fax, case postale).
     absent = truth.derive_absent(form_id)
+    assert len(absent) >= 2
     services.use(form_id, extra={fid: "50" for fid in absent})
     assert regression.main(argv + ["--report", str(report)], client=client) == 1
     assert "valeur(s) inventée(s)" in report.read_text(encoding="utf-8")
@@ -202,12 +219,54 @@ def test_score_flags_non_answers_and_invented_values():
     assert result["invented_details"] == [{"id": "1.4", "category": "coordonnees", "extracted": "021 555 00 00"}]
 
 
-@pytest.mark.parametrize("form_id", FORMS)
-def test_absent_fields_are_extracted_and_never_expected(form_id):
-    absent = truth.derive_absent(form_id)
-    extracted = {str(f["id"]) for f in prepare_fields(truth.load_template(form_id))}
+@pytest.mark.parametrize("dossier", DOSSIERS)
+def test_absent_fields_are_extracted_and_never_expected(dossier):
+    absent = truth.derive_absent(dossier)
+    extracted = {str(f["id"]) for f in prepare_fields(truth.load_template(truth.form_of(dossier)))}
     assert set(absent) <= extracted
-    assert not set(absent) & set(truth.derive_truth(form_id))
+    assert not set(absent) & set(truth.derive_truth(dossier))
+
+
+def test_pdf_check_catches_the_canton_table_overwriting_the_patient(api, monkeypatch):
+    """
+    Le patient neuchâtelois d'AI_ReadaptationRente : appliquée par nom seul, la
+    table cantonale remplaçait son adresse par celle de l'office AI, le GLN du
+    médecin par celui de l'office et les remarques par « exaddress#@#… ».
+    /fields restait juste : seule la lecture du PDF livré le voit.
+    """
+    import core.fields
+
+    client, services = api
+    dossier = "AI_ReadaptationRente"
+    assert SCENARIOS[dossier].patient.canton == "NE"
+    services.use(dossier)
+    monkeypatch.setattr(core.fields, "is_recipient_field", lambda field: True)
+    result = regression.run_form(client, dossier, truth.dossier_pdfs(dossier), sleep=_no_wait)
+
+    assert result["correct"] == result["truth_fields"]               # /fields ne voit rien
+    wrong = {d["id"] for d in result["pdf_details"]}
+    assert {"2.5", "2.6", "2.7", "10.1"} <= wrong                    # adresse du patient, GLN
+    assert any("#@#" in d["pdf"] for d in result["pdf_details"])      # remarques
+    assert regression.compare([result], None)
+
+
+def test_variants_cover_what_issue_50_asked_for():
+    # Trois périodes, attestées de la plus récente à la plus ancienne : le formulaire
+    # les veut dans l'ordre chronologique, la quatrième reste vide.
+    periodes = truth.derive_truth("LCA_IncapaciteTravail__periodes")
+    assert [periodes[f].expected for f in ("5.4", "5.10", "5.16")] == ["50 %", "100 %", "50 %"]
+    assert {"5.22", "5.23", "5.24"} <= set(truth.derive_absent("LCA_IncapaciteTravail__periodes"))
+
+    # Patient retraité : ni téléphone, ni e-mail, ni employeur, ni incapacité.
+    absent = truth.derive_absent("LAMal_RapportInitial__sans-reponse")
+    assert {"1.8", "1.9", "1.11", "1.13", "4.4", "4.10", "4.16", "4.22"} <= set(absent)
+    assert "1.18" not in absent                                      # remarque libre
+
+    # Documents illisibles : présents dans l'envoi, absents du texte du dossier.
+    dossier = "LAA_CertificatMedical_Suva__document-illisible"
+    sent = {p.name for p in truth.dossier_pdfs(dossier)}
+    read = {d["filename"] for d in truth.dossier_documents(dossier)}
+    assert len(sent - read) == 2
 
 
 def test_absent_fields_cover_unattested_incapacity_periods():

@@ -45,7 +45,7 @@ orchestrator:
     - cd services/orchestrator
     - pip install --quiet -r requirements-dev.txt
     # Sans GPU ni service : OCR, TEI et vLLM sont simulés. Couvre les 21
-    # formulaires du catalogue et les 21 dossiers de eval/dossiers/.
+    # formulaires du catalogue et les 25 dossiers de eval/dossiers/.
     - python -m pytest tests -q --cov=. --cov-report=term:skip-covered --cov-fail-under=70
   coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%/'
 
@@ -79,7 +79,7 @@ frontend:
 # déployé sur cette machine. Lancement manuel (« Run job » dans le pipeline de
 # la MR), typiquement sur une MR qui touche aux prompts, au modèle, au
 # découpage ou aux templates. Variables modifiables au lancement : EVAL_API,
-# EVAL_FORMS (séparés par des espaces, vide = les 21).
+# EVAL_FORMS (formulaires ou dossiers, séparés par des espaces, vide = les 25 dossiers).
 #
 # La référence (eval/baseline.json) se met à jour par MR, après validation :
 #   python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
@@ -97,7 +97,8 @@ eval:
     EVAL_FORMS: ""
   script:
     # truth.py n'importe que la partie pure de l'orchestrateur (core/fields, core/provenance).
-    - python3 -m pip install --user "httpx>=0.27.0,<1.0"
+    # pypdf lit le PDF livré ; fpdf2 génère les PDF des variantes de dossiers.
+    - python3 -m pip install --user "httpx>=0.27.0,<1.0" "pypdf>=5.0.0,<7.0" "fpdf2>=2.8.0,<3.0"
     - |
       python3 eval/regression.py --api "$EVAL_API" --api-key "$DOCTORFILL_API_KEY" \
         ${EVAL_FORMS:+--forms $EVAL_FORMS} --report report.md --json results.json

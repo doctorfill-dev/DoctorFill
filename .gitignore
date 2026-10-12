@@ -32,6 +32,8 @@ services/orchestrator/results/
 # échouer tout `git add` sur eux.
 eval/results/
 eval/test_docs/
+# Variantes de dossiers : rendues à la demande depuis dossiers/scenarios_cas.py.
+eval/dossiers/*__*/
 services/logs/*.md
 
 # ── tests

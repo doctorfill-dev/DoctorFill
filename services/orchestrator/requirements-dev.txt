@@ -3,3 +3,5 @@
 -r requirements.txt
 pytest>=8.0,<10.0
 pytest-cov>=5.0,<8.0
+# PDF des variantes de dossiers d'évaluation, générés à la demande (eval/truth.py).
+fpdf2>=2.8.0,<3.0
