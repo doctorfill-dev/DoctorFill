@@ -88,6 +88,20 @@ def test_prompt_puts_shared_context_first():
     assert '"..."' not in user
 
 
+def test_repeated_fields_rule_does_not_forbid_equal_values():
+    """
+    #50 : LCA_IncapaciteTravail 5.4 (taux d'incapacité, 100 %) restait vide, alors
+    que le taux d'activité de la même période vaut aussi 100. « Laisse "" plutôt que
+    de répéter une valeur » se lisait comme une interdiction des valeurs égales ;
+    la règle ne vise que les occurrences en surnombre.
+    """
+    from prompts import SYSTEM_PROMPT_BATCH_EXTRACT
+
+    rule = next(line for line in SYSTEM_PROMPT_BATCH_EXTRACT.split("\n") if line.startswith("9."))
+    assert "plutôt que de répéter une valeur" not in rule
+    assert "deux champs peuvent avoir la même valeur" in rule
+
+
 # --- Appel résilient ---------------------------------------------------------------
 
 def _completion(payload, finish_reason="stop"):

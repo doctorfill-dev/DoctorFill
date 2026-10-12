@@ -296,6 +296,17 @@ def test_a_fourth_period_copied_from_the_third_is_not_delivered(api):
     assert not any(acro.get(by_id[fid]["acroform_name"]) for fid in copied)
 
 
+def test_a_remark_on_a_second_period_that_does_not_exist_is_not_delivered(api):
+    """#50, mesure de main : une seule période, mais 9.3 (remarque de la n°2) remplie."""
+    client, services = api
+    dossier = "LAA_CertificatMedical_Suva__document-illisible"
+    services.use(dossier, extra={"9.3": "Suite à un accident de travail"})
+    result = regression.run_form(client, dossier, truth.dossier_pdfs(dossier), sleep=_no_wait)
+
+    assert result["invented"] == 0, result["invented_details"]
+    assert result["correct"] == result["truth_fields"]
+
+
 def test_variants_cover_what_issue_50_asked_for():
     # Trois périodes, attestées de la plus récente à la plus ancienne : le formulaire
     # les veut dans l'ordre chronologique, la quatrième reste vide.
