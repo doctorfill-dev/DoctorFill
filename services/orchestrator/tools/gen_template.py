@@ -435,6 +435,14 @@ CONTEXT_VOCAB = {
         "par ICD (diagnostic), CHOP (intervention) ou FreeText (texte libre).", None),
     ("unemployabilityS1Struct", "input"): (
         "Y a-t-il une précision à apporter sur cette période d'incapacité de travail ?", None),
+    # Deux pourcentages par période : sans nommer chacun, le modèle laissait le
+    # taux d'incapacité vide (« pourcentage indiqué » ne désigne rien, #49).
+    ("unemployabilityS1Struct", "percentageNum"): (
+        "Quel est le taux d'incapacité de travail sur cette période, en pourcentage ? "
+        "Répondre par le nombre seul (100 pour une incapacité totale).", "percent"),
+    ("unemployabilityS1Struct", "percentWorkload"): (
+        "Quel est le taux d'activité habituel du patient (taux d'occupation), en pourcentage ? "
+        "Répondre par le nombre seul. Ne pas confondre avec le taux d'incapacité.", "percent"),
     ("cardS1Struct", "input"): (
         "Y a-t-il une remarque concernant la carte d'assuré ?", None),
     ("cardS1Struct", "cardID"): (

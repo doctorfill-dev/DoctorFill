@@ -16,8 +16,9 @@ from pathlib import Path
 import pytest
 
 import extraction
-from core.fields import batch_fields, is_recipient_field, prepare_fields
+from core.fields import batch_fields, fold, is_recipient_field, prepare_fields
 from prompts import SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_messages
+from tools.gen_template import _describe
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "template"
 TEMPLATES = {p.stem.removeprefix("Form_"): json.loads(p.read_text(encoding="utf-8"))
@@ -86,6 +87,27 @@ def test_canton_recipients_target_existing_fields(form_id):
     canton_fields = [f for f in _fields(template) if f.get("name") == "treatmentCanton"]
     assert canton_fields, "table cantonale sans champ treatmentCanton"
     assert set(table) <= set(canton_fields[0].get("options") or []), "canton de la table non proposé au modèle"
+
+
+@pytest.mark.parametrize("form_id", sorted(TEMPLATES))
+def test_incapacity_periods_name_both_rates(form_id):
+    """
+    Une période d'incapacité porte deux pourcentages : le taux d'activité et le
+    taux d'incapacité. Avec « Quel est le pourcentage indiqué ? » pour le second,
+    le modèle laissait le taux d'incapacité vide (#49).
+
+    Le générateur doit rédiger la même question, sinon la prochaine régénération
+    du template ramène le défaut.
+    """
+    named = {"percentageNum": "taux d'incapacite", "percentWorkload": "taux d'activite"}
+    for f in _fields(TEMPLATES[form_id]):
+        segments = [re.sub(r"\[\d+\]$", "", s) for s in f["xml_path"].split("/")]
+        if f.get("name") not in named or segments[-2] != "unemployabilityS1Struct":
+            continue
+        assert named[f["name"]] in fold(f["question"]), f"{f['id']} : {f['question']}"
+        assert f.get("type") == "percent", f["id"]
+        assert _describe(segments[-1], segments[:-1])[0] == f["question"], \
+            f"{f['id']} : question différente de celle du générateur"
 
 
 @pytest.mark.parametrize("form_id", sorted(TEMPLATES))
