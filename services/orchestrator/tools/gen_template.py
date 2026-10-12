@@ -415,6 +415,11 @@ CONTEXT_VOCAB = {
         "Y a-t-il une précision à apporter sur ce diagnostic ?", None),
     ("employerS1Address", "nif"): (
         "Quel est le numéro d'identification de l'entreprise (IDE/NIF) de l'employeur ?", None),
+    # Formulaires de l'assurance militaire : l'attestation de service donne une
+    # fonction (« soldat d'infanterie »), que le modèle prenait pour la profession.
+    ("employerS1Address", "profession"): (
+        "Quelle est la profession civile du patient (son métier, apprentissage compris) ? "
+        "Ne pas répondre par une fonction ou un grade militaire.", None),
     ("consumerS1Address", "title"): (
         "Quel est le titre ou la civilité du destinataire du formulaire "
         "(Dr, Prof., Madame, Monsieur) ?", None),

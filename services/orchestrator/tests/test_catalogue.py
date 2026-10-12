@@ -74,6 +74,28 @@ def test_field_types_and_options_are_consistent(form_id):
 
 
 @pytest.mark.parametrize("form_id", sorted(TEMPLATES))
+def test_military_forms_ask_for_the_civil_profession(form_id):
+    """
+    Dans un dossier d'assurance militaire, l'attestation de service donne une
+    fonction (« soldat d'infanterie mécanisée ») : à « Quelle est la profession
+    exercée ? », le modèle la préférait au métier civil (#50).
+
+    Le générateur doit rédiger la même question, sinon la prochaine régénération
+    du template ramène le défaut.
+    """
+    from tools.gen_template import _describe
+
+    for f in _fields(TEMPLATES[form_id]):
+        segments = [re.sub(r"\[\d+\]$", "", s) for s in f["xml_path"].split("/")]
+        if f.get("name") != "profession" or segments[-2] != "employerS1Address":
+            continue
+        question = f["question"].lower()
+        assert "civile" in question and "militaire" in question, f"{f['id']} : {f['question']}"
+        assert _describe(segments[-1], segments[:-1])[0] == f["question"], \
+            f"{f['id']} : question différente de celle du générateur"
+
+
+@pytest.mark.parametrize("form_id", sorted(TEMPLATES))
 def test_canton_recipients_target_existing_fields(form_id):
     template = TEMPLATES[form_id]
     table = template.get("_recipient_by_canton")

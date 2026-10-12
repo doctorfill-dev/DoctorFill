@@ -144,7 +144,7 @@
       "id": "1.8",
       "name": "profession",
       "label": "profession",
-      "question": "Quelle est la profession exercée par le patient ?",
+      "question": "Quelle est la profession civile du patient (son métier, apprentissage compris) ? Ne pas répondre par une fonction ou un grade militaire.",
       "required": false,
       "xml_path": "topmostSubform/page1/employerS1Address/profession",
       "acroform_name": "topmostSubform[0].page1[0].employerS1Address[0].profession[0]"
