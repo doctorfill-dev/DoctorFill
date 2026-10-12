@@ -252,6 +252,29 @@ def test_pdf_check_catches_the_canton_table_overwriting_the_patient(api, monkeyp
     assert regression.compare([result], None)
 
 
+def test_a_fourth_period_copied_from_the_third_is_not_delivered(api):
+    """
+    #50, mesure de main : sur trois périodes, le modèle remplissait la n°4 avec
+    5.20 = 100, 5.22 = 50, 5.23 = 20.04.2026, la date de début et le taux de la n°3.
+    Ces valeurs ne doivent atteindre ni /fields ni le PDF.
+    """
+    client, services = api
+    dossier = "LCA_IncapaciteTravail__periodes"
+    copied = {"5.20": "100", "5.22": "50", "5.23": "20.04.2026"}
+    services.use(dossier, extra=copied)
+    result = regression.run_form(client, dossier, truth.dossier_pdfs(dossier), sleep=_no_wait)
+
+    assert result["invented"] == 0, result["invented_details"]
+    assert result["correct"] == result["truth_fields"]                  # la n°3 reste juste
+    job = orchestrator.JOBS[result["job_id"]]
+    fields = {f["id"]: f for f in client.get(f"/fields/{result['job_id']}",
+                                             params={"token": job["token"]}).json()["fields"]}
+    assert all(not fields[fid]["value"] and fields[fid]["raw_value"] == value for fid, value in copied.items())
+    acro = read_acroform(Path(job["file_path"]))
+    by_id = {str(f["id"]): f for f in truth.load_template("LCA_IncapaciteTravail")["fields"] if "id" in f}
+    assert not any(acro.get(by_id[fid]["acroform_name"]) for fid in copied)
+
+
 def test_variants_cover_what_issue_50_asked_for():
     # Trois périodes, attestées de la plus récente à la plus ancienne : le formulaire
     # les veut dans l'ordre chronologique, la quatrième reste vide.

@@ -90,6 +90,9 @@ La synthèse est transmise **en entier** à chaque lot, avant les documents.
 - Valeurs : « non mentionné », « N/A », « ... », exemples de format → vide ;
   dates → `JJ.MM.AAAA` ; oui/non canoniques ; nombres seuls ; sexe `M`/`F`.
   La réponse brute reste dans `raw_value`.
+- Occurrences recopiées : une période d'incapacité dont la date de début est
+  celle d'une période précédente n'existe pas, elle est vidée en entier
+  (`drop_repeated_occurrences`).
 - Provenance (`core/provenance.py`) : la valeur est-elle retrouvable dans les
   documents, et où ? Verdict `verified` / `attested` / `inferred` / `unverified`
   / `not_checkable`, avec document, page et extrait. Pour une réponse choisie

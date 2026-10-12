@@ -9,6 +9,7 @@ from core.fields import (
     batch_fields,
     collect_form_values,
     contextualize,
+    drop_repeated_occurrences,
     extractable_fields,
     is_blank_default,
     normalize_date,
@@ -233,3 +234,36 @@ def test_procedure_slots_are_not_numbered_as_diagnoses():
     procedure = by_path["topmostSubform/page1/ediagnosisS1Struct/code"]
     assert "CHOP" in procedure["question"]
     assert "intervention n°2 sur 2" in procedure["prompt_question"]
+
+
+# --- Occurrences recopiées ------------------------------------------------------
+
+def _period_results(values: dict[str, str]) -> tuple[list[dict], dict[str, dict]]:
+    template = json.loads((TEMPLATE_DIR / "Form_LCA_IncapaciteTravail.json").read_text(encoding="utf-8"))
+    fields_by_id = {str(f["id"]): f for f in prepare_fields(template)}
+    results = [{"id": fid, "result": {"value": values.get(fid, ""), "source_quote": "",
+                                      "grounding": "verified" if values.get(fid) else None}}
+               for fid in fields_by_id]
+    return results, fields_by_id
+
+
+def test_a_period_copied_from_the_previous_one_is_dropped():
+    """#50 : trois périodes au dossier, la n°4 reprenait la date de début et le taux de la n°3."""
+    values = {"5.4": "50", "5.5": "26.01.2026", "5.6": "22.02.2026",
+              "5.10": "100", "5.11": "23.02.2026", "5.12": "19.04.2026",
+              "5.14": "100", "5.16": "50", "5.17": "20.04.2026",
+              "5.20": "100", "5.22": "50", "5.23": "20.04.2026"}          # n°4 = n°3
+    results, fields_by_id = _period_results(values)
+
+    assert sorted(drop_repeated_occurrences(results, fields_by_id)) == ["5.20", "5.22", "5.23"]
+    by_id = {r["id"]: r["result"] for r in results}
+    assert by_id["5.23"]["value"] == "" and by_id["5.23"]["raw_value"] == "20.04.2026"
+    assert "grounding" not in by_id["5.23"]
+    assert by_id["5.17"]["value"] == "20.04.2026" and by_id["5.16"]["value"] == "50"   # la n°3 reste
+
+
+def test_distinct_periods_are_kept_whatever_their_rates():
+    values = {"5.4": "100", "5.5": "01.02.2026", "5.10": "100", "5.11": "01.03.2026"}
+    results, fields_by_id = _period_results(values)
+    assert drop_repeated_occurrences(results, fields_by_id) == []
+    assert {r["id"]: r["result"]["value"] for r in results}["5.10"] == "100"

@@ -28,7 +28,8 @@ from core.fill import update_datasets
 from core.inject import inject_datasets
 from core.checkbox import discover_checkbox_paths, normalize_checkboxes
 from core.acroform import detect_form_type, fill_acroform
-from core.fields import batch_fields, collect_form_values, normalize_value, prepare_fields
+from core.fields import (batch_fields, collect_form_values, drop_repeated_occurrences, normalize_value,
+                         prepare_fields)
 from core.provenance import SourceIndex, ground_value
 import extraction
 import stats
@@ -613,6 +614,9 @@ async def _extract_fields(client: httpx.AsyncClient, job_id: str, form_id: str, 
 
     batch_results = await asyncio.gather(*[_run_batch(b) for b in batches])
     results = [item for batch in batch_results for item in batch]
+    repeated = drop_repeated_occurrences(results, fields_by_id)
+    if repeated:
+        logger.info(f"[{job_id[:8]}] Occurrences recopiées d'une précédente, vidées : {', '.join(repeated)}")
     failed = sum(1 for r in results if "error" in r)
     if failed:
         logger.warning(f"[{job_id[:8]}] {failed}/{len(results)} champs en erreur d'extraction")
