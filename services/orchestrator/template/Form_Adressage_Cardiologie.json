@@ -241,7 +241,7 @@
       "id": "2.1",
       "name": "blockAddress",
       "label": "blockAddress",
-      "question": "Quelle est l'adresse complète du destinataire (bloc adresse) ?",
+      "question": "Quelle est l'adresse postale complète du médecin traitant (fournisseur de prestations) (nom, rue, NPA et localité) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/providerS1Address/blockAddress",
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].blockAddress[0]"
@@ -250,7 +250,7 @@
       "id": "2.2",
       "name": "ean",
       "label": "ean",
-      "question": "Quel est le numéro GLN (identifiant à 13 chiffres) du destinataire / médecin de référence ?",
+      "question": "Quel est le numéro GLN (anciennement EAN) du médecin traitant (fournisseur de prestations) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/providerS1Address/ean",
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].ean[0]"
@@ -259,7 +259,7 @@
       "id": "2.3",
       "name": "zsr",
       "label": "zsr",
-      "question": "Quel est le numéro RCC (ZSR) du destinataire ?",
+      "question": "Quel est le numéro RCC (ZSR) du médecin traitant (fournisseur de prestations) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/providerS1Address/zsr",
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].zsr[0]"
@@ -271,7 +271,7 @@
       "id": "8.1",
       "name": "phone",
       "label": "phone",
-      "question": "Quel est le numéro de téléphone du cabinet du médecin spécialiste ?",
+      "question": "Quel est le numéro de téléphone du médecin traitant (fournisseur de prestations) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/providerS1Address/phone",
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].phone[0]"
@@ -289,7 +289,7 @@
       "id": "2.4",
       "name": "email",
       "label": "email",
-      "question": "Quelle est l'adresse e-mail du destinataire ?",
+      "question": "Quelle est l'adresse e-mail du médecin traitant (fournisseur de prestations) ?",
       "required": false,
       "xml_path": "topmostSubform/page1/providerS1Address/email",
       "acroform_name": "topmostSubform[0].page1[0].providerS1Address[0].email[0]"

@@ -207,8 +207,13 @@ FIELD_VOCAB = {
     "formRemark": ("Y a-t-il une remarque générale à joindre au formulaire ?", None),
     "addendum": ("Y a-t-il une information complémentaire à ajouter au rapport ?", None),
     "procedure": ("Quelle procédure ou intervention a été réalisée ou est prévue ?", None),
-    "treatmentCanton": ("Dans quel canton suisse le patient est-il traité ? "
-                        "Répondre par le sigle du canton (VD, GE, VS, FR…).", None),
+    # Le canton choisit l'office destinataire (office AI, section de l'assurance
+    # militaire) : celui du domicile. « Dans quel canton le patient est-il
+    # traité ? » faisait répondre le canton du cabinet, et un patient fribourgeois
+    # soigné à Lausanne partait à l'office vaudois (#50).
+    "treatmentCanton": ("Dans quel canton suisse le patient est-il domicilié ? "
+                        "Répondre par le sigle du canton (VD, GE, VS, FR…). C'est le "
+                        "canton de son adresse, et non celui du cabinet ou de l'hôpital.", None),
     "insuranceSelector": ("Quel est le nom de l'assureur qui prend en charge le cas ?", None),
     "condensedName": ("Quel est le nom complet {role} ?", None),
     "condensedAddress": ("Quelle est l'adresse complète {role} "
