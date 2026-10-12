@@ -491,6 +491,71 @@ def bool_item(value: str, field: dict, truthy: bool) -> str:
 # Du résultat d'extraction aux valeurs du formulaire
 # ---------------------------------------------------------------------------
 
+# Champ qui identifie une occurrence de structure répétée : deux périodes
+# d'incapacité distinctes ne commencent pas le même jour.
+_OCCURRENCE_KEY = {"unemployabilityS1Struct": "beginDate"}
+
+# Clés que la provenance ajoute à une valeur ; elles n'ont plus de sens une fois
+# la valeur retirée.
+_GROUNDING_KEYS = ("grounding", "quote_verified", "source_document", "source_page",
+                   "source_excerpt", "source_match")
+
+
+def _occurrence_rank(segment: str) -> int:
+    match = re.search(r"\[(\d+)\]$", segment)
+    return int(match.group(1)) if match else 0
+
+
+def _clear(result: dict) -> bool:
+    """Retire la valeur d'un résultat, en gardant la réponse du modèle dans `raw_value`."""
+    payload = result.get("result")
+    if not isinstance(payload, dict) or not str(payload.get("value") or "").strip():
+        return False
+    payload["raw_value"] = payload.get("raw_value") or payload["value"]
+    payload["value"] = ""
+    payload["source_quote"] = ""
+    for key in _GROUNDING_KEYS:
+        payload.pop(key, None)
+    return True
+
+
+def drop_repeated_occurrences(results: list[dict], fields_by_id: dict[str, dict]) -> list[str]:
+    """
+    Vide les occurrences d'une structure répétée qui recopient une occurrence précédente.
+
+    Sur un dossier à trois périodes d'incapacité, le modèle remplissait la n°4 avec
+    la date de début et le taux de la n°3 (#50) : les quatre questions nommant
+    désormais le taux de chaque période, il trouvait toujours une réponse. Une
+    période dont la date de début est celle d'une période précédente n'existe pas :
+    l'occurrence entière est vidée, la réponse du modèle reste dans `raw_value`.
+
+    Returns:
+        IDs des champs vidés.
+    """
+    families: dict[str, dict[str, list[dict]]] = {}
+    for res in results:
+        field = fields_by_id.get(str(res.get("id")))
+        if not field or _struct_of(field) not in _OCCURRENCE_KEY:
+            continue
+        occurrence = "/".join(_segments(field.get("xml_path"))[:-1])
+        families.setdefault(_container(field), {}).setdefault(occurrence, []).append(res)
+
+    cleared: list[str] = []
+    for family in families.values():
+        seen: set[str] = set()
+        for occurrence in sorted(family, key=lambda path: _occurrence_rank(path.rsplit("/", 1)[-1])):
+            members = family[occurrence]
+            key_name = _OCCURRENCE_KEY[_struct_of(fields_by_id[str(members[0]["id"])])]
+            key = next((str((r.get("result") or {}).get("value") or "").strip() for r in members
+                        if fields_by_id[str(r["id"])].get("name") == key_name), "")
+            if not key:
+                continue
+            if key in seen:
+                cleared += [str(r["id"]) for r in members if _clear(r)]
+            seen.add(key)
+    return cleared
+
+
 def computed_values(template: dict) -> list[tuple[dict, str]]:
     """
     Champs dont la valeur se déduit du formulaire lui-même.
