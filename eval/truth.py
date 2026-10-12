@@ -10,6 +10,9 @@ donc de sa structure medForms et de son nom, pour n'importe quel formulaire.
 Seuls les faits effectivement présents dans le texte du dossier sont retenus :
 un champ que le dossier ne documente pas ne peut pas être reproché au modèle.
 
+Un dossier s'identifie par son nom : le formulaire pour les 21 dossiers de base,
+`<formulaire>__<cas>` pour une variante (`dossiers/scenarios_cas.py`).
+
 Utilisé par eval/regression.py (contre le vrai backend) et par les tests de
 l'orchestrateur (services simulés) : les deux mesurent avec la même règle.
 """
@@ -17,6 +20,7 @@ l'orchestrateur (services simulés) : les deux mesurent avec la même règle.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -27,6 +31,8 @@ EVAL_DIR = Path(__file__).resolve().parent
 REPO_DIR = EVAL_DIR.parent
 ORCHESTRATOR_DIR = REPO_DIR / "services" / "orchestrator"
 DOSSIERS_DIR = EVAL_DIR / "dossiers"
+# PDF des variantes de dossiers, générés à la demande depuis leur scénario.
+PDF_CACHE_DIR = Path(os.getenv("EVAL_PDF_CACHE", EVAL_DIR / "results" / "pdf"))
 TEMPLATES_DIR = ORCHESTRATOR_DIR / "template"
 
 for _path in (EVAL_DIR, ORCHESTRATOR_DIR):
@@ -34,7 +40,7 @@ for _path in (EVAL_DIR, ORCHESTRATOR_DIR):
         sys.path.insert(0, str(_path))
 
 from core.fields import (coding_systems, fold, is_null_like, is_recipient_field,  # noqa: E402
-                         normalize_date, prepare_fields)
+                         normalize_date, normalize_value, prepare_fields)
 from core.provenance import SourceIndex  # noqa: E402
 
 # (structure, champ) → (attribut du patient, tolérance)
@@ -65,20 +71,62 @@ class Expectation:
 
 
 def load_scenarios() -> dict[str, Any]:
-    """Scénarios par identifiant de formulaire."""
+    """Scénarios par nom de dossier."""
     from dossiers import SCENARIOS
-    return {s.form: s for s in SCENARIOS}
+    return {s.dossier: s for s in SCENARIOS}
 
 
-def dossier_documents(form_id: str) -> list[dict[str, str]]:
-    """Texte des documents d'un dossier, tel que l'OCR le rendrait."""
-    folder = DOSSIERS_DIR / form_id
+def form_of(dossier: str) -> str:
+    """Formulaire que remplit un dossier."""
+    return load_scenarios()[dossier].form
+
+
+def dossier_documents(dossier: str) -> list[dict[str, str]]:
+    """
+    Texte des documents lisibles d'un dossier, tel que l'OCR le rendrait.
+
+    Les 21 dossiers de base sont versionnés (markdown et PDF). Une variante se
+    déduit de son scénario : son markdown est rendu à la demande, à l'identique
+    de `gen_dossiers.py`.
+    """
+    scenario = load_scenarios()[dossier]
+    if scenario.cas:
+        from dossiers.render import documents
+        return [{"filename": f"{name}.pdf", "markdown": markdown} for name, markdown in documents(scenario)]
+    folder = DOSSIERS_DIR / dossier
     return [{"filename": md.with_suffix(".pdf").name, "markdown": md.read_text(encoding="utf-8")}
             for md in sorted(folder.glob("[0-9]*.md"))]
 
 
-def dossier_pdfs(form_id: str) -> list[Path]:
-    return sorted((DOSSIERS_DIR / form_id).glob("[0-9]*.pdf"))
+def dossier_pdfs(dossier: str) -> list[Path]:
+    """
+    PDF du dossier, documents illisibles compris.
+
+    Ceux d'une variante sont générés (fpdf2) dans `PDF_CACHE_DIR`, et regénérés
+    quand son markdown change.
+    """
+    scenario = load_scenarios()[dossier]
+    if not scenario.cas:
+        return sorted((DOSSIERS_DIR / dossier).glob("[0-9]*.pdf"))
+
+    from dossiers.render import illegible_documents, illegible_pdf, to_pdf
+
+    target = PDF_CACHE_DIR / dossier
+    target.mkdir(parents=True, exist_ok=True)
+    pdfs = []
+    for doc in dossier_documents(dossier):
+        pdf = target / doc["filename"]
+        source = pdf.with_suffix(".md")
+        if not pdf.exists() or not source.exists() or source.read_text(encoding="utf-8") != doc["markdown"]:
+            to_pdf(doc["markdown"], pdf)
+            source.write_text(doc["markdown"], encoding="utf-8")
+        pdfs.append(pdf)
+    for name, nature in illegible_documents(scenario):
+        pdf = target / f"{name}.pdf"
+        if not pdf.exists():
+            illegible_pdf(nature, pdf)
+        pdfs.append(pdf)
+    return sorted(pdfs)
 
 
 def load_template(form_id: str, templates_dir: Path = TEMPLATES_DIR) -> dict:
@@ -142,15 +190,15 @@ def _candidates(scenario, fields: list[dict], coding: dict[str, str]) -> dict[st
     return {k: v for k, v in truth.items() if str(v.expected or "").strip()}
 
 
-def derive_truth(form_id: str, templates_dir: Path = TEMPLATES_DIR) -> dict[str, Expectation]:
+def derive_truth(dossier: str, templates_dir: Path = TEMPLATES_DIR) -> dict[str, Expectation]:
     """
-    Vérité terrain d'un formulaire : les champs extraits par le pipeline dont le
+    Vérité terrain d'un dossier : les champs extraits par le pipeline dont le
     scénario fixe la valeur, et que le dossier documente réellement.
     """
-    scenario = load_scenarios()[form_id]
-    template = load_template(form_id, templates_dir)
+    scenario = load_scenarios()[dossier]
+    template = load_template(scenario.form, templates_dir)
     fields = prepare_fields(template)
-    index = SourceIndex(dossier_documents(form_id))
+    index = SourceIndex(dossier_documents(dossier))
     truth = {}
     for fid, exp in _candidates(scenario, fields, coding_systems(template)).items():
         needle = exp.expected
@@ -166,29 +214,40 @@ def derive_truth(form_id: str, templates_dir: Path = TEMPLATES_DIR) -> dict[str,
 _UNSTATED = {"fax": re.compile(r"\bfax\b"), "pobox": re.compile(r"\bcase postale\b|\bpostfach\b")}
 
 
-def derive_absent(form_id: str, templates_dir: Path = TEMPLATES_DIR) -> dict[str, Expectation]:
+def derive_absent(dossier: str, templates_dir: Path = TEMPLATES_DIR) -> dict[str, Expectation]:
     """
     Champs que le dossier laisse vides : toute valeur y est inventée.
 
     Seulement là où le scénario permet de l'affirmer :
     - les périodes d'incapacité au-delà de celles qu'attestent les documents
-      (n°3 et n°4 quand il y en a deux) ;
-    - le fax et la case postale, qu'aucun document du dossier ne mentionne.
+      (n°3 et n°4 quand il y en a deux), toutes si le scénario n'en a aucune
+      à dessein ;
+    - le fax et la case postale, qu'aucun document du dossier ne mentionne ;
+    - ce que le scénario déclare absent (`absents`) : téléphone, e-mail,
+      employeur du patient.
     Les blocs du destinataire, remplis par la table cantonale, sont exclus.
     """
-    scenario = load_scenarios()[form_id]
-    text = fold(" ".join(d["markdown"] for d in dossier_documents(form_id)))
+    scenario = load_scenarios()[dossier]
+    declared = set(scenario.absents)
+    text = fold(" ".join(d["markdown"] for d in dossier_documents(dossier)))
     absent: dict[str, Expectation] = {}
-    for field in prepare_fields(load_template(form_id, templates_dir)):
+    for field in prepare_fields(load_template(scenario.form, templates_dir)):
         parts = _segments(field)
         if len(parts) < 2 or is_recipient_field(field):
             continue
         leaf, container = _bare(parts[-1]), parts[-2]
-        if _bare(container) == "unemployabilityS1Struct":
-            if scenario.incapacites and _index(container) >= len(scenario.incapacites):
-                absent[str(field["id"])] = Expectation("", "empty", "incapacite")
+        struct, fid = _bare(container), str(field["id"])
+        if struct == "unemployabilityS1Struct":
+            attested = len(scenario.incapacites)
+            if (attested or "incapacites" in declared) and _index(container) >= attested:
+                absent[fid] = Expectation("", "empty", "incapacite")
+        elif struct == "patientS1Address" and leaf in ("phone", "email") \
+                and {"phone": "tel", "email": "email"}[leaf] in declared:
+            absent[fid] = Expectation("", "empty", "patient")
+        elif struct == "employerS1Address" and leaf != "input" and "employeur" in declared:
+            absent[fid] = Expectation("", "empty", "travail")
         elif leaf in _UNSTATED and not _UNSTATED[leaf].search(text):
-            absent[str(field["id"])] = Expectation("", "empty", "coordonnees")
+            absent[fid] = Expectation("", "empty", "coordonnees")
     return absent
 
 
@@ -295,3 +354,39 @@ def score(truth: dict[str, Expectation], fields_payload: list[dict],
         "non_answer_details": non_answers,
         "invented_details": invented,
     }
+
+
+# Valeur technique de la table cantonale (« exaddress#@#7601…#@#… ») : sa place est
+# dans le bloc du destinataire, jamais dans une remarque ou une coordonnée.
+_RECIPIENT_PAYLOAD = "#@#"
+
+
+def pdf_mismatches(dossier: str, fields_payload: list[dict],
+                   acroform: dict[str, str | None]) -> list[dict[str, str]]:
+    """
+    Champs dont le PDF livré ne porte pas ce qu'affiche /fields.
+
+    /fields montre la réponse du modèle ; le PDF passe ensuite par les champs
+    calculés et la table cantonale. C'est là qu'un patient neuchâtelois a reçu
+    l'adresse de l'office AI à la place de la sienne, et le médecin le GLN de
+    l'office : /fields restait juste, seul le PDF le montrait.
+
+    Vérifié sur les champs de la vérité terrain que /fields remplit, et, sur tout
+    le formulaire hors destinataire, l'absence de la chaîne technique de la table.
+    """
+    template = load_template(form_of(dossier))
+    by_id = {str(f["id"]): f for f in template.get("fields", []) if "id" in f}
+    shown = {str(f["id"]): str(f.get("value") or "").strip() for f in fields_payload}
+    out = []
+    for fid, exp in derive_truth(dossier).items():
+        field, value = by_id[fid], shown.get(fid, "")
+        if not value:
+            continue
+        written = str(acroform.get(field.get("acroform_name")) or "")
+        if not matches(value, normalize_value(written, field), exp.tolerance):
+            out.append({"id": fid, "category": exp.category, "fields": value, "pdf": written})
+    for fid, field in by_id.items():
+        written = str(acroform.get(field.get("acroform_name")) or "")
+        if _RECIPIENT_PAYLOAD in written and not is_recipient_field(field):
+            out.append({"id": fid, "category": "destinataire", "fields": shown.get(fid, ""), "pdf": written})
+    return out
