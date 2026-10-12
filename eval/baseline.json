@@ -1,0 +1,299 @@
+{
+  "_meta": {
+    "build": "0.2.0+832f49b.20261012T1916Z",
+    "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "updated": "2026-10-12T19:39:12+00:00"
+  },
+  "global": {
+    "forms": 25,
+    "completed": 25,
+    "truth_fields": 398,
+    "correct": 398,
+    "accuracy": 1.0,
+    "errors": 0,
+    "filled": 1107,
+    "non_answers": 0,
+    "non_answers_erased": 1,
+    "absent_fields": 166,
+    "invented": 0,
+    "pdf_mismatches": 0,
+    "pdf_checked": 25
+  },
+  "forms": {
+    "AI_MoyensAuxiliaires": {
+      "correct": 7,
+      "truth_fields": 7,
+      "accuracy": 1.0,
+      "fill_rate": 0.9091,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "AI_RapportIntermediaire_Actualisation": {
+      "correct": 15,
+      "truth_fields": 15,
+      "accuracy": 1.0,
+      "fill_rate": 0.8529,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "AI_RapportIntermediaire_Revision": {
+      "correct": 15,
+      "truth_fields": 15,
+      "accuracy": 1.0,
+      "fill_rate": 0.7447,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "AI_ReadaptationRente": {
+      "correct": 11,
+      "truth_fields": 11,
+      "accuracy": 1.0,
+      "fill_rate": 0.7531,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "Adressage_Angiologie": {
+      "correct": 14,
+      "truth_fields": 14,
+      "accuracy": 1.0,
+      "fill_rate": 0.5185,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "Adressage_Cardiologie": {
+      "correct": 14,
+      "truth_fields": 14,
+      "accuracy": 1.0,
+      "fill_rate": 0.6719,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "Gyneco_AnnonceMaternite": {
+      "correct": 8,
+      "truth_fields": 8,
+      "accuracy": 1.0,
+      "fill_rate": 0.7273,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "LAA_CertificatMedical_Suva": {
+      "correct": 21,
+      "truth_fields": 21,
+      "accuracy": 1.0,
+      "fill_rate": 0.5844,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 13,
+      "invented": 0
+    },
+    "LAA_CertificatMedical_Suva__document-illisible": {
+      "correct": 21,
+      "truth_fields": 21,
+      "accuracy": 1.0,
+      "fill_rate": 0.6234,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 13,
+      "invented": 0
+    },
+    "LAA_MoyensAuxiliaires": {
+      "correct": 15,
+      "truth_fields": 15,
+      "accuracy": 1.0,
+      "fill_rate": 0.7164,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 2,
+      "invented": 0
+    },
+    "LAA_Physiotherapie": {
+      "correct": 15,
+      "truth_fields": 15,
+      "accuracy": 1.0,
+      "fill_rate": 0.6552,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 2,
+      "invented": 0
+    },
+    "LAA_Physiotherapie_LongueDuree": {
+      "correct": 15,
+      "truth_fields": 15,
+      "accuracy": 1.0,
+      "fill_rate": 0.7015,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 2,
+      "invented": 0
+    },
+    "LAA_PremierDiagnostic_MTBI": {
+      "correct": 14,
+      "truth_fields": 14,
+      "accuracy": 1.0,
+      "fill_rate": 0.7419,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 1,
+      "invented": 0
+    },
+    "LAA_PriseEnChargeHospitaliere": {
+      "correct": 18,
+      "truth_fields": 18,
+      "accuracy": 1.0,
+      "fill_rate": 0.7925,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 2,
+      "invented": 0
+    },
+    "LAA_RapportAbrege": {
+      "correct": 14,
+      "truth_fields": 14,
+      "accuracy": 1.0,
+      "fill_rate": 0.7778,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 1,
+      "invented": 0
+    },
+    "LAA_RapportInitial": {
+      "correct": 19,
+      "truth_fields": 19,
+      "accuracy": 1.0,
+      "fill_rate": 0.5638,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 22,
+      "invented": 0
+    },
+    "LAA_RapportInitial__dossier-long": {
+      "correct": 19,
+      "truth_fields": 19,
+      "accuracy": 1.0,
+      "fill_rate": 0.5426,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 22,
+      "invented": 0
+    },
+    "LAA_RapportIntermediaire_Suva": {
+      "correct": 19,
+      "truth_fields": 19,
+      "accuracy": 1.0,
+      "fill_rate": 0.7931,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 1,
+      "invented": 0
+    },
+    "LAM_FeuilleMaladieAccident": {
+      "correct": 20,
+      "truth_fields": 20,
+      "accuracy": 1.0,
+      "fill_rate": 0.5195,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "LAM_RapportIntermediaire": {
+      "correct": 19,
+      "truth_fields": 19,
+      "accuracy": 1.0,
+      "fill_rate": 0.7037,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 0,
+      "invented": 0
+    },
+    "LAMal_RapportInitial": {
+      "correct": 21,
+      "truth_fields": 21,
+      "accuracy": 1.0,
+      "fill_rate": 0.5701,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 15,
+      "invented": 0
+    },
+    "LAMal_RapportInitial__sans-reponse": {
+      "correct": 12,
+      "truth_fields": 12,
+      "accuracy": 1.0,
+      "fill_rate": 0.4206,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 1,
+      "absent_fields": 39,
+      "invented": 0
+    },
+    "LCA_IncapaciteTravail": {
+      "correct": 16,
+      "truth_fields": 16,
+      "accuracy": 1.0,
+      "fill_rate": 0.5455,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 22,
+      "invented": 0
+    },
+    "LCA_IncapaciteTravail__periodes": {
+      "correct": 22,
+      "truth_fields": 22,
+      "accuracy": 1.0,
+      "fill_rate": 0.6364,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 8,
+      "invented": 0
+    },
+    "Prescription_EnseignementDiabete": {
+      "correct": 14,
+      "truth_fields": 14,
+      "accuracy": 1.0,
+      "fill_rate": 0.7857,
+      "errors": 0,
+      "non_answers": 0,
+      "non_answers_erased": 0,
+      "absent_fields": 1,
+      "invented": 0
+    }
+  }
+}
