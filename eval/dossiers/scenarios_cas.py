@@ -72,7 +72,7 @@ _MOTIFS = [
      "P : collyre antibiotique cinq jours, hygiène des mains."),
     ("Douleurs dorsales",
      "S : douleurs lombaires basses après un week-end de jardinage, sans irradiation.\n"
-     "O : contracture parapvertébrale, Lasègue négatif, examen neurologique normal.\n"
+     "O : contracture paravertébrale, Lasègue négatif, examen neurologique normal.\n"
      "A : lombalgie commune.\n"
      "P : antalgiques simples, mobilisation précoce. Poursuite de l'activité "
      "professionnelle habituelle."),

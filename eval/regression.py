@@ -9,8 +9,9 @@ casser un seul test. Ce script la mesure : il soumet chaque dossier de
 scénarios (`truth.py`), puis à la dernière référence validée (`baseline.json`).
 
 Au-delà de la précision, il compte ce qu'elle ne voit pas : les non-réponses
-(« non mentionné », « N/A »…) écrites ou effacées par la normalisation, et les
-valeurs inventées dans les champs que le dossier laisse vides.
+(« non mentionné », « N/A »…) écrites ou effacées par la normalisation, les
+valeurs inventées dans les champs que le dossier laisse vides, et les champs du
+PDF livré qui diffèrent de /fields (lecture du PDF par pypdf).
 
     # Fixer la référence (sur main, après validation) :
     python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
@@ -18,7 +19,7 @@ valeurs inventées dans les champs que le dossier laisse vides.
     # Vérifier une branche avant merge :
     python eval/regression.py --api http://localhost:8080 --api-key $KEY --report report.md
 
-    # Sous-ensemble :
+    # Sous-ensemble (un formulaire inclut ses variantes, ex. LCA_IncapaciteTravail__periodes) :
     python eval/regression.py ... --forms LCA_IncapaciteTravail AI_ReadaptationRente
 
 Code de sortie : 0 sans régression, 1 en cas de régression, 2 si un dossier n'a
@@ -28,6 +29,7 @@ pas pu être traité (job en échec, délai dépassé, API injoignable).
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import sys
 import time
@@ -38,7 +40,7 @@ from typing import Any, Callable
 
 import httpx
 
-from truth import derive_absent, derive_truth, dossier_pdfs, load_scenarios, score
+from truth import derive_absent, derive_truth, dossier_pdfs, form_of, load_scenarios, pdf_mismatches, score
 
 BASELINE_PATH = Path(__file__).resolve().parent / "baseline.json"
 
@@ -48,14 +50,25 @@ MAX_FIELD_DROP = 1
 MAX_GLOBAL_DROP = 0.02
 
 
-def run_form(client: httpx.Client, form_id: str, pdfs: list[Path], poll_interval: float = 5.0,
+def read_acroform(data: bytes) -> dict[str, str | None] | None:
+    """Valeurs AcroForm d'un PDF par nom complet ; None si pypdf n'est pas installé."""
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return None
+    fields = PdfReader(io.BytesIO(data)).get_fields() or {}
+    return {name: (str(f["/V"]) if f.get("/V") is not None else None) for name, f in fields.items()}
+
+
+def run_form(client: httpx.Client, dossier: str, pdfs: list[Path], poll_interval: float = 5.0,
              timeout: float = 1800.0, sleep: Callable[[float], None] = time.sleep) -> dict[str, Any]:
-    """Soumet un dossier, attend le résultat et le note."""
+    """Soumet un dossier, attend le résultat et le note, PDF livré compris."""
     started = time.monotonic()
+    form_id = form_of(dossier)
     files = [("report_files", (p.name, p.read_bytes(), "application/pdf")) for p in pdfs]
     resp = client.post("/process-form", files=files, data={"form_id": form_id})
     if resp.status_code != 200:
-        return {"form": form_id, "status": "rejected", "message": f"HTTP {resp.status_code}: {resp.text[:200]}"}
+        return {"form": dossier, "status": "rejected", "message": f"HTTP {resp.status_code}: {resp.text[:200]}"}
     job = resp.json()
     job_id, token = job["job_id"], job.get("token", "")
 
@@ -64,15 +77,30 @@ def run_form(client: httpx.Client, form_id: str, pdfs: list[Path], poll_interval
         if status["status"] == "completed":
             break
         if status["status"] == "failed":
-            return {"form": form_id, "status": "failed", "message": status.get("message")}
+            return {"form": dossier, "status": "failed", "message": status.get("message")}
         if time.monotonic() - started > timeout:
-            return {"form": form_id, "status": "timeout", "message": f"> {timeout:.0f} s"}
+            return {"form": dossier, "status": "timeout", "message": f"> {timeout:.0f} s"}
         sleep(poll_interval)
 
     fields = client.get(f"/fields/{job_id}", params={"token": token}).json()["fields"]
-    result = score(derive_truth(form_id), fields, derive_absent(form_id))
+    result = score(derive_truth(dossier), fields, derive_absent(dossier))
+
+    pdf = client.get(f"/download/{job_id}", params={"token": token})
+    if pdf.status_code != 200:
+        mismatches = [{"id": "—", "category": "pdf", "fields": "", "pdf": f"HTTP {pdf.status_code}"}]
+    else:
+        try:
+            acroform = read_acroform(pdf.content)
+        except Exception as exc:                # PDF livré illisible : un défaut, pas un plantage
+            mismatches = [{"id": "—", "category": "pdf", "fields": "", "pdf": f"illisible : {exc}"}]
+        else:
+            mismatches = None if acroform is None else pdf_mismatches(dossier, fields, acroform)
     result.update({
-        "form": form_id,
+        "form": dossier,
+        "form_id": form_id,
+        # None : PDF non vérifié (pypdf absent).
+        "pdf_mismatches": None if mismatches is None else len(mismatches),
+        "pdf_details": mismatches or [],
         "status": "completed",
         "seconds": round(time.monotonic() - started, 1),
         "warnings": status.get("warnings", []),
@@ -97,6 +125,8 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         "non_answers_erased": sum(r.get("non_answers_erased", 0) for r in done),
         "absent_fields": sum(r.get("absent_fields", 0) for r in done),
         "invented": sum(r.get("invented", 0) for r in done),
+        "pdf_mismatches": sum(r.get("pdf_mismatches") or 0 for r in done),
+        "pdf_checked": sum(1 for r in done if r.get("pdf_mismatches") is not None),
     }
 
 
@@ -112,11 +142,14 @@ def compare(results: list[dict[str, Any]], baseline: dict[str, Any] | None,
             problems.append(f"{form} : job {r['status']} ({r.get('message')})")
             continue
         base = reference.get(form)
-        if base is None:
-            continue
-        if r["correct"] < base["correct"] - max_field_drop:
+        if base is not None and r["correct"] < base["correct"] - max_field_drop:
             problems.append(f"{form} : {r['correct']}/{r['truth_fields']} champs justes "
                             f"(référence {base['correct']}/{base['truth_fields']})")
+        # Le PDF ne dépend pas du modèle : tout écart avec /fields est un défaut.
+        if r.get("pdf_mismatches"):
+            problems.append(f"{form} : {r['pdf_mismatches']} champ(s) du PDF différent(s) de /fields")
+        if base is None:
+            continue
         if r["errors"] > base.get("errors", 0):
             problems.append(f"{form} : {r['errors']} champ(s) en erreur (référence {base.get('errors', 0)})")
         # Absentes d'une référence plus ancienne : pas de comparaison possible.
@@ -168,20 +201,24 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
                      f"que les dossiers laissent vides · Non-réponses : **{summary['non_answers']}** écrites, "
                      f"{summary['non_answers_erased']} effacées par la normalisation · "
                      f"{summary['filled']} champs remplis")
+        lines.append("")
+        lines.append(f"PDF livré : **{summary['pdf_mismatches']}** champ(s) différent(s) de /fields "
+                     f"({summary['pdf_checked']}/{summary['completed']} dossiers vérifiés)")
     lines.append("")
     lines.append("✅ Aucune régression." if not problems else "❌ **Régressions :**")
     lines += [f"- {p}" for p in problems]
-    lines += ["", "| Formulaire | Justes | Δ réf. | Remplis | Inventés | Non-réponses (effacées) | Erreurs | Durée |",
-              "|---|---|---|---|---|---|---|---|"]
+    lines += ["", "| Dossier | Justes | Δ réf. | Remplis | Inventés | Non-réponses (effacées) | PDF | Erreurs | Durée |",
+              "|---|---|---|---|---|---|---|---|---|"]
     for r in results:
         if r["status"] != "completed":
-            lines.append(f"| {r['form']} | — | — | — | — | — | {r['status']} | — |")
+            lines.append(f"| {r['form']} | — | — | — | — | — | — | {r['status']} | — |")
             continue
+        pdf = "—" if r.get("pdf_mismatches") is None else ("✓" if not r["pdf_mismatches"] else r["pdf_mismatches"])
         base = reference.get(r["form"])
         delta = f"{r['correct'] - base['correct']:+d}" if base else "n/a"
         lines.append(f"| {r['form']} | {r['correct']}/{r['truth_fields']} | {delta} | "
                      f"{r['filled']}/{r['fields']} | {r['invented']}/{r['absent_fields']} | "
-                     f"{r['non_answers']} ({r['non_answers_erased']}) | {r['errors']} | "
+                     f"{r['non_answers']} ({r['non_answers_erased']}) | {pdf} | {r['errors']} | "
                      f"{r.get('seconds', 0):.0f} s |")
     wrong = [(r["form"], d) for r in results if r["status"] == "completed"
              for d in r["details"] if not d["match"]]
@@ -203,6 +240,15 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
             got = d["extracted"].replace("\n", " ").replace("|", "/")[:60]
             lines.append(f"| {form} | {d['id']} | {got} | {kind} |")
         lines += ["", "</details>"]
+    pdf_wrong = [(r["form"], d) for r in results if r["status"] == "completed" for d in r.get("pdf_details", [])]
+    if pdf_wrong:
+        lines += ["", "<details><summary>PDF différent de /fields</summary>", "",
+                  "| Dossier | Champ | /fields | PDF |", "|---|---|---|---|"]
+        for form, d in pdf_wrong:
+            shown = d["fields"].replace("\n", " ").replace("|", "/")[:40] or "∅"
+            written = d["pdf"].replace("\n", " ").replace("|", "/")[:60] or "∅"
+            lines.append(f"| {form} | {d['id']} ({d['category']}) | {shown} | {written} |")
+        lines += ["", "</details>"]
     return "\n".join(lines) + "\n"
 
 
@@ -211,7 +257,8 @@ def main(argv: list[str] | None = None, client: httpx.Client | None = None) -> i
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--api", default="http://localhost:8080")
     parser.add_argument("--api-key", default="")
-    parser.add_argument("--forms", nargs="*", help="Formulaires à évaluer (défaut : tous)")
+    parser.add_argument("--forms", nargs="*",
+                        help="Dossiers ou formulaires (avec leurs variantes) à évaluer (défaut : tous)")
     parser.add_argument("--baseline", type=Path, default=BASELINE_PATH)
     parser.add_argument("--update-baseline", action="store_true", help="Écrire le résultat comme nouvelle référence")
     parser.add_argument("--max-field-drop", type=int, default=MAX_FIELD_DROP)
@@ -222,7 +269,8 @@ def main(argv: list[str] | None = None, client: httpx.Client | None = None) -> i
     parser.add_argument("--json", type=Path, help="Résultats détaillés")
     args = parser.parse_args(argv)
 
-    forms = args.forms or sorted(load_scenarios())
+    forms = [d for d in sorted(load_scenarios())
+             if not args.forms or d in args.forms or form_of(d) in args.forms]
     client = client or httpx.Client(base_url=args.api, headers={"X-API-Key": args.api_key}, timeout=900.0)
     try:
         health = client.get("/health").json()
