@@ -8,6 +8,10 @@ casser un seul test. Ce script la mesure : il soumet chaque dossier de
 `eval/dossiers/` à l'API, compare le résultat à la vérité terrain dérivée des
 scénarios (`truth.py`), puis à la dernière référence validée (`baseline.json`).
 
+Au-delà de la précision, il compte ce qu'elle ne voit pas : les non-réponses
+(« non mentionné », « N/A »…) écrites ou effacées par la normalisation, et les
+valeurs inventées dans les champs que le dossier laisse vides.
+
     # Fixer la référence (sur main, après validation) :
     python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
 
@@ -34,7 +38,7 @@ from typing import Any, Callable
 
 import httpx
 
-from truth import derive_truth, dossier_pdfs, load_scenarios, score
+from truth import derive_absent, derive_truth, dossier_pdfs, load_scenarios, score
 
 BASELINE_PATH = Path(__file__).resolve().parent / "baseline.json"
 
@@ -66,7 +70,7 @@ def run_form(client: httpx.Client, form_id: str, pdfs: list[Path], poll_interval
         sleep(poll_interval)
 
     fields = client.get(f"/fields/{job_id}", params={"token": token}).json()["fields"]
-    result = score(derive_truth(form_id), fields)
+    result = score(derive_truth(form_id), fields, derive_absent(form_id))
     result.update({
         "form": form_id,
         "status": "completed",
@@ -88,6 +92,11 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         "correct": correct,
         "accuracy": round(correct / truth, 4) if truth else None,
         "errors": sum(r["errors"] for r in done),
+        "filled": sum(r["filled"] for r in done),
+        "non_answers": sum(r.get("non_answers", 0) for r in done),
+        "non_answers_erased": sum(r.get("non_answers_erased", 0) for r in done),
+        "absent_fields": sum(r.get("absent_fields", 0) for r in done),
+        "invented": sum(r.get("invented", 0) for r in done),
     }
 
 
@@ -110,6 +119,13 @@ def compare(results: list[dict[str, Any]], baseline: dict[str, Any] | None,
                             f"(référence {base['correct']}/{base['truth_fields']})")
         if r["errors"] > base.get("errors", 0):
             problems.append(f"{form} : {r['errors']} champ(s) en erreur (référence {base.get('errors', 0)})")
+        # Absentes d'une référence plus ancienne : pas de comparaison possible.
+        if "invented" in base and r.get("invented", 0) > base["invented"] + max_field_drop:
+            problems.append(f"{form} : {r['invented']} valeur(s) inventée(s) (référence {base['invented']})")
+        # Une non-réponse écrite part dans le PDF : aucune tolérance.
+        if "non_answers" in base and r.get("non_answers", 0) > base["non_answers"]:
+            problems.append(f"{form} : {r['non_answers']} non-réponse(s) écrite(s) "
+                            f"(référence {base['non_answers']})")
 
     # Précision globale, sur les seuls formulaires présents des deux côtés.
     shared = [r for r in results if r["status"] == "completed" and r["form"] in reference]
@@ -130,7 +146,8 @@ def baseline_from(results: list[dict[str, Any]], meta: dict[str, Any]) -> dict[s
     return {
         "_meta": {**meta, "updated": datetime.now(timezone.utc).isoformat(timespec="seconds")},
         "global": summarize(results),
-        "forms": {r["form"]: {k: r[k] for k in ("correct", "truth_fields", "accuracy", "fill_rate", "errors")}
+        "forms": {r["form"]: {k: r[k] for k in ("correct", "truth_fields", "accuracy", "fill_rate", "errors",
+                                                "non_answers", "non_answers_erased", "absent_fields", "invented")}
                   for r in results if r["status"] == "completed"},
     }
 
@@ -146,19 +163,26 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
                      f"({summary['correct']}/{summary['truth_fields']} champs, "
                      f"{summary['completed']}/{summary['forms']} dossiers traités, "
                      f"{summary['errors']} champ(s) en erreur)")
+        lines.append("")
+        lines.append(f"Valeurs inventées : **{summary['invented']}** sur {summary['absent_fields']} champs "
+                     f"que les dossiers laissent vides · Non-réponses : **{summary['non_answers']}** écrites, "
+                     f"{summary['non_answers_erased']} effacées par la normalisation · "
+                     f"{summary['filled']} champs remplis")
     lines.append("")
     lines.append("✅ Aucune régression." if not problems else "❌ **Régressions :**")
     lines += [f"- {p}" for p in problems]
-    lines += ["", "| Formulaire | Justes | Δ réf. | Remplis | Erreurs | Durée |",
-              "|---|---|---|---|---|---|"]
+    lines += ["", "| Formulaire | Justes | Δ réf. | Remplis | Inventés | Non-réponses (effacées) | Erreurs | Durée |",
+              "|---|---|---|---|---|---|---|---|"]
     for r in results:
         if r["status"] != "completed":
-            lines.append(f"| {r['form']} | — | — | — | {r['status']} | — |")
+            lines.append(f"| {r['form']} | — | — | — | — | — | {r['status']} | — |")
             continue
         base = reference.get(r["form"])
         delta = f"{r['correct'] - base['correct']:+d}" if base else "n/a"
         lines.append(f"| {r['form']} | {r['correct']}/{r['truth_fields']} | {delta} | "
-                     f"{r['filled']}/{r['fields']} | {r['errors']} | {r.get('seconds', 0):.0f} s |")
+                     f"{r['filled']}/{r['fields']} | {r['invented']}/{r['absent_fields']} | "
+                     f"{r['non_answers']} ({r['non_answers_erased']}) | {r['errors']} | "
+                     f"{r.get('seconds', 0):.0f} s |")
     wrong = [(r["form"], d) for r in results if r["status"] == "completed"
              for d in r["details"] if not d["match"]]
     if wrong:
@@ -167,6 +191,17 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
         for form, d in wrong:
             got = d["extracted"].replace("\n", " ").replace("|", "/")[:60] or "∅"
             lines.append(f"| {form} | {d['id']} ({d['category']}) | {d['expected']} | {got} |")
+        lines += ["", "</details>"]
+    flagged = [(r["form"], d, "inventée") for r in results if r["status"] == "completed"
+               for d in r.get("invented_details", [])]
+    flagged += [(r["form"], d, "non-réponse") for r in results if r["status"] == "completed"
+                for d in r.get("non_answer_details", [])]
+    if flagged:
+        lines += ["", "<details><summary>Valeurs inventées et non-réponses écrites</summary>", "",
+                  "| Formulaire | Champ | Valeur | Défaut |", "|---|---|---|---|"]
+        for form, d, kind in flagged:
+            got = d["extracted"].replace("\n", " ").replace("|", "/")[:60]
+            lines.append(f"| {form} | {d['id']} | {got} | {kind} |")
         lines += ["", "</details>"]
     return "\n".join(lines) + "\n"
 
