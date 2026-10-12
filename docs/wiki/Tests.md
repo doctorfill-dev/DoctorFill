@@ -18,7 +18,7 @@ cd services/marker_ocr   && python -m pytest tests          # pypdfium2 + pikepd
 |---|---|
 | `test_catalogue.py` | Invariants des 21 templates : IDs, `xml_path` et `acroform_name` uniques, questions toutes rédigées, options alignées sur leurs valeurs d'export, table cantonale cohérente, chaque lot tient dans la fenêtre du modèle, **aucun formulaire ne perd de champs extraits** (`catalogue_coverage.json`) |
 | `test_catalogue_fill.py` | Pour les 21 formulaires, un PDF hybride XFA + AcroForm de même structure (`form_factory.py`) : **chaque champ extrait arrive dans les deux couches**, cases, boutons radio, listes et destinataire cantonal compris |
-| `test_eval_dossiers.py` | Les 21 dossiers de `eval/dossiers/` passent **par l'API HTTP** (upload → OCR → synthèse → extraction → `/fields` → `/download`), modèle simulé répondant la vérité terrain : 100 % dans `/fields` et dans le PDF livré. Le garde-fou qualité lui-même est testé (il note 100 % un modèle parfait, détecte une valeur fausse, sort en erreur sur un job en échec) |
+| `test_eval_dossiers.py` | Les 21 dossiers de `eval/dossiers/` passent **par l'API HTTP** (upload → OCR → synthèse → extraction → `/fields` → `/download`), modèle simulé répondant la vérité terrain : 100 % dans `/fields` et dans le PDF livré. Le garde-fou qualité lui-même est testé (il note 100 % un modèle parfait, détecte une valeur fausse, une valeur inventée et une non-réponse, sort en erreur sur un job en échec) |
 | `test_pipeline.py` | Robustesse : document illisible, panne d'embeddings, de rerank ou de synthèse, re-run, purge des fichiers patients, jeton du chat |
 | `test_extraction.py` | Appel LLM : contexte trop long, réponse tronquée, IDs absents, réponse vide, schéma refusé, erreurs 4xx/5xx |
 | `test_fields.py` | Préparation des champs et normalisation des valeurs |
@@ -50,6 +50,17 @@ Sans ces réglages, GitLab autorise la fusion d'une MR rouge.
 dossiers (patient, médecin, incapacités, diagnostics, accident) : **324 champs
 sur les 21 formulaires**, chacun vérifié présent dans le texte du dossier.
 
+La précision ne voit pas les champs sans valeur attendue. Deux mesures les
+couvrent :
+
+- **valeurs inventées** : `truth.derive_absent` liste les champs que le dossier
+  laisse vides (84 : périodes d'incapacité au-delà de celles attestées, fax et
+  case postale qu'aucun document ne donne). Toute valeur y est inventée ;
+- **non-réponses** (« non mentionné », « N/A », « ... ») : *écrites*, elles
+  partent dans le PDF ; *effacées* par la normalisation, elles disent combien
+  de champs « remplis » n'étaient que du bruit. Une baisse du nombre de champs
+  remplis s'explique ainsi : non-réponses effacées, ou valeurs perdues.
+
 ```bash
 # Sur main, après validation : fixer la référence (à committer)
 python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
@@ -60,12 +71,14 @@ python eval/regression.py --api http://localhost:8080 --api-key $KEY --report re
 
 Code de sortie : `0` sans régression, `1` en cas de régression, `2` si un
 dossier n'a pas pu être traité. Est une régression : un formulaire qui perd
-plus d'un champ juste par rapport à la référence (bruit de vLLM toléré), un
-champ en erreur de plus, ou une précision globale en baisse de plus de
-2 points. `--min-accuracy 0.85` ajoute un plancher absolu.
+plus d'un champ juste ou gagne plus d'une valeur inventée par rapport à la
+référence (bruit de vLLM toléré), un champ en erreur ou une non-réponse écrite
+de plus, ou une précision globale en baisse de plus de 2 points.
+`--min-accuracy 0.85` ajoute un plancher absolu.
 
 Le rapport liste, par formulaire, les champs justes, l'écart à la référence,
-et le détail des champs faux (attendu / obtenu).
+les valeurs inventées et les non-réponses, et le détail des champs faux
+(attendu / obtenu), des valeurs inventées et des non-réponses écrites.
 
 ### Sur le DGX, depuis GitLab
 

@@ -33,7 +33,8 @@ for _path in (EVAL_DIR, ORCHESTRATOR_DIR):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from core.fields import coding_systems, fold, normalize_date, prepare_fields  # noqa: E402
+from core.fields import (coding_systems, fold, is_null_like, is_recipient_field,  # noqa: E402
+                         normalize_date, prepare_fields)
 from core.provenance import SourceIndex  # noqa: E402
 
 # (structure, champ) → (attribut du patient, tolérance)
@@ -160,6 +161,37 @@ def derive_truth(form_id: str, templates_dir: Path = TEMPLATES_DIR) -> dict[str,
     return truth
 
 
+# Coordonnées qu'aucun document du dossier ne donne : y écrire un numéro, c'est
+# l'emprunter à une autre personne ou l'inventer.
+_UNSTATED = {"fax": re.compile(r"\bfax\b"), "pobox": re.compile(r"\bcase postale\b|\bpostfach\b")}
+
+
+def derive_absent(form_id: str, templates_dir: Path = TEMPLATES_DIR) -> dict[str, Expectation]:
+    """
+    Champs que le dossier laisse vides : toute valeur y est inventée.
+
+    Seulement là où le scénario permet de l'affirmer :
+    - les périodes d'incapacité au-delà de celles qu'attestent les documents
+      (n°3 et n°4 quand il y en a deux) ;
+    - le fax et la case postale, qu'aucun document du dossier ne mentionne.
+    Les blocs du destinataire, remplis par la table cantonale, sont exclus.
+    """
+    scenario = load_scenarios()[form_id]
+    text = fold(" ".join(d["markdown"] for d in dossier_documents(form_id)))
+    absent: dict[str, Expectation] = {}
+    for field in prepare_fields(load_template(form_id, templates_dir)):
+        parts = _segments(field)
+        if len(parts) < 2 or is_recipient_field(field):
+            continue
+        leaf, container = _bare(parts[-1]), parts[-2]
+        if _bare(container) == "unemployabilityS1Struct":
+            if scenario.incapacites and _index(container) >= len(scenario.incapacites):
+                absent[str(field["id"])] = Expectation("", "empty", "incapacite")
+        elif leaf in _UNSTATED and not _UNSTATED[leaf].search(text):
+            absent[str(field["id"])] = Expectation("", "empty", "coordonnees")
+    return absent
+
+
 # ---------------------------------------------------------------------------
 # Comparaison
 # ---------------------------------------------------------------------------
@@ -203,13 +235,23 @@ def matches(expected: str, extracted: str, tolerance: str) -> bool:
     return fold(expected) == fold(extracted)
 
 
-def score(truth: dict[str, Expectation], fields_payload: list[dict]) -> dict[str, Any]:
+def score(truth: dict[str, Expectation], fields_payload: list[dict],
+          absent: dict[str, Expectation] | None = None) -> dict[str, Any]:
     """
     Compare le résultat de /fields à la vérité terrain.
 
+    Deux défauts que la précision ne voit pas, parce qu'ils touchent des champs
+    sans valeur attendue :
+    - les non-réponses (« non mentionné », « N/A », « ... ») : écrites, elles
+      partent dans le PDF ; effacées par la normalisation, elles disent combien
+      de champs « remplis » n'étaient en fait que du bruit ;
+    - les valeurs inventées, dans les champs que le dossier laisse vides (`absent`).
+
     Returns:
-        métriques (précision, taux de remplissage, erreurs) et détail par champ.
+        métriques (précision, taux de remplissage, erreurs, non-réponses, valeurs
+        inventées) et détail par champ.
     """
+    absent = absent or {}
     by_id = {str(f["id"]): f for f in fields_payload}
     details = []
     correct = 0
@@ -222,6 +264,20 @@ def score(truth: dict[str, Expectation], fields_payload: list[dict]) -> dict[str
                         "status": "ok" if ok else ("missing" if not got.strip() else "wrong")})
     filled = sum(1 for f in fields_payload if str(f.get("value") or "").strip())
     errors = sum(1 for f in fields_payload if f.get("error"))
+
+    non_answers, erased = [], 0
+    for f in fields_payload:
+        value, raw = str(f.get("value") or "").strip(), str(f.get("raw_value") or "").strip()
+        if value and is_null_like(value):
+            non_answers.append({"id": str(f["id"]), "extracted": value})
+        elif not value and raw and is_null_like(raw):
+            erased += 1
+    invented = []
+    for fid, exp in sorted(absent.items(), key=lambda kv: [int(p) for p in kv[0].split(".")]):
+        got = str((by_id.get(fid) or {}).get("value") or "").strip()
+        if got and not is_null_like(got):
+            invented.append({"id": fid, "category": exp.category, "extracted": got})
+
     return {
         "truth_fields": len(truth),
         "correct": correct,
@@ -230,5 +286,12 @@ def score(truth: dict[str, Expectation], fields_payload: list[dict]) -> dict[str
         "filled": filled,
         "fill_rate": round(filled / len(fields_payload), 4) if fields_payload else None,
         "errors": errors,
+        # Écrites dans le PDF / effacées par la normalisation avant le PDF.
+        "non_answers": len(non_answers),
+        "non_answers_erased": erased,
+        "absent_fields": len(absent),
+        "invented": len(invented),
         "details": details,
+        "non_answer_details": non_answers,
+        "invented_details": invented,
     }
