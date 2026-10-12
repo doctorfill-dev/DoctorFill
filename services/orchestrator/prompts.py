@@ -215,7 +215,9 @@ personne ou entité : une adresse de cabinet sans rue reste sans rue.
 8. Si le champ propose une liste de valeurs, reprends exactement l'une d'elles.
 9. Champs répétés (« n°2 sur 4 ») : attribue les éléments dans l'ordre indiqué, un élément différent \
 par occurrence. S'il y a moins d'éléments que d'occurrences, laisse "" les occurrences en surnombre \
-plutôt que de répéter une valeur.
+plutôt que d'y recopier un élément déjà attribué. Cette règle porte sur les occurrences, pas sur les \
+valeurs : deux champs peuvent avoir la même valeur (un taux d'activité de 100 et un taux d'incapacité \
+de 100, par exemple) ; ne laisse jamais un champ vide pour cette raison.
 10. Pour les listes (ex : diagnostics), liste TOUTES les entrées séparées par des sauts de ligne.
 11. "source_quote" : citation EXACTE et courte (100 caractères au plus) du passage des DOCUMENTS qui \
 justifie la valeur, recopiée mot pour mot. "" si la valeur est vide.

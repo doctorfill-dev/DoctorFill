@@ -494,6 +494,10 @@ def bool_item(value: str, field: dict, truthy: bool) -> str:
 # Champ qui identifie une occurrence de structure répétée : deux périodes
 # d'incapacité distinctes ne commencent pas le même jour.
 _OCCURRENCE_KEY = {"unemployabilityS1Struct": "beginDate"}
+# Champs sans lesquels une occurrence au-delà de la première n'existe pas : une
+# période d'incapacité a au moins un début ou un taux. Une remarque ou un horaire
+# seuls ne décrivent aucune période.
+_OCCURRENCE_DEFINING = {"unemployabilityS1Struct": ("beginDate", "percentageNum")}
 
 # Clés que la provenance ajoute à une valeur ; elles n'ont plus de sens une fois
 # la valeur retirée.
@@ -506,11 +510,16 @@ def _occurrence_rank(segment: str) -> int:
     return int(match.group(1)) if match else 0
 
 
+def _value_of(result: dict) -> str:
+    payload = result.get("result")
+    return str(payload.get("value") or "").strip() if isinstance(payload, dict) else ""
+
+
 def _clear(result: dict) -> bool:
     """Retire la valeur d'un résultat, en gardant la réponse du modèle dans `raw_value`."""
-    payload = result.get("result")
-    if not isinstance(payload, dict) or not str(payload.get("value") or "").strip():
+    if not _value_of(result):
         return False
+    payload = result["result"]
     payload["raw_value"] = payload.get("raw_value") or payload["value"]
     payload["value"] = ""
     payload["source_quote"] = ""
@@ -521,13 +530,19 @@ def _clear(result: dict) -> bool:
 
 def drop_repeated_occurrences(results: list[dict], fields_by_id: dict[str, dict]) -> list[str]:
     """
-    Vide les occurrences d'une structure répétée qui recopient une occurrence précédente.
+    Vide les occurrences d'une structure répétée qui n'existent pas dans le dossier.
 
     Sur un dossier à trois périodes d'incapacité, le modèle remplissait la n°4 avec
     la date de début et le taux de la n°3 (#50) : les quatre questions nommant
     désormais le taux de chaque période, il trouvait toujours une réponse. Une
-    période dont la date de début est celle d'une période précédente n'existe pas :
-    l'occurrence entière est vidée, la réponse du modèle reste dans `raw_value`.
+    période dont la date de début est celle d'une période précédente n'existe pas.
+
+    Sur un dossier à une période, il écrivait aussi une remarque dans la n°2
+    (« Suite à un accident de travail », #50) : au-delà de la première, une
+    occurrence sans début ni taux n'est pas une période.
+
+    Dans les deux cas, l'occurrence entière est vidée, la réponse du modèle reste
+    dans `raw_value`.
 
     Returns:
         IDs des champs vidés.
@@ -543,16 +558,17 @@ def drop_repeated_occurrences(results: list[dict], fields_by_id: dict[str, dict]
     cleared: list[str] = []
     for family in families.values():
         seen: set[str] = set()
-        for occurrence in sorted(family, key=lambda path: _occurrence_rank(path.rsplit("/", 1)[-1])):
+        ordered = sorted(family, key=lambda path: _occurrence_rank(path.rsplit("/", 1)[-1]))
+        for position, occurrence in enumerate(ordered):
             members = family[occurrence]
-            key_name = _OCCURRENCE_KEY[_struct_of(fields_by_id[str(members[0]["id"])])]
-            key = next((str((r.get("result") or {}).get("value") or "").strip() for r in members
-                        if fields_by_id[str(r["id"])].get("name") == key_name), "")
-            if not key:
-                continue
-            if key in seen:
+            struct = _struct_of(fields_by_id[str(members[0]["id"])])
+            filled = {fields_by_id[str(r["id"])].get("name"): _value_of(r) for r in members}
+            key = filled.get(_OCCURRENCE_KEY[struct], "")
+            shell = position > 0 and not any(filled.get(name) for name in _OCCURRENCE_DEFINING[struct])
+            if shell or (key and key in seen):
                 cleared += [str(r["id"]) for r in members if _clear(r)]
-            seen.add(key)
+            elif key:
+                seen.add(key)
     return cleared
 
 

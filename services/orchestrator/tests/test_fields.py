@@ -262,6 +262,22 @@ def test_a_period_copied_from_the_previous_one_is_dropped():
     assert by_id["5.17"]["value"] == "20.04.2026" and by_id["5.16"]["value"] == "50"   # la n°3 reste
 
 
+def test_a_period_beyond_the_first_needs_a_start_or_a_rate():
+    """#50 : dossier à une période, le modèle écrivait une remarque dans la n°2 (9.3)."""
+    template = json.loads((TEMPLATE_DIR / "Form_LAA_CertificatMedical_Suva.json").read_text(encoding="utf-8"))
+    fields_by_id = {str(f["id"]): f for f in prepare_fields(template)}
+    values = {"2.3": "100", "2.6": "24.03.2026", "9.2": "Reprise à réévaluer",
+              "9.3": "Suite à un accident de travail",                       # n°2 : remarque seule
+              "2.13": "50"}                                                  # n°3 : un taux, gardée
+    results = [{"id": fid, "result": {"value": values.get(fid, ""), "source_quote": ""}}
+               for fid in fields_by_id]
+
+    assert drop_repeated_occurrences(results, fields_by_id) == ["9.3"]
+    by_id = {r["id"]: r["result"]["value"] for r in results}
+    assert by_id["9.2"] == "Reprise à réévaluer"                             # n°1 : jamais vidée
+    assert by_id["2.13"] == "50"
+
+
 def test_distinct_periods_are_kept_whatever_their_rates():
     values = {"5.4": "100", "5.5": "01.02.2026", "5.10": "100", "5.11": "01.03.2026"}
     results, fields_by_id = _period_results(values)
