@@ -371,11 +371,15 @@ def pdf_mismatches(dossier: str, fields_payload: list[dict],
     l'adresse de l'office AI à la place de la sienne, et le médecin le GLN de
     l'office : /fields restait juste, seul le PDF le montrait.
 
-    Vérifié sur les champs de la vérité terrain que /fields remplit, et, sur tout
-    le formulaire hors destinataire, l'absence de la chaîne technique de la table.
+    Vérifié sur les champs de la vérité terrain que /fields remplit, et, sur les
+    champs extraits hors destinataire, l'absence de la chaîne technique de la table.
+    Les champs que le template remplit lui-même (`preset`, jamais demandés au
+    modèle) n'en relèvent pas : le bloc du destinataire du formulaire y porte
+    l'adresse officielle de l'assureur (Suva, diabètesuisse) sous cette forme.
     """
     template = load_template(form_of(dossier))
     by_id = {str(f["id"]): f for f in template.get("fields", []) if "id" in f}
+    extracted = {str(f["id"]) for f in prepare_fields(template)}
     shown = {str(f["id"]): str(f.get("value") or "").strip() for f in fields_payload}
     out = []
     for fid, exp in derive_truth(dossier).items():
@@ -385,7 +389,8 @@ def pdf_mismatches(dossier: str, fields_payload: list[dict],
         written = str(acroform.get(field.get("acroform_name")) or "")
         if not matches(value, normalize_value(written, field), exp.tolerance):
             out.append({"id": fid, "category": exp.category, "fields": value, "pdf": written})
-    for fid, field in by_id.items():
+    for fid in extracted:
+        field = by_id[fid]
         written = str(acroform.get(field.get("acroform_name")) or "")
         if _RECIPIENT_PAYLOAD in written and not is_recipient_field(field):
             out.append({"id": fid, "category": "destinataire", "fields": shown.get(fid, ""), "pdf": written})
