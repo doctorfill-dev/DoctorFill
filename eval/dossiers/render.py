@@ -7,6 +7,10 @@ réellement. Sans ça, une extraction ne peut pas être jugée — un formulaire
 moyens auxiliaires AI sur un dossier sans procédure AI laisse forcément vide le
 champ qui compte, et le résultat est ininterprétable.
 
+Quelques formulaires ont en plus une variante (`cas`) qui force un chemin du
+pipeline : dossier trop long pour être transmis en entier, document illisible,
+périodes d'incapacité multiples, informations délibérément absentes.
+
 Les documents ne contiennent aucune donnée réelle : patients, médecins,
 assureurs et numéros sont fictifs.
 """
@@ -72,6 +76,25 @@ class Scenario:
     documents: list[tuple[str, str, str]] = field(default_factory=list)
     evolution: str = ""
     pronostic: str = ""
+    # Variante d'un formulaire déjà couvert : le dossier s'appelle <form>__<cas>.
+    cas: str = ""
+    # Contexte que le pipeline doit choisir : « integral » (dossier transmis en
+    # entier) ou « extraits » (recherche vectorielle), selon la taille du dossier.
+    mode: str = "integral"
+    # Documents illisibles (nom, nature) : « corrompu » (fichier tronqué) ou
+    # « scan-de-travers » (image penchée, sans couche texte). Le job doit aboutir.
+    illisibles: list[tuple[str, str]] = field(default_factory=list)
+    # Ce que le dossier ne donne pas, à dessein : « tel », « email », « employeur »,
+    # « incapacites ». Les champs correspondants doivent rester vides.
+    absents: tuple[str, ...] = ()
+    # Attestations d'incapacité listées de la plus récente à la plus ancienne :
+    # le formulaire, lui, les veut dans l'ordre chronologique.
+    incapacites_antichrono: bool = False
+
+    @property
+    def dossier(self) -> str:
+        """Nom du dossier dans eval/dossiers/."""
+        return f"{self.form}__{self.cas}" if self.cas else self.form
 
 
 # ---------------------------------------------------------------------------
@@ -97,8 +120,12 @@ def _fiche_administrative(s: Scenario) -> str:
         "## Coordonnées",
         "",
         f"- Adresse : {p.rue}, {p.npa} {p.ville} (canton de {p.canton})",
-        f"- Téléphone : {p.tel}",
-        f"- E-mail : {p.email}",
+    ]
+    if p.tel:
+        lignes.append(f"- Téléphone : {p.tel}")
+    if p.email:
+        lignes.append(f"- E-mail : {p.email}")
+    lignes += [
         "",
         "## Situation professionnelle",
         "",
@@ -181,7 +208,8 @@ def _incapacites(s: Scenario) -> str:
         f"Profession : {s.patient.profession}",
         "",
     ]
-    for debut, fin, taux in s.incapacites:
+    periodes = list(reversed(s.incapacites)) if s.incapacites_antichrono else s.incapacites
+    for debut, fin, taux in periodes:
         borne = f"du {debut} au {fin}" if fin else f"depuis le {debut}, sans terme fixé"
         lignes.append(f"- Incapacité de travail de {taux} {borne}.")
     lignes.append("")
@@ -236,6 +264,12 @@ def documents(s: Scenario) -> list[tuple[str, str]]:
     return out
 
 
+def illegible_documents(s: Scenario) -> list[tuple[str, str]]:
+    """(nom de fichier sans extension, nature) des documents illisibles, numérotés à la suite."""
+    first = len(documents(s)) + 1
+    return [(f"{first + i:02d}_{nom}", nature) for i, (nom, nature) in enumerate(s.illisibles)]
+
+
 # ---------------------------------------------------------------------------
 # Rendu PDF
 # ---------------------------------------------------------------------------
@@ -276,6 +310,60 @@ def _unicode_font() -> str | None:
         return found if found.endswith((".ttf", ".otf")) and Path(found).exists() else None
     except Exception:
         return None
+
+
+# Texte d'un document scanné de travers : un ancien courrier sans rapport avec le
+# formulaire. Qu'il soit lu ou non, la vérité terrain n'en dépend pas.
+_SCAN_TEXT = (
+    "Centre de radiologie de la Riponne",
+    "Lausanne, le 12.03.2019",
+    "",
+    "Radiographie du thorax face et profil.",
+    "Pas de foyer de condensation, pas d'épanchement pleural.",
+    "Silhouette cardiaque de taille normale.",
+    "Conclusion : examen dans les limites de la norme.",
+)
+
+
+def illegible_pdf(nature: str, path: Path) -> None:
+    """
+    Document que l'OCR ne peut pas, ou mal, lire.
+
+    « corrompu » : un PDF tronqué, que ni la couche texte ni l'OCR n'ouvrent.
+    « scan-de-travers » : une page scannée penchée de 4°, image seule, avec du bruit.
+    Déterministes, pour que deux générations donnent les mêmes fichiers.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if nature == "corrompu":
+        path.write_bytes(b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n" + bytes(range(256)) * 8)
+        return
+    if nature != "scan-de-travers":
+        raise ValueError(f"nature de document illisible inconnue : {nature}")
+
+    import random
+
+    from fpdf import FPDF
+    from PIL import Image, ImageDraw, ImageFont
+
+    font_path = _unicode_font()
+    font = ImageFont.truetype(font_path, 26) if font_path else ImageFont.load_default()
+    page = Image.new("L", (1240, 1754), 255)
+    draw = ImageDraw.Draw(page)
+    for i, line in enumerate(_SCAN_TEXT):
+        draw.text((140, 200 + 48 * i), line, fill=40, font=font)
+    page = page.rotate(4, resample=Image.BICUBIC, fillcolor=235, expand=False)
+    rng = random.Random(0)
+    pixels = page.load()
+    for _ in range(40000):
+        x, y = rng.randrange(page.width), rng.randrange(page.height)
+        pixels[x, y] = rng.choice((90, 160, 200))
+    image = path.with_suffix(".png")
+    page.save(image)
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.image(str(image), x=0, y=0, w=210, h=297)
+    pdf.output(str(path))
+    image.unlink()
 
 
 def to_pdf(markdown: str, path: Path) -> None:
