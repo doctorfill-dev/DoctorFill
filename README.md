@@ -117,6 +117,22 @@ modèle se contrôle avec `eval/regression.py` contre une référence. Détails,
 réglage de GitLab pour bloquer une fusion rouge :
 [docs/wiki/Tests.md](docs/wiki/Tests.md).
 
+## Publier une version
+
+Le backend en production suit les **versions publiées**, pas chaque fusion
+dans `main`. Numérotation [SemVer](https://semver.org/lang/fr/) : `MAJEUR.MINEUR.CORRECTIF`.
+
+1. Une MR monte le numéro dans `VERSION` (par exemple `0.3.0`), fusionnée dans `main`.
+2. **Deploy → Releases → New release** : tag `v0.3.0` sur `main`, avec les
+   notes de version. La CI vérifie que le tag correspond à `VERSION` et
+   repasse les tests.
+3. La mise en production de cette version est alors proposée par une merge
+   request côté infrastructure, à valider.
+
+Seules les versions finales (`v1.2.3`) partent en production ; un tag
+`v1.2.3-rc1` sert aux essais. Un tag publié ne se déplace pas : pour corriger,
+publier une nouvelle version.
+
 ## Évaluation RAG
 
 ```bash

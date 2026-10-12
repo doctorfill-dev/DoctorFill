@@ -11,6 +11,8 @@ workflow:
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
       when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "dev"
+    # Une version publiée (tag vX.Y.Z) repasse les tests.
+    - if: $CI_COMMIT_TAG
 
 stages:
   - test
@@ -19,6 +21,19 @@ stages:
 default:
   # Un nouveau push annule le pipeline en cours sur la même branche.
   interruptible: true
+
+# Le tag d'une version doit correspondre au fichier VERSION : v1.2.3 pour 1.2.3.
+version-tag:
+  stage: test
+  image: alpine:3
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - |
+      if [ "$CI_COMMIT_TAG" != "v$(cat VERSION)" ]; then
+        echo "Tag $CI_COMMIT_TAG, mais VERSION contient $(cat VERSION)"
+        exit 1
+      fi
 
 lint:
   stage: test
