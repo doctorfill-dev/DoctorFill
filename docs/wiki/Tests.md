@@ -100,9 +100,12 @@ référence, car le modèle n'y est pour rien — un champ du PDF différent de
 `/fields`.
 `--min-accuracy 0.85` ajoute un plancher absolu.
 
-Le rapport liste, par formulaire, les champs justes, l'écart à la référence,
+Le rapport liste, par dossier, les champs justes, l'écart à la référence,
 les valeurs inventées et les non-réponses, et le détail des champs faux
 (attendu / obtenu), des valeurs inventées et des non-réponses écrites.
+Il donne aussi la durée de chaque étape (OCR et embeddings, synthèse,
+extraction, remplissage, attente), que le backend publie dans `/status` : un
+dossier anormalement lent s'explique sans aller lire les journaux du serveur.
 
 ### Sur le DGX, depuis GitLab
 

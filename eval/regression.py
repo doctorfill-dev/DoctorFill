@@ -103,6 +103,8 @@ def run_form(client: httpx.Client, dossier: str, pdfs: list[Path], poll_interval
         "pdf_details": mismatches or [],
         "status": "completed",
         "seconds": round(time.monotonic() - started, 1),
+        # Durées par étape mesurées par le backend (absentes d'un backend plus ancien).
+        "timings": status.get("timings") or {},
         "warnings": status.get("warnings", []),
         "job_id": job_id,
     })
@@ -248,6 +250,20 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
             shown = d["fields"].replace("\n", " ").replace("|", "/")[:40] or "∅"
             written = d["pdf"].replace("\n", " ").replace("|", "/")[:60] or "∅"
             lines.append(f"| {form} | {d['id']} ({d['category']}) | {shown} | {written} |")
+        lines += ["", "</details>"]
+    timed = [r for r in results if r["status"] == "completed" and r.get("timings")]
+    if timed:
+        # « Attente » : ce que la durée vécue ajoute au pipeline (envoi, file d'attente,
+        # sondage de /status). Une durée anormale se lit ici, étape par étape.
+        lines += ["", "<details><summary>Durées par étape</summary>", "",
+                  "| Dossier | Total | OCR et embeddings | Synthèse | Extraction | Remplissage | Attente |",
+                  "|---|---|---|---|---|---|---|"]
+        for r in timed:
+            t = r["timings"]
+            cells = [f"{t[k]:.0f} s" if k in t else "—"
+                     for k in ("ocr_embed_pipeline", "medical_synthesis", "rag_extraction", "xfa_injection")]
+            wait = f"{r['seconds'] - t['total']:.0f} s" if "total" in t else "—"
+            lines.append(f"| {r['form']} | {r['seconds']:.0f} s | {' | '.join(cells)} | {wait} |")
         lines += ["", "</details>"]
     return "\n".join(lines) + "\n"
 
