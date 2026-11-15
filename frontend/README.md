@@ -40,13 +40,18 @@ npm run tauri build
 
 ### Variables d'environnement
 
-Créer un fichier `.env` à la racine :
+L'interface appelle l'API sous `/api/*`, sur sa propre origine : en production
+via la Pages Function `../functions/api/[[path]].ts` (qui ajoute la clé API côté
+serveur), en développement via le proxy de Vite. Pour `npm run dev`, variables
+du shell (jamais incluses dans le bundle) :
 
-```env
-# API Backend
-VITE_API_URL=http://localhost:8080          # Dev local
-# VITE_API_URL=https://api.doctorfill.ch    # Production
+```bash
+DOCTORFILL_API_URL=http://localhost:8080   # défaut
+DOCTORFILL_API_KEY=...                     # seulement si l'API locale a une clé
 ```
+
+La clé API n'est plus une variable `VITE_*` : tout ce qui porte ce préfixe finit
+dans le bundle.
 
 ## Déploiement
 

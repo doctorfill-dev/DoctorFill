@@ -4,7 +4,7 @@
 
 | Service | Endpoint | Méthode | Description |
 |---------|----------|---------|-------------|
-| Orchestrator | `:8080/health` | GET | Santé du service |
+| Orchestrator | `:8080/health` | GET | Santé du service (`{"status": "ok"}` ; version, commit et modèle avec la clé API) |
 | Orchestrator | `:8080/forms` | GET | Liste des formulaires disponibles |
 | Orchestrator | `:8080/process-form` | POST | Lancer un job de remplissage |
 | Orchestrator | `:8080/status/{job_id}` | GET | Statut et progression d'un job |

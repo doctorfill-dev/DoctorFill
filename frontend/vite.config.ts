@@ -32,8 +32,24 @@ function readCommit(): string {
   }
 }
 
+// Local stand-in for the Pages Function functions/api/[[path]].ts: /api/* goes
+// to the orchestrator, with its key when the backend requires one. These two
+// variables have no VITE_ prefix, so Vite never puts them in the bundle.
+const devApiTarget = process.env.DOCTORFILL_API_URL || "http://localhost:8080"
+const devApiKey = process.env.DOCTORFILL_API_KEY || ""
+
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      "/api": {
+        target: devApiTarget,
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, ""),
+        headers: devApiKey ? { "X-API-Key": devApiKey } : {},
+      },
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(readVersion()),
     __APP_COMMIT__: JSON.stringify(readCommit()),

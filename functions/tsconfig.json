@@ -1,0 +1,20 @@
+{
+  // Type check of the Pages Functions (Cloudflare bundles them itself at deploy
+  // time). The types come from frontend/node_modules: run through
+  // `npm run build` or `npm run test:functions` in frontend/.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "typeRoots": ["../frontend/node_modules/@cloudflare"],
+    "types": ["workers-types"],
+    "rootDir": ".",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}

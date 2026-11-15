@@ -85,7 +85,10 @@ frontend:
   script:
     - cd frontend
     - npm ci --cache "$CI_PROJECT_DIR/.npm" --prefer-offline
+    # The build also type-checks the Pages Function (functions/).
     - npm run build
+    # Pages Function /api/* proxy: header filtering, fixed upstream, streaming.
+    - npm run test:functions
 
 # Non-régression de la qualité d'extraction contre le vrai modèle.
 #

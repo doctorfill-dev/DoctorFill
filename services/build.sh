@@ -3,7 +3,8 @@
 #
 # La version seule ne suffit pas à savoir ce qui tourne : entre deux releases,
 # plusieurs images portent la même. On y ajoute donc le commit et l'horodatage,
-# visibles ensuite dans /health et dans l'en-tête de l'application.
+# visibles ensuite dans /health (avec la clé API) et dans l'en-tête de
+# l'application.
 #
 #   ./build.sh              # build + up -d
 #   ./build.sh orchestrator # limité à un service

@@ -45,8 +45,9 @@ docker compose ps       # Vérifier la santé
 
 > Premier lancement : ~10 min (téléchargement et chargement des modèles en VRAM)
 
-> `build.sh` injecte version, commit et horodatage dans l'image ; `/health` et
-> l'en-tête de l'application les affichent. Sans l'étape `gen_catalog`, aucun
+> `build.sh` injecte version, commit et horodatage dans l'image ; `/health`
+> (avec la clé API) et l'en-tête de l'application les affichent. Sans clé,
+> `/health` ne renvoie que `{"status": "ok"}`. Sans l'étape `gen_catalog`, aucun
 > formulaire n'est exposé.
 
 ### Frontend
