@@ -81,11 +81,11 @@ cd orchestrator && python -m tools.gen_catalog --list tools/catalog_fr.txt --wri
 # Vérifier les logs de démarrage
 docker compose logs -f
 
-# Contrôler le build déployé
-curl -s http://localhost:8080/health | python3 -m json.tool
+# Contrôler le build déployé (sans la clé, /health ne renvoie que {"status": "ok"})
+curl -s -H "X-API-Key: $API_KEY" http://localhost:8080/health | python3 -m json.tool
 ```
 
-Réponse attendue de `/health` :
+Réponse attendue de `/health` avec la clé :
 
 ```json
 {
@@ -122,8 +122,10 @@ Réponse attendue de `/health` :
 # Santé globale
 docker compose ps
 
-# Test de l'API
-curl -H "X-API-Key: <votre-clé>" http://localhost:8080/health
+# Sonde publique : {"status":"ok"} seulement
+curl -s http://localhost:8080/health
+# Détails du build : avec la clé
+curl -s -H "X-API-Key: <votre-clé>" http://localhost:8080/health
 
 # Vérification VRAM
 nvidia-smi

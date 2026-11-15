@@ -16,16 +16,23 @@ cd frontend
 npm install
 ```
 
-### Variables d'environnement
+### API et clé
 
-Créer un fichier `.env` à la racine du dossier `frontend/` :
+Le frontend appelle l'API sur sa propre origine, sous `/api/*`. La clé API
+n'est plus dans le bundle (`VITE_API_KEY` n'est plus lu) :
 
-```env
-# URL de l'API backend (via Cloudflare Tunnel)
-VITE_API_URL=https://api.doctorfill.ch
+- en production, la Pages Function `functions/api/[[path]].ts` relaie `/api/*`
+  vers `https://api.doctorfill.ch` et ajoute la clé côté serveur, depuis le
+  secret Pages `DOCTORFILL_API_KEY` ;
+- en développement (`npm run dev`), Vite relaie `/api/*` vers l'orchestrateur
+  local. Variables du shell, jamais incluses dans le bundle :
+
+```bash
+DOCTORFILL_API_URL=http://localhost:8080   # défaut
+DOCTORFILL_API_KEY=...                     # seulement si l'API locale a une clé
 ```
 
-> En développement local, utiliser `VITE_API_URL=http://localhost:8080`
+`VITE_API_BASE_URL` permet encore de viser une autre URL (sans clé).
 
 ## 2. Build local (vérification)
 
@@ -51,9 +58,9 @@ Le build produit un dossier `dist/` avec les fichiers statiques.
 | Build output directory | `frontend/dist` |
 | Root directory | `/` |
 
-5. Ajouter les variables d'environnement :
-   - `VITE_API_URL` = `https://api.doctorfill.ch`
-   - `NODE_VERSION` = `18`
+5. Ajouter le secret `DOCTORFILL_API_KEY` (*Settings → Variables and
+   Secrets*, type *Secret*, environnement Production) : la clé de l'orchestrateur,
+   lue par la Pages Function. Aucune variable `VITE_*` n'est nécessaire.
 
 6. Cliquer **"Save and Deploy"**
 
@@ -117,18 +124,21 @@ Les branches autres que `main` génèrent des **preview URLs** :
 
 ### Flux des requêtes API
 
-1. Le frontend fait un `fetch("https://api.doctorfill.ch/process-form", ...)`
-2. Cloudflare DNS résout `api.doctorfill.ch` vers le Tunnel
-3. Le Tunnel forwarde la requête vers `localhost:8080` sur le DGX Spark
-4. L'orchestrator traite la requête et retourne le résultat
+1. Le frontend fait un `fetch("/api/process-form", ...)` sur `doctorfill.ch`
+   (derrière Cloudflare Access)
+2. La Pages Function `functions/api/[[path]].ts` relaie vers
+   `https://api.doctorfill.ch/process-form`, en flux (rien n'est mis en
+   mémoire), avec l'en-tête `X-API-Key` tiré du secret `DOCTORFILL_API_KEY`
+3. Cloudflare DNS résout `api.doctorfill.ch` vers le Tunnel, qui transmet à
+   `localhost:8080` sur le DGX Spark
 
-### Headers importants
+La fonction ne relaie que vers cet hôte fixe, ne sert que `doctorfill.ch` et
+`www.doctorfill.ch`, ne transmet ni la clé envoyée par le client ni les
+cookies, et ne journalise rien.
 
-Le frontend envoie systématiquement :
-```
-X-API-Key: <clé-api>
-Content-Type: multipart/form-data
-```
+Limites Cloudflare qui s'appliquent (les mêmes qu'en appel direct à
+`api.doctorfill.ch`, zone en plan Free) : corps de requête de 100 Mo au plus
+par requête, réponse d'origine attendue 125 s au plus (erreur 524 au-delà).
 
 ## 7. Troubleshooting
 

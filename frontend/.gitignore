@@ -28,3 +28,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Pages Function compiled for its tests (npm run test:functions)
+.functions-test

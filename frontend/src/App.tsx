@@ -10,8 +10,11 @@ import {
   Brain, RefreshCw, Save, Wand2, AlertTriangle, Timer,
 } from "lucide-react";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-const API_KEY = import.meta.env.VITE_API_KEY || "";
+// Same origin by default: on Cloudflare Pages, /api/* is relayed to the API by
+// functions/api/[[path]].ts, which adds the API key server side. The key is
+// never part of this bundle. In local development, Vite proxies /api to the
+// orchestrator (vite.config.ts); VITE_API_BASE_URL can point elsewhere.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 /** Réponse de GET /stats : repères de durée sur les exécutions abouties. */
 interface PipelineStats {
@@ -52,11 +55,7 @@ class PollFatalError extends Error {}
 // Coupures tolérées pendant le suivi d'une tâche avant d'abandonner.
 const MAX_POLL_FAILURES = 6;
 
-const apiFetch = (url: string, options: RequestInit = {}) => {
-  const headers = new Headers(options.headers || {});
-  if (API_KEY) headers.set("X-API-Key", API_KEY);
-  return fetch(url, { ...options, headers });
-};
+const apiFetch = (url: string, options: RequestInit = {}) => fetch(url, options);
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -363,15 +362,17 @@ export default function App() {
     fetchForms();
   }, [apiStatus]);
 
-  // /health est hors authentification : il renseigne la version du backend, à
-  // comparer avec celle de l'interface (déploiements indépendants), et dit si
-  // l'API est disponible. Revérifié chaque minute pour lever le bandeau seul.
+  // /health tells whether the API is up. With the API key (added by the Pages
+  // proxy) it also returns the backend version, to compare with the UI's
+  // (independent deployments); without the key it only returns
+  // {"status": "ok"}. Checked every minute so the banner clears by itself.
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/health`);
+        const res = await apiFetch(`${BASE_URL}/health`);
         if (res.ok) {
-          setBackend(await res.json());
+          const data = await res.json();
+          setBackend(data?.version ? data : null);
           setApiStatus("ok");
           return;
         }

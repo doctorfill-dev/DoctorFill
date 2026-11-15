@@ -67,15 +67,24 @@ API_KEY = os.getenv("API_KEY", "")
 
 from fastapi import Request
 
+def _has_valid_api_key(request: Request) -> bool:
+    """True when no key is configured, or when the request carries the right one."""
+    if not API_KEY:
+        return True
+    # Compared as bytes: compare_digest rejects non-ASCII str with a TypeError.
+    supplied = request.headers.get("X-API-Key", "").encode("utf-8")
+    return secrets.compare_digest(supplied, API_KEY.encode("utf-8"))
+
+
 @app.middleware("http")
 async def verify_api_key(request: Request, call_next):
-    # Bypass : health check, CORS preflight, docs
+    # Bypass : health check, CORS preflight, docs. /health checks the key
+    # itself: without it, it only answers the liveness probe.
     if request.url.path in ("/health", "/docs", "/redoc", "/openapi.json") or request.method == "OPTIONS":
         return await call_next(request)
     # Si API_KEY est définie, on vérifie le header
     if API_KEY:
-        client_key = request.headers.get("X-API-Key", "")
-        if not secrets.compare_digest(client_key, API_KEY):
+        if not _has_valid_api_key(request):
             from fastapi.responses import JSONResponse
             return JSONResponse(status_code=403, content={"detail": "API key invalide."})
     return await call_next(request)
@@ -1048,9 +1057,14 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
 # --- ROUTES ---
 
 @app.get("/health")
-async def health_check():
-    # /health est le seul endpoint hors authentification : c'est donc lui que le
-    # frontend interroge pour afficher la version du backend qu'il pilote.
+async def health_check(request: Request):
+    # Public liveness probe (container healthchecks, monitoring): without a valid
+    # API key it only says the service answers. Version, commit and model are
+    # build details an anonymous caller has no use for; they are returned only
+    # with the key, which the frontend gets through the Pages proxy and the
+    # evaluation scripts send themselves.
+    if not _has_valid_api_key(request):
+        return {"status": "ok"}
     return {
         "status": "ok",
         "service": "orchestrator",
