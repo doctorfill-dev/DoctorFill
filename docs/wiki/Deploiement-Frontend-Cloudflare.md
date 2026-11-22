@@ -61,6 +61,10 @@ Le build produit un dossier `dist/` avec les fichiers statiques.
 5. Ajouter le secret `DOCTORFILL_API_KEY` (*Settings → Variables and
    Secrets*, type *Secret*, environnement Production) : la clé de l'orchestrateur,
    lue par la Pages Function. Aucune variable `VITE_*` n'est nécessaire.
+   Ajouter aussi `CF_ACCESS_TEAM_DOMAIN` (`https://<équipe>.cloudflareaccess.com`)
+   et `CF_ACCESS_AUD` (étiquette *Application Audience* de l'application
+   Access) : la fonction vérifie elle-même l'assertion d'Access et répond 500
+   tant qu'elles manquent, 403 sans assertion valide.
 
 6. Cliquer **"Save and Deploy"**
 
@@ -134,7 +138,11 @@ Les branches autres que `main` génèrent des **preview URLs** :
 
 La fonction ne relaie que vers cet hôte fixe, ne sert que `doctorfill.ch` et
 `www.doctorfill.ch`, ne transmet ni la clé envoyée par le client ni les
-cookies, et ne journalise rien.
+cookies, et ne journalise rien. Avant d'ajouter la clé, elle vérifie
+l'assertion `Cf-Access-Jwt-Assertion` (signature RS256 par les clés de
+l'équipe Access, audience, émetteur, expiration) : une règle Access mal réglée
+n'ouvre plus l'API à elle seule. Le jeton de job passe dans l'en-tête
+`X-Job-Token`, jamais dans l'URL.
 
 Limites Cloudflare qui s'appliquent (les mêmes qu'en appel direct à
 `api.doctorfill.ch`, zone en plan Free) : corps de requête de 100 Mo au plus

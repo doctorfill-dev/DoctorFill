@@ -16,13 +16,17 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Set
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from fastapi import (APIRouter, BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request,
+                     UploadFile)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 import chromadb
 import shutil
 
+import audit
+import auth
+from auth import Principal
 from core.extract import extract_xfa_datasets, PDFNoXFAError
 from core.fill import update_datasets
 from core.inject import inject_datasets
@@ -40,8 +44,9 @@ from prompts import (SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_message
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- [SEC-21] Désactivation Swagger/ReDoc en production
-_disable_docs = os.getenv("DISABLE_DOCS", "false").lower() == "true"
+# --- [SEC-21] Swagger/ReDoc désactivés par défaut : DISABLE_DOCS=false pour la
+# mise au point. Un .env incomplet ne doit rien ouvrir (audit S10).
+_disable_docs = os.getenv("DISABLE_DOCS", "true").lower() != "false"
 app = FastAPI(
     title="DoctorFill - Orchestrator Hub",
     docs_url=None if _disable_docs else "/docs",
@@ -62,32 +67,18 @@ app.add_middleware(
     allow_headers=["*", "X-API-Key"]
 )
 
-# --- [SEC-22] Clé API pour protéger les endpoints contre les appels non autorisés
-API_KEY = os.getenv("API_KEY", "")
+# --- [SEC-22] Authentification (issue 36) : voir auth.py. Fermée par défaut :
+# sans configuration, le service refuse de démarrer et chaque route protégée
+# répond 503. Toutes les routes, sauf /health, sont déclarées sur ce routeur :
+# sa dépendance s'applique à chacune, y compris à celles qu'on ajoutera.
+protected = APIRouter(dependencies=[Depends(auth.current_principal)])
 
-from fastapi import Request
+# Journal d'audit séparé des journaux applicatifs (audit.py).
+audit.configure()
 
-def _has_valid_api_key(request: Request) -> bool:
-    """True when no key is configured, or when the request carries the right one."""
-    if not API_KEY:
-        return True
-    # Compared as bytes: compare_digest rejects non-ASCII str with a TypeError.
-    supplied = request.headers.get("X-API-Key", "").encode("utf-8")
-    return secrets.compare_digest(supplied, API_KEY.encode("utf-8"))
-
-
-@app.middleware("http")
-async def verify_api_key(request: Request, call_next):
-    # Bypass : health check, CORS preflight, docs. /health checks the key
-    # itself: without it, it only answers the liveness probe.
-    if request.url.path in ("/health", "/docs", "/redoc", "/openapi.json") or request.method == "OPTIONS":
-        return await call_next(request)
-    # Si API_KEY est définie, on vérifie le header
-    if API_KEY:
-        if not _has_valid_api_key(request):
-            from fastapi.responses import JSONResponse
-            return JSONResponse(status_code=403, content={"detail": "API key invalide."})
-    return await call_next(request)
+# Jobs en cours par utilisateur identifié (OIDC). La clé partagée n'identifie
+# personne : la limite globale MAX_CONCURRENT_JOBS reste la seule dans ce mode.
+MAX_ACTIVE_JOBS_PER_USER = int(os.getenv("MAX_ACTIVE_JOBS_PER_USER", "3"))
 
 # [SEC-13] Defaults = noms de services Docker (réseau interne)
 MARKER_URL = os.getenv("MARKER_URL", "http://marker_ocr:8082")
@@ -257,6 +248,8 @@ def _scan_templates() -> Set[str]:
 @app.on_event("startup")
 async def startup_tasks():
     """Initialisation au démarrage : whitelist form_id + cleanup périodique."""
+    # Fermé par défaut : sans authentification configurée, le service ne démarre pas.
+    auth.check_settings(auth.settings)
     # [SEC-03] Scanner les templates disponibles
     VALID_FORM_IDS.update(_scan_templates())
     logger.info(f"Form IDs valides: {sorted(VALID_FORM_IDS)}")
@@ -1058,12 +1051,12 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
 
 @app.get("/health")
 async def health_check(request: Request):
-    # Public liveness probe (container healthchecks, monitoring): without a valid
-    # API key it only says the service answers. Version, commit and model are
+    # Public liveness probe (container healthchecks, monitoring): without valid
+    # credentials it only says the service answers. Version, commit and model are
     # build details an anonymous caller has no use for; they are returned only
-    # with the key, which the frontend gets through the Pages proxy and the
-    # evaluation scripts send themselves.
-    if not _has_valid_api_key(request):
+    # to an authenticated caller (see auth.py). Nothing is open when
+    # authentication is not configured.
+    if await auth.optional_principal(request) is None:
         return {"status": "ok"}
     return {
         "status": "ok",
@@ -1077,7 +1070,7 @@ async def health_check(request: Request):
     }
 
 
-@app.get("/stats")
+@protected.get("/stats")
 async def pipeline_stats(form_id: str = ""):
     """
     Repères de durée, calculés sur les exécutions abouties.
@@ -1092,29 +1085,72 @@ async def pipeline_stats(form_id: str = ""):
     }
 
 
-@app.get("/forms")
+@protected.get("/forms")
 async def list_forms():
     # Même filtre que la whitelist de démarrage : un formulaire non relu ne doit
     # pas être proposé, sinon /process-form le refuserait ensuite avec un 400.
     return {"forms": sorted(_scan_templates())}
 
 
-@app.post("/process-form")
+def _owner(principal: Principal) -> Dict[str, str]:
+    return {"user_id": principal.user_id, "cabinet_id": principal.cabinet_id}
+
+
+def _job_token(request: Request, body_token: str = "") -> str:
+    """
+    Jeton de job : en-tête X-Job-Token, ou champ `token` d'un corps JSON.
+
+    Plus jamais dans l'URL : la chaîne de requête finit dans les journaux
+    d'accès (serveur, relais), et job + jeton donnent le dossier (audit S9).
+    """
+    return request.headers.get("X-Job-Token", "") or body_token or ""
+
+
+def _authorize(job_id: str, principal: Principal, token: str, action: str) -> Dict:
+    """
+    Le job, s'il appartient à l'appelant et si le jeton de job est le bon.
+
+    Un job d'un autre utilisateur ou d'un autre cabinet répond 404, comme un
+    job inconnu : la réponse ne confirme pas son existence. Remplace les
+    contrôles recopiés route par route. Chaque refus est journalisé.
+    """
+    job = JOBS.get(job_id)
+    if job is None or job.get("owner") != _owner(principal):
+        audit.record(principal, action, job_id=job_id, result="not_found")
+        raise HTTPException(status_code=404, detail="Session introuvable ou expirée.")
+    expected = str(job.get("token") or "")
+    # Comparé en octets : compare_digest refuse une chaîne non ASCII.
+    if not token or not expected or not secrets.compare_digest(token.encode("utf-8"), expected.encode("utf-8")):
+        audit.record(principal, action, job_id=job_id, form_id=job.get("form_id"), result="denied")
+        raise HTTPException(status_code=403, detail="Token invalide.")
+    return job
+
+
+@protected.post("/process-form")
 async def process_form(
         background_tasks: BackgroundTasks,
         report_files: List[UploadFile] = File(...),
-        form_id: str = Form(...)
+        form_id: str = Form(...),
+        principal: Principal = Depends(auth.current_principal),
 ):
     """Initie le traitement. Retourne immédiatement un job_id + token."""
 
     # --- [SEC-03] Validation du form_id (whitelist)
     if form_id not in VALID_FORM_IDS:
+        audit.record(principal, "job.create", result="refused")
         raise HTTPException(status_code=400, detail="Formulaire inconnu.")
 
     # --- [SEC-06] Limite de jobs concurrents
-    active_jobs = sum(1 for j in JOBS.values() if j.get("status") in ("pending", "processing"))
-    if active_jobs >= MAX_CONCURRENT_JOBS:
+    active = [j for j in JOBS.values() if j.get("status") in ("pending", "processing")]
+    if len(active) >= MAX_CONCURRENT_JOBS:
+        audit.record(principal, "job.create", form_id=form_id, result="refused")
         raise HTTPException(status_code=429, detail="Serveur saturé, réessayez dans quelques minutes.")
+    # Par utilisateur identifié : un seul compte ne doit pas occuper toute la file.
+    if principal.method == "oidc" and \
+            sum(1 for j in active if j.get("owner") == _owner(principal)) >= MAX_ACTIVE_JOBS_PER_USER:
+        audit.record(principal, "job.create", form_id=form_id, result="refused")
+        raise HTTPException(status_code=429, detail=f"Maximum {MAX_ACTIVE_JOBS_PER_USER} traitements "
+                                                    "en cours par utilisateur.")
 
     # --- [SEC-05] Validation du nombre de fichiers
     if len(report_files) > MAX_FILES:
@@ -1155,21 +1191,24 @@ async def process_form(
         "message": "Initialisation du pipeline...",
         "progress": 0,
         "token": download_token,
+        # Seul son propriétaire y accède (_authorize), en plus du jeton.
+        "owner": _owner(principal),
+        "form_id": form_id,
         # Origine du chronomètre affiché pendant le traitement.
         "started_at": time.time(),
     }
+    audit.record(principal, "job.create", job_id=job_id, form_id=form_id)
 
     background_tasks.add_task(run_pipeline_task, job_id, form_id, tmp_dir, saved_report_paths)
 
     return {"job_id": job_id, "token": download_token}
 
 
-@app.get("/status/{job_id}")
-async def get_status(job_id: str):
+@protected.get("/status/{job_id}")
+async def get_status(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
     """Retourne la progression du job (sans le token ni le file_path)."""
-    if job_id not in JOBS:
-        raise HTTPException(status_code=404, detail="Job introuvable ou expiré.")
-    job = JOBS[job_id]
+    # Interrogé toutes les 2 s : seuls les refus vont au journal d'audit.
+    job = _authorize(job_id, principal, _job_token(request), "job.status")
     # Ne pas exposer le token ni le file_path dans le status
     # elapsed_s alimente le chronomètre pendant le traitement ; duration_s est la
     # durée définitive, celle qui entre dans la moyenne.
@@ -1193,17 +1232,16 @@ async def get_status(job_id: str):
 # ---------------------------------------------------------------
 # --- RÉSULTATS DU FORMULAIRE ---
 
-@app.get("/fields/{job_id}")
-async def get_fields(job_id: str, token: str = ""):
+@protected.get("/fields/{job_id}")
+async def get_fields(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
     """Retourne les champs du formulaire rempli avec leurs valeurs (pour affichage chat)."""
-    if job_id not in JOBS or JOBS[job_id].get("status") != "completed":
+    job = _authorize(job_id, principal, _job_token(request), "fields.read")
+    if job.get("status") != "completed":
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
-    expected_token = JOBS[job_id].get("token", "")
-    if expected_token and not secrets.compare_digest(token, expected_token):
-        raise HTTPException(status_code=403, detail="Token invalide.")
+    audit.record(principal, "fields.read", job_id=job_id, form_id=job.get("form_id"))
 
-    template_fields = JOBS[job_id].get("_template_fields", [])
-    raw_results = {r["id"]: r for r in JOBS[job_id].get("_debug_results", [])}
+    template_fields = job.get("_template_fields", [])
+    raw_results = {r["id"]: r for r in job.get("_debug_results", [])}
 
     fields_out = []
     for f in template_fields:
@@ -1240,8 +1278,9 @@ class ChatRequest(BaseModel):
     history: List[Dict[str, Any]] = []
 
 
-@app.post("/chat")
-async def chat_endpoint(request: ChatRequest):
+@protected.post("/chat")
+async def chat_endpoint(request: ChatRequest, http_request: Request,
+                        principal: Principal = Depends(auth.current_principal)):
     """Chat interactif sur les documents d'un job déjà traité. Streame la réponse."""
     # Validation
     if len(request.message) > 2000:
@@ -1249,14 +1288,12 @@ async def chat_endpoint(request: ChatRequest):
     if len(request.history) > 40:
         raise HTTPException(status_code=400, detail="Historique trop long (max 20 échanges).")
 
-    job = JOBS.get(request.job_id)
-    if not job or job.get("status") != "completed":
+    # Le chat lit le dossier patient : même contrôle que /fields et /download.
+    job = _authorize(request.job_id, principal, _job_token(http_request, request.token), "chat")
+    if job.get("status") != "completed":
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
-    # Le chat lit le dossier patient : même contrôle que /fields et /download,
-    # qui l'exigeaient déjà alors que celui-ci s'en passait.
-    expected_token = job.get("token", "")
-    if expected_token and not secrets.compare_digest(request.token, expected_token):
-        raise HTTPException(status_code=403, detail="Token invalide.")
+    # Le fait de poser une question, jamais son contenu.
+    audit.record(principal, "chat", job_id=request.job_id, form_id=job.get("form_id"))
 
     synthesis = job.get("_debug_synthesis")
     synthesis_json = json.dumps(synthesis, ensure_ascii=False) if synthesis else None
@@ -1344,37 +1381,36 @@ async def chat_endpoint(request: ChatRequest):
 # --- CONTEXTE GLOBAL (SYNTHÈSE MÉDICALE) ---
 
 class SynthesisUpdateRequest(BaseModel):
-    token: str
+    # Jeton de job : en-tête X-Job-Token de préférence (voir _job_token).
+    token: str = ""
     synthesis: Dict[str, Any]
 
 class SynthesisRefineRequest(BaseModel):
-    token: str
+    token: str = ""
     instruction: str
 
 
-def _validate_job_token(job_id: str, token: str) -> Dict:
-    """Valide job_id + token et retourne le job ou lève HTTPException."""
-    job = JOBS.get(job_id)
-    if not job or job.get("status") not in ("completed", "processing"):
+def _validate_job_token(job_id: str, principal: Principal, token: str, action: str) -> Dict:
+    """_authorize, pour un job terminé ou en cours ; journalise l'action."""
+    job = _authorize(job_id, principal, token, action)
+    if job.get("status") not in ("completed", "processing"):
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
-    expected = job.get("token", "")
-    if expected and not secrets.compare_digest(token, expected):
-        raise HTTPException(status_code=403, detail="Token invalide.")
+    audit.record(principal, action, job_id=job_id, form_id=job.get("form_id"))
     return job
 
 
-@app.get("/synthesis/{job_id}")
-async def get_synthesis(job_id: str, token: str = ""):
+@protected.get("/synthesis/{job_id}")
+async def get_synthesis(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
     """Retourne la synthèse médicale générée pour ce job (null si non disponible)."""
-    job = _validate_job_token(job_id, token)
+    job = _validate_job_token(job_id, principal, _job_token(request), "synthesis.read")
     synthesis = job.get("_debug_synthesis")
     return {"synthesis": synthesis, "available": synthesis is not None}
 
 
-@app.post("/synthesis/{job_id}/generate")
-async def generate_synthesis(job_id: str, token: str = ""):
+@protected.post("/synthesis/{job_id}/generate")
+async def generate_synthesis(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
     """(Re)génère la synthèse médicale depuis le texte OCR conservé avec le job."""
-    job = _validate_job_token(job_id, token)
+    job = _validate_job_token(job_id, principal, _job_token(request), "synthesis.generate")
     # Le texte OCR vit avec le job ; les journaux de debug, purgés avec lui, ne
     # servent plus que de secours pour un job antérieur à ce changement.
     ocr_results = list(job.get("_source_documents") or [])
@@ -1399,19 +1435,21 @@ async def generate_synthesis(job_id: str, token: str = ""):
     return {"synthesis": synthesis, "available": True}
 
 
-@app.post("/synthesis/{job_id}/update")
-async def update_synthesis(job_id: str, request: SynthesisUpdateRequest):
+@protected.post("/synthesis/{job_id}/update")
+async def update_synthesis(job_id: str, request: SynthesisUpdateRequest, http_request: Request,
+                           principal: Principal = Depends(auth.current_principal)):
     """Met à jour la synthèse médicale en mémoire (pour affiner avant re-run)."""
-    _validate_job_token(job_id, request.token)
-    JOBS[job_id]["_debug_synthesis"] = request.synthesis
+    job = _validate_job_token(job_id, principal, _job_token(http_request, request.token), "synthesis.update")
+    job["_debug_synthesis"] = request.synthesis
     logger.info(f"[{job_id[:8]}] Synthèse mise à jour manuellement.")
     return {"ok": True}
 
 
-@app.post("/synthesis/{job_id}/refine")
-async def refine_synthesis(job_id: str, request: SynthesisRefineRequest):
+@protected.post("/synthesis/{job_id}/refine")
+async def refine_synthesis(job_id: str, request: SynthesisRefineRequest, http_request: Request,
+                           principal: Principal = Depends(auth.current_principal)):
     """LLM-assisted: propose une synthèse améliorée selon l'instruction. Retourne la suggestion JSON."""
-    job = _validate_job_token(job_id, request.token)
+    job = _validate_job_token(job_id, principal, _job_token(http_request, request.token), "synthesis.refine")
     if len(request.instruction) > 1000:
         raise HTTPException(status_code=400, detail="Instruction trop longue (max 1000 caractères).")
     synthesis = job.get("_debug_synthesis")
@@ -1508,10 +1546,11 @@ async def _rerun_pipeline(job_id: str):
         })
 
 
-@app.post("/rerun/{job_id}")
-async def trigger_rerun(job_id: str, background_tasks: BackgroundTasks, token: str = ""):
+@protected.post("/rerun/{job_id}")
+async def trigger_rerun(job_id: str, background_tasks: BackgroundTasks, request: Request,
+                        principal: Principal = Depends(auth.current_principal)):
     """Relance l'extraction + remplissage avec la synthèse mise à jour. Saute l'OCR."""
-    job = _validate_job_token(job_id, token)
+    job = _validate_job_token(job_id, principal, _job_token(request), "job.rerun")
     if job.get("status") == "processing":
         raise HTTPException(status_code=409, detail="Un traitement est déjà en cours.")
     if not job.get("_form_id"):
@@ -1523,40 +1562,34 @@ async def trigger_rerun(job_id: str, background_tasks: BackgroundTasks, token: s
     return {"ok": True, "job_id": job_id}
 
 
-@app.get("/download/{job_id}")
-async def download_result(job_id: str, token: str = ""):
-    """Télécharge le PDF final. Requiert le token retourné à la création."""
-    if job_id not in JOBS or JOBS[job_id]["status"] != "completed":
+@protected.get("/download/{job_id}")
+async def download_result(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
+    """Télécharge le PDF final. Requiert le token retourné à la création (en-tête X-Job-Token)."""
+    # --- [SEC-07] Propriétaire et jeton de téléchargement
+    job = _authorize(job_id, principal, _job_token(request), "pdf.download")
+    if job["status"] != "completed":
         raise HTTPException(status_code=400, detail="Fichier non disponible ou traitement en cours.")
 
-    # --- [SEC-07] Vérification du token de téléchargement
-    expected_token = JOBS[job_id].get("token", "")
-    if not token or not secrets.compare_digest(token, expected_token):
-        raise HTTPException(status_code=403, detail="Token invalide.")
-
-    file_path = JOBS[job_id].get("file_path")
+    file_path = job.get("file_path")
     if not file_path or not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Fichier introuvable.")
 
+    audit.record(principal, "pdf.download", job_id=job_id, form_id=job.get("form_id"))
     return FileResponse(file_path, media_type="application/pdf", filename=f"DoctorFill_{job_id[:8]}.pdf")
 
 
-@app.get("/debug/{job_id}")
-async def debug_results(job_id: str, token: str = ""):
+@protected.get("/debug/{job_id}")
+async def debug_results(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
     """Retourne les résultats bruts d'extraction LLM pour évaluation/debug."""
-    if job_id not in JOBS:
-        raise HTTPException(status_code=404, detail="Job introuvable.")
+    job = _authorize(job_id, principal, _job_token(request), "debug.read")
+    audit.record(principal, "debug.read", job_id=job_id, form_id=job.get("form_id"))
 
-    expected_token = JOBS[job_id].get("token", "")
-    if not token or not secrets.compare_digest(token, expected_token):
-        raise HTTPException(status_code=403, detail="Token invalide.")
-
-    debug_results = JOBS[job_id].get("_debug_results", [])
-    debug_synthesis = JOBS[job_id].get("_debug_synthesis")
+    debug_results = job.get("_debug_results", [])
+    debug_synthesis = job.get("_debug_synthesis")
     return {
         "job_id": job_id,
-        "status": JOBS[job_id].get("status"),
-        "chunks_count": JOBS[job_id].get("_debug_chunks_count", 0),
+        "status": job.get("status"),
+        "chunks_count": job.get("_debug_chunks_count", 0),
         "medical_synthesis": debug_synthesis,
         "extractions": [
             {
@@ -1574,3 +1607,7 @@ async def debug_results(job_id: str, token: str = ""):
             for r in debug_results
         ],
     }
+
+
+# Les routes protégées, déclarées plus haut sur `protected`, sont montées en dernier.
+app.include_router(protected)

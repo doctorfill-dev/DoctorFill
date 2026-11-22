@@ -50,10 +50,11 @@ def main() -> int:
     resp.raise_for_status()
     job = resp.json()
     job_id, token = job["job_id"], job.get("token", "")
+    job_headers = {"X-Job-Token": token}          # jamais dans l'URL
     print(f"job {job_id[:8]} — {args.form} — {len(pdfs)} documents")
 
     while True:
-        status = client.get(f"{args.api}/status/{job_id}").json()
+        status = client.get(f"{args.api}/status/{job_id}", headers=job_headers).json()
         if status["status"] == "completed":
             break
         if status["status"] == "failed":
@@ -64,7 +65,7 @@ def main() -> int:
         time.sleep(5)
     print(f"\rpipeline : {time.time() - started:.0f}s{'':<50}")
 
-    payload = client.get(f"{args.api}/fields/{job_id}", params={"token": token}).json()
+    payload = client.get(f"{args.api}/fields/{job_id}", headers=job_headers).json()
     rows = payload["fields"] if isinstance(payload, dict) else payload
     filled = [f for f in rows if f.get("value")]
     if not filled:
@@ -97,7 +98,7 @@ def main() -> int:
         args.out.write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"\nChamps bruts écrits dans {args.out}")
     if args.pdf:
-        pdf = client.get(f"{args.api}/download/{job_id}", params={"token": token})
+        pdf = client.get(f"{args.api}/download/{job_id}", headers=job_headers)
         pdf.raise_for_status()
         args.pdf.write_bytes(pdf.content)
         print(f"Formulaire rempli écrit dans {args.pdf} ({len(pdf.content)} octets)")

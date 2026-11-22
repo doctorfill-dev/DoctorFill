@@ -57,6 +57,13 @@ const MAX_POLL_FAILURES = 6;
 
 const apiFetch = (url: string, options: RequestInit = {}) => fetch(url, options);
 
+/**
+ * En-têtes d'une requête sur un job : son jeton voyage en en-tête, jamais
+ * dans l'URL, qui finit dans les journaux d'accès (serveur, relais).
+ */
+const jobHeaders = (token: string, extra: Record<string, string> = {}): Record<string, string> =>
+  ({ "X-Job-Token": token, ...extra });
+
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -458,7 +465,7 @@ export default function App() {
   const fetchFormFields = async (jid: string, token: string) => {
     setFieldsLoading(true);
     try {
-      const res = await apiFetch(`${BASE_URL}/fields/${jid}?token=${encodeURIComponent(token)}`);
+      const res = await apiFetch(`${BASE_URL}/fields/${jid}`, { headers: jobHeaders(token) });
       if (res.ok) {
         const data = await res.json();
         setFormFields(data.fields || []);
@@ -474,7 +481,7 @@ export default function App() {
     setSynthesisLoading(true);
     setSynthesisLoadError(null);
     try {
-      const res = await apiFetch(`${BASE_URL}/synthesis/${jid}?token=${encodeURIComponent(token)}`);
+      const res = await apiFetch(`${BASE_URL}/synthesis/${jid}`, { headers: jobHeaders(token) });
       if (res.ok) {
         const data = await res.json();
         setSynthesisAvailable(data.available);
@@ -500,8 +507,9 @@ export default function App() {
     setSynthesisGenerating(true);
     setSynthesisLoadError(null);
     try {
-      const res = await apiFetch(`${BASE_URL}/synthesis/${jobId}/generate?token=${encodeURIComponent(jobToken)}`, {
+      const res = await apiFetch(`${BASE_URL}/synthesis/${jobId}/generate`, {
         method: "POST",
+        headers: jobHeaders(jobToken),
       });
       if (res.ok) {
         const data = await res.json();
@@ -533,8 +541,8 @@ export default function App() {
       const parsed = JSON.parse(synthesisText);
       await apiFetch(`${BASE_URL}/synthesis/${jobId}/update`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: jobToken, synthesis: parsed }),
+        headers: jobHeaders(jobToken, { "Content-Type": "application/json" }),
+        body: JSON.stringify({ synthesis: parsed }),
       });
       setSynthesisDirty(false);
     } catch {
@@ -551,8 +559,8 @@ export default function App() {
     try {
       const res = await apiFetch(`${BASE_URL}/synthesis/${jobId}/refine`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: jobToken, instruction: refineInstruction.trim() }),
+        headers: jobHeaders(jobToken, { "Content-Type": "application/json" }),
+        body: JSON.stringify({ instruction: refineInstruction.trim() }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -579,8 +587,9 @@ export default function App() {
     setPdfUrl(null);
     setFormFields([]);
     try {
-      const res = await apiFetch(`${BASE_URL}/rerun/${jobId}?token=${encodeURIComponent(jobToken)}`, {
+      const res = await apiFetch(`${BASE_URL}/rerun/${jobId}`, {
         method: "POST",
+        headers: jobHeaders(jobToken),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -619,7 +628,7 @@ export default function App() {
 
   const pollStatus = async (jid: string, token: string, failures = 0) => {
     try {
-      const res = await apiFetch(`${BASE_URL}/status/${jid}`);
+      const res = await apiFetch(`${BASE_URL}/status/${jid}`, { headers: jobHeaders(token) });
       if (res.status === 404) throw new PollFatalError("Tâche introuvable ou expirée.");
       if (!res.ok) throw new Error("Impossible de lire le statut de la tâche.");
       const data = await res.json();
@@ -627,7 +636,7 @@ export default function App() {
       setProgress(data.progress);
       setWarnings(data.warnings ?? []);
       if (data.status === "completed") {
-        const pdfRes = await apiFetch(`${BASE_URL}/download/${jid}?token=${encodeURIComponent(token)}`);
+        const pdfRes = await apiFetch(`${BASE_URL}/download/${jid}`, { headers: jobHeaders(token) });
         if (!pdfRes.ok) throw new Error("Erreur lors de la récupération du PDF.");
         const blob = await pdfRes.blob();
         setPdfUrl(URL.createObjectURL(blob));
@@ -721,10 +730,9 @@ export default function App() {
     try {
       const res = await apiFetch(`${BASE_URL}/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: jobHeaders(jobToken, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           job_id: jobId,
-          token: jobToken,
           message: userMsg,
           history: chatMessages.map((m) => ({ role: m.role, content: m.content })),
         }),

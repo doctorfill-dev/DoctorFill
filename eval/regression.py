@@ -71,9 +71,11 @@ def run_form(client: httpx.Client, dossier: str, pdfs: list[Path], poll_interval
         return {"form": dossier, "status": "rejected", "message": f"HTTP {resp.status_code}: {resp.text[:200]}"}
     job = resp.json()
     job_id, token = job["job_id"], job.get("token", "")
+    # Jeton de job en en-tête, jamais dans l'URL (journaux d'accès).
+    job_headers = {"X-Job-Token": token}
 
     while True:
-        status = client.get(f"/status/{job_id}").json()
+        status = client.get(f"/status/{job_id}", headers=job_headers).json()
         if status["status"] == "completed":
             break
         if status["status"] == "failed":
@@ -82,10 +84,10 @@ def run_form(client: httpx.Client, dossier: str, pdfs: list[Path], poll_interval
             return {"form": dossier, "status": "timeout", "message": f"> {timeout:.0f} s"}
         sleep(poll_interval)
 
-    fields = client.get(f"/fields/{job_id}", params={"token": token}).json()["fields"]
+    fields = client.get(f"/fields/{job_id}", headers=job_headers).json()["fields"]
     result = score(derive_truth(dossier), fields, derive_absent(dossier))
 
-    pdf = client.get(f"/download/{job_id}", params={"token": token})
+    pdf = client.get(f"/download/{job_id}", headers=job_headers)
     if pdf.status_code != 200:
         mismatches = [{"id": "—", "category": "pdf", "fields": "", "pdf": f"HTTP {pdf.status_code}"}]
     else:

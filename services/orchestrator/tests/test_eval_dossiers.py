@@ -143,7 +143,7 @@ def test_perfect_model_scores_perfectly_through_the_api(api, dossier):
 
     # Le PDF livré porte les mêmes valeurs que /fields.
     job = orchestrator.JOBS[result["job_id"]]
-    pdf = client.get(f"/download/{result['job_id']}", params={"token": job["token"]})
+    pdf = client.get(f"/download/{result['job_id']}", headers={"X-Job-Token": job["token"]})
     assert pdf.status_code == 200
     out = Path(job["file_path"])
     acro = read_acroform(out)
@@ -289,7 +289,7 @@ def test_a_fourth_period_copied_from_the_third_is_not_delivered(api):
     assert result["correct"] == result["truth_fields"]                  # la n°3 reste juste
     job = orchestrator.JOBS[result["job_id"]]
     fields = {f["id"]: f for f in client.get(f"/fields/{result['job_id']}",
-                                             params={"token": job["token"]}).json()["fields"]}
+                                             headers={"X-Job-Token": job["token"]}).json()["fields"]}
     assert all(not fields[fid]["value"] and fields[fid]["raw_value"] == value for fid, value in copied.items())
     acro = read_acroform(Path(job["file_path"]))
     by_id = {str(f["id"]): f for f in truth.load_template("LCA_IncapaciteTravail")["fields"] if "id" in f}

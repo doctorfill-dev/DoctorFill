@@ -10,3 +10,5 @@ pypdf>=5.0.0,<7.0
 pikepdf>=9.0.0,<11.0
 lxml>=4.9.0
 defusedxml>=0.7.1,<1.0
+# Jetons OIDC du fournisseur d'identité (auth.py) ; [crypto] pour RS256/ES256.
+PyJWT[crypto]>=2.8.0,<3.0

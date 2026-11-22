@@ -165,8 +165,9 @@ def run_evaluation(api_url: str, api_key: str = "", form_id: str = "AI_Readaptat
 
     # 2. Polling
     print("[2/4] Traitement en cours...")
+    job_headers = {"X-Job-Token": token}          # jamais dans l'URL
     while True:
-        status_resp = client.get(f"{api_url}/status/{job_id}")
+        status_resp = client.get(f"{api_url}/status/{job_id}", headers=job_headers)
         status = status_resp.json()
 
         progress = status.get("progress", 0)
@@ -188,7 +189,7 @@ def run_evaluation(api_url: str, api_key: str = "", form_id: str = "AI_Readaptat
 
     # 3. Récupérer les résultats debug
     print("[3/4] Récupération des résultats bruts...")
-    debug_resp = client.get(f"{api_url}/debug/{job_id}", params={"token": token})
+    debug_resp = client.get(f"{api_url}/debug/{job_id}", headers=job_headers)
     if debug_resp.status_code != 200:
         print(f"      ERREUR debug endpoint: {debug_resp.status_code}")
         print("      Assurez-vous que l'orchestrateur est à jour (endpoint /debug)")

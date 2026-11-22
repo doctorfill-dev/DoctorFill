@@ -22,6 +22,7 @@ from fastapi.testclient import TestClient
 import app as orchestrator
 import medical_synthesis
 from tests import fakes
+from tests.conftest import TEST_CABINET, TEST_USER
 from tests.pdf_factory import make_acroform, read_fields
 
 DOCS = {
@@ -140,6 +141,7 @@ def workspace(tmp_path, monkeypatch):
 def _start_job(tmp_path: Path, uploads: Path) -> str:
     job_id = f"test{time.time_ns():x}"
     orchestrator.JOBS[job_id] = {"status": "pending", "progress": 0, "token": "secret",
+                                 "owner": {"user_id": TEST_USER, "cabinet_id": TEST_CABINET},
                                  "started_at": time.time()}
     tmp_dir = tmp_path / "job"
     tmp_dir.mkdir(exist_ok=True)
@@ -226,11 +228,13 @@ def test_chat_requires_the_job_token(workspace):
     client = TestClient(orchestrator.app)
     resp = client.post("/chat", json={"job_id": job_id, "message": "Diagnostic ?"})
     assert resp.status_code == 403
-    status = client.get(f"/status/{job_id}").json()
+    status = client.get(f"/status/{job_id}", headers={"X-Job-Token": "secret"}).json()
     assert status["status"] == "completed" and status["warnings"]
-    fields = client.get(f"/fields/{job_id}", params={"token": "secret"}).json()["fields"]
+    fields = client.get(f"/fields/{job_id}", headers={"X-Job-Token": "secret"}).json()["fields"]
     assert {f["id"] for f in fields} >= {"1.4", "1.5"}
-    assert client.get(f"/fields/{job_id}", params={"token": "nope"}).status_code == 403
+    assert client.get(f"/fields/{job_id}", headers={"X-Job-Token": "nope"}).status_code == 403
+    # Plus jamais dans l'URL : la chaîne de requête finit dans les journaux d'accès.
+    assert client.get(f"/fields/{job_id}", params={"token": "secret"}).status_code == 403
 
 
 def test_synthesis_falls_back_to_hierarchical(monkeypatch):

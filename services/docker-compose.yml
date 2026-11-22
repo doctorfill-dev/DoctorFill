@@ -79,8 +79,11 @@ services:
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
       - "8081"
-    env_file:
-      - .env
+    # Seulement ce dont TEI a besoin : pas tout le .env, qui porte les secrets
+    # de l'orchestrateur (audit S17).
+    environment:
+      EMBED_MODEL_NAME: ${EMBED_MODEL_NAME:-BAAI/bge-m3}
+      RERANK_MODEL_NAME: ${RERANK_MODEL_NAME:-BAAI/bge-reranker-v2-m3}
     deploy:
       resources:
         reservations:
