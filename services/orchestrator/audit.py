@@ -49,13 +49,16 @@ def _job_ref(job_id: str | None) -> str | None:
 
 
 def record(principal, action: str, *, job_id: str | None = None, form_id: str | None = None,
-           result: str = "ok") -> None:
+           result: str = "ok", field_id: str | None = None) -> None:
     """
     Une action au journal.
 
     `principal` : l'appelant (auth.Principal), ou None s'il n'a pas pu être identifié.
     `result` : ok, denied (jeton de job invalide), not_found (job inconnu ou
     d'un autre cabinet), refused (refus métier : quota, formulaire inconnu…).
+    `field_id` : identifiant du champ du gabarit (« 1.2 »), pour les décisions
+    du médecin (issue 37). Jamais sa valeur. N'apparaît que s'il est donné ;
+    l'appelant ne passe qu'un identifiant présent dans le gabarit.
     """
     entry = {
         "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -67,4 +70,6 @@ def record(principal, action: str, *, job_id: str | None = None, form_id: str | 
         "job_id": _job_ref(job_id),
         "result": result,
     }
+    if field_id is not None:
+        entry["field_id"] = field_id
     logger.info(json.dumps(entry, ensure_ascii=False, sort_keys=True))

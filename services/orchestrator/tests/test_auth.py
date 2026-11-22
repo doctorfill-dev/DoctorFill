@@ -2,7 +2,8 @@
 Identité, cloisonnement et journal d'audit (issue 36, audit S1, S9, S10, S16).
 
 - un job d'un médecin répond 404 à tout autre utilisateur, de son cabinet ou
-  d'un autre, sur les 10 routes de job, même avec le bon jeton de job ;
+  d'un autre, sur les 12 routes de job (dont /fields en écriture et /validate,
+  issue 37), même avec le bon jeton de job ;
 - toute requête sans identité est refusée, quelle que soit la configuration ;
 - un jeton OIDC expiré, mal signé, d'un autre émetteur ou d'une autre audience
   reçoit 401 ;
@@ -92,6 +93,8 @@ def job_of_a(tmp_path, monkeypatch) -> str:
         "status": "completed", "token": JOB_TOKEN,
         "owner": {"user_id": A_USER, "cabinet_id": A_CABINET},
         "form_id": "Test", "_form_id": "Test", "file_path": str(pdf),
+        # Non validé (issue 37) : /download sert l'aperçu.
+        "preview_path": str(pdf),
         "_template_fields": [], "_debug_results": [],
         "_debug_synthesis": {"patient": {"nom": "Patient Test"}},
         "started_at": time.time(), "completed_at": time.time(),
@@ -99,7 +102,7 @@ def job_of_a(tmp_path, monkeypatch) -> str:
     return job_id
 
 
-# Les 10 routes de job : (méthode, chemin, corps JSON).
+# Les 12 routes de job : (méthode, chemin, corps JSON).
 def job_routes(job_id: str) -> list[tuple[str, str, dict | None]]:
     return [
         ("GET", f"/status/{job_id}", None),
@@ -112,6 +115,9 @@ def job_routes(job_id: str) -> list[tuple[str, str, dict | None]]:
         ("POST", f"/rerun/{job_id}", None),
         ("GET", f"/download/{job_id}", None),
         ("GET", f"/debug/{job_id}", None),
+        # Issue 37 : décisions du médecin et validation.
+        ("POST", f"/fields/{job_id}", {"corrections": [{"id": "1.1", "action": "edit", "value": "Test"}]}),
+        ("POST", f"/validate/{job_id}", None),
     ]
 
 
@@ -127,7 +133,8 @@ def test_a_job_is_invisible_to_anyone_but_its_owner(oidc, job_of_a, other_user, 
     # Rien n'a été modifié ni lancé par ces appels.
     job = orchestrator.JOBS[job_of_a]
     assert job["status"] == "completed" and job["_debug_synthesis"] == {"patient": {"nom": "Patient Test"}}
-    assert len(audit_lines) == 10
+    assert "validation" not in job and "final_path" not in job
+    assert len(audit_lines) == len(job_routes(job_of_a)) == 12
     assert all(line["result"] == "not_found" and line["user_id"] == other_user for line in audit_lines)
 
 
@@ -289,7 +296,8 @@ def test_every_action_is_audited_without_file_names_or_values(oidc, job_of_a, tm
 
     actions = [(line["action"], line["result"]) for line in audit_lines]
     assert actions == [("job.create", "ok"), ("fields.read", "ok"), ("synthesis.read", "ok"),
-                       ("pdf.download", "ok"), ("synthesis.update", "ok"), ("fields.read", "denied")]
+                       # Job non validé (issue 37) : l'aperçu, journalisé comme tel.
+                       ("pdf.preview", "ok"), ("synthesis.update", "ok"), ("fields.read", "denied")]
     first = audit_lines[0]
     assert first["user_id"] == A_USER and first["cabinet_id"] == A_CABINET and first["auth"] == "oidc"
     assert first["form_id"] == "Test" and first["job_id"] == new_job

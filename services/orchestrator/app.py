@@ -4,6 +4,7 @@ DOCTORFILL - ORCHESTRATOR HUB
 =============================================================================
 """
 
+import copy
 import os
 import re
 import secrets
@@ -15,7 +16,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Set
+from typing import List, Dict, Any, Literal, Set
 from fastapi import (APIRouter, BackgroundTasks, Depends, FastAPI, File, Form, HTTPException, Request,
                      UploadFile)
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,6 +38,7 @@ from core.fields import (batch_fields, collect_form_values, drop_repeated_occurr
 from core.provenance import SourceIndex, ground_value
 import extraction
 import stats
+import validation
 from medical_synthesis import run_medical_synthesis
 from prompts import (SYSTEM_PROMPT_BATCH_EXTRACT, build_batch_extraction_messages,
                      build_chat_messages, build_synthesis_refine_messages)
@@ -695,6 +697,23 @@ def _fill_pdf(job_id: str, form_id: str, template: Dict, results: List[Dict],
     return output_pdf, form_type
 
 
+def _publish_preview(job: Dict, filled_pdf: Path) -> None:
+    """
+    Après tout changement de valeurs (pipeline, re-run, correction) : nouvel
+    aperçu « NON VALIDÉ », PDF final retiré, validation à refaire (issue 37).
+
+    Le PDF rempli (`file_path`) reste interne : /download ne sert que l'aperçu
+    marqué, ou le PDF final produit par /validate.
+    """
+    preview = filled_pdf.with_name(f"{filled_pdf.stem}_apercu.pdf")
+    validation.watermark_preview(filled_pdf, preview)
+    final = job.pop("final_path", None)
+    if final:
+        Path(final).unlink(missing_ok=True)
+    job.update({"file_path": str(filled_pdf), "preview_path": str(preview),
+                "validation": validation.new_state()})
+
+
 def _load_template(form_id: str) -> Dict:
     with open(f"template/Form_{form_id}.json", "r", encoding="utf-8") as f:
         return json.load(f)
@@ -974,6 +993,8 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
             JOBS[job_id].update({"status": "processing", "message": "✍️ Injection des données dans le formulaire PDF...",
                             "progress": 90})
             output_pdf, form_type = _fill_pdf(job_id, form_id, template, results, tmp_dir)
+            # Rien ne sort sans validation du médecin : seulement un aperçu marqué.
+            _publish_preview(JOBS[job_id], output_pdf)
 
             t_xfa_end = time.perf_counter()
             timings["xfa_injection"] = t_xfa_end - t_xfa_start
@@ -1012,9 +1033,12 @@ async def _run_pipeline(job_id: str, form_id: str, tmp_dir: Path, report_paths: 
             # échec ne dit rien du coût d'un dossier traité.
             stats.record_run(form_id, total_files, elapsed)
 
+            # `status` reste « completed » (pipeline terminé) pour le frontend, les
+            # scripts d'évaluation et la purge ; la validation a son propre état,
+            # `validation.state` (awaiting_validation, puis validated).
             JOBS[job_id].update({
                 "status": "completed",
-                "message": f"✅ Formulaire généré en {timings['total']:.0f}s !",
+                "message": f"✅ Formulaire prérempli en {timings['total']:.0f}s — à valider.",
                 "progress": 100,
                 "file_path": str(output_pdf),
                 "completed_at": time.time(),
@@ -1226,6 +1250,8 @@ async def get_status(job_id: str, request: Request, principal: Principal = Depen
         # Ce que l'utilisateur doit savoir sans que le job échoue : document
         # illisible écarté, champs à compléter à la main.
         "warnings": job.get("warnings", []),
+        # Issue 37 : awaiting_validation tant qu'un médecin n'a pas validé.
+        "validation": validation.state_of(job).get("state") if job.get("status") == "completed" else None,
     }
 
 
@@ -1239,7 +1265,17 @@ async def get_fields(job_id: str, request: Request, principal: Principal = Depen
     if job.get("status") != "completed":
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
     audit.record(principal, "fields.read", job_id=job_id, form_id=job.get("form_id"))
+    return _fields_view(job)
 
+
+def _validation_view(job: Dict) -> Dict:
+    """État de validation, et les champs qui attendent encore le médecin."""
+    return {**validation.state_of(job),
+            "pending": validation.pending_fields(job.get("_debug_results", []))}
+
+
+def _fields_view(job: Dict) -> Dict:
+    """Champs, valeurs, provenance et décisions du médecin : réponse de GET et POST /fields."""
     template_fields = job.get("_template_fields", [])
     raw_results = {r["id"]: r for r in job.get("_debug_results", [])}
 
@@ -1264,8 +1300,120 @@ async def get_fields(job_id: str, request: Request, principal: Principal = Depen
             # Réponse du modèle avant normalisation, quand elle diffère.
             "raw_value": payload.get("raw_value"),
             "error": r.get("error"),
+            # Issue 37 : valeur du modèle quand le médecin l'a changée, sa
+            # décision (action, qui, quand), et s'il doit encore se prononcer.
+            "model_value": payload.get("model_value"),
+            "review": r.get("review"),
+            "needs_review": validation.needs_review(r),
         })
-    return {"fields": fields_out}
+    return {"fields": fields_out, "validation": _validation_view(job)}
+
+
+# ---------------------------------------------------------------
+# --- VALIDATION PAR LE MÉDECIN (issue 37) ---
+
+class FieldCorrection(BaseModel):
+    id: str
+    action: Literal["confirm", "edit", "clear"]
+    value: str | None = None
+
+
+class FieldsUpdateRequest(BaseModel):
+    token: str = ""
+    corrections: List[FieldCorrection]
+
+
+def _completed_job(job_id: str, principal: Principal, token: str, action: str) -> Dict:
+    """_authorize, puis un job dont le traitement est terminé (pas de re-run en cours)."""
+    job = _authorize(job_id, principal, token, action)
+    if job.get("status") != "completed":
+        audit.record(principal, action, job_id=job_id, form_id=job.get("form_id"), result="refused")
+        raise HTTPException(status_code=409, detail="Traitement en cours ou non terminé.")
+    return job
+
+
+@protected.post("/fields/{job_id}")
+async def update_fields(job_id: str, request: FieldsUpdateRequest, http_request: Request,
+                        principal: Principal = Depends(auth.current_principal)):
+    """
+    Décisions du médecin, champ par champ : confirmer, corriger ou vider.
+
+    Tout ou rien : une correction refusée n'en applique aucune. Les valeurs sont
+    normalisées comme celles du modèle, puis le PDF est rempli à nouveau
+    (`_fill_pdf`) sans rappeler le modèle. Toute décision annule une validation
+    antérieure : le formulaire est à valider de nouveau.
+    """
+    job = _completed_job(job_id, principal, _job_token(http_request, request.token), "fields.update")
+    form_id = job.get("_form_id") or job.get("form_id")
+    if not request.corrections or len(request.corrections) > validation.MAX_CORRECTIONS:
+        audit.record(principal, "fields.update", job_id=job_id, form_id=form_id, result="refused")
+        raise HTTPException(status_code=400, detail=f"Entre 1 et {validation.MAX_CORRECTIONS} corrections.")
+
+    template = _load_template(form_id)
+    fields_by_id = {str(f["id"]): f for f in template.get("fields", []) if "id" in f}
+    # Sur une copie : rien n'est modifié si une correction ou le remplissage échoue.
+    results = copy.deepcopy(job.get("_debug_results", []))
+    results_by_id = {str(r.get("id")): r for r in results}
+    at = validation.now_iso()
+    try:
+        for c in request.corrections:
+            if c.id not in results_by_id or c.id not in fields_by_id:
+                raise validation.CorrectionError("Champ inconnu pour ce formulaire.")
+            validation.apply_correction(results_by_id[c.id], fields_by_id[c.id], c.action, c.value,
+                                        principal.user_id, at)
+    except validation.CorrectionError as e:
+        audit.record(principal, "fields.update", job_id=job_id, form_id=form_id, result="refused")
+        raise HTTPException(status_code=400, detail=str(e))
+
+    tmp_dir = Path(job.get("_tmp_dir") or JOBS_DIR / job_id)
+    try:
+        output_pdf, _ = _fill_pdf(job_id, form_id, template, results, tmp_dir, suffix="_corrige")
+        job["_debug_results"] = results
+        _publish_preview(job, output_pdf)
+    except Exception as e:
+        logger.error(f"[{job_id[:8]}] Échec du remplissage après correction : {type(e).__name__}")
+        raise HTTPException(status_code=500, detail="Le formulaire n'a pas pu être rempli à nouveau.")
+
+    # Une ligne par champ : qui, quand, quel champ, quelle décision. Jamais la valeur.
+    for c in request.corrections:
+        audit.record(principal, f"field.{c.action}", job_id=job_id, form_id=form_id, field_id=c.id)
+    return _fields_view(job)
+
+
+@protected.post("/validate/{job_id}")
+async def validate_form(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
+    """
+    Validation explicite par un médecin identifié : produit le PDF final.
+
+    Refusée (409, liste des champs en attente) tant qu'un champ non tracé,
+    déduit ou en erreur n'est ni confirmé, ni corrigé, ni vidé. Refusée (403)
+    avec la clé partagée transitoire : elle n'identifie personne.
+    """
+    job = _completed_job(job_id, principal, _job_token(request), "form.validate")
+    form_id = job.get("_form_id") or job.get("form_id")
+    if principal.method != "oidc":
+        audit.record(principal, "form.validate", job_id=job_id, form_id=form_id, result="refused")
+        raise HTTPException(status_code=403, detail="La validation exige une connexion nominative.")
+    pending = validation.pending_fields(job.get("_debug_results", []))
+    if pending:
+        audit.record(principal, "form.validate", job_id=job_id, form_id=form_id, result="refused")
+        raise HTTPException(status_code=409, detail={
+            "message": f"{len(pending)} champ(s) à confirmer ou corriger avant la validation.",
+            "pending": pending})
+
+    template = _load_template(form_id)
+    tmp_dir = Path(job.get("_tmp_dir") or JOBS_DIR / job_id)
+    try:
+        final_pdf, _ = _fill_pdf(job_id, form_id, template, job.get("_debug_results", []), tmp_dir,
+                                 suffix="_final")
+    except Exception as e:
+        logger.error(f"[{job_id[:8]}] Échec du PDF final : {type(e).__name__}")
+        raise HTTPException(status_code=500, detail="Le PDF final n'a pas pu être produit.")
+    job["final_path"] = str(final_pdf)
+    job["validation"] = {"state": validation.VALIDATED, "validated_by": principal.user_id,
+                         "validated_at": validation.now_iso()}
+    audit.record(principal, "form.validate", job_id=job_id, form_id=form_id)
+    return {"validation": _validation_view(job)}
 
 
 # ---------------------------------------------------------------
@@ -1526,10 +1674,12 @@ async def _rerun_pipeline(job_id: str):
 
             JOBS[job_id].update({"message": "✍️ Re-run : injection dans le formulaire...", "progress": 88})
             output_pdf, _ = _fill_pdf(job_id, form_id, template, results, tmp_dir, suffix="_rerun")
+            # Nouvelles valeurs, décisions du médecin effacées : validation à refaire.
+            _publish_preview(JOBS[job_id], output_pdf)
 
         JOBS[job_id].update({
             "status": "completed",
-            "message": "✅ Re-run terminé — formulaire mis à jour !",
+            "message": "✅ Re-run terminé — formulaire mis à jour, à valider.",
             "progress": 100,
             "file_path": str(output_pdf),
             "completed_at": time.time(),
@@ -1564,18 +1714,28 @@ async def trigger_rerun(job_id: str, background_tasks: BackgroundTasks, request:
 
 @protected.get("/download/{job_id}")
 async def download_result(job_id: str, request: Request, principal: Principal = Depends(auth.current_principal)):
-    """Télécharge le PDF final. Requiert le token retourné à la création (en-tête X-Job-Token)."""
+    """
+    Télécharge le PDF. Requiert le token retourné à la création (en-tête X-Job-Token).
+
+    Issue 37 : le PDF final seulement après validation par un médecin
+    (/validate) ; avant, l'aperçu marqué « NON VALIDÉ » sur chaque page. Le
+    PDF rempli interne (`file_path`) n'est jamais servi. L'en-tête
+    X-DoctorFill-Validation dit lequel des deux est servi (preview ou final).
+    """
     # --- [SEC-07] Propriétaire et jeton de téléchargement
     job = _authorize(job_id, principal, _job_token(request), "pdf.download")
     if job["status"] != "completed":
         raise HTTPException(status_code=400, detail="Fichier non disponible ou traitement en cours.")
 
-    file_path = job.get("file_path")
+    final = validation.is_validated(job)
+    file_path = job.get("final_path") if final else job.get("preview_path")
     if not file_path or not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Fichier introuvable.")
 
-    audit.record(principal, "pdf.download", job_id=job_id, form_id=job.get("form_id"))
-    return FileResponse(file_path, media_type="application/pdf", filename=f"DoctorFill_{job_id[:8]}.pdf")
+    audit.record(principal, "pdf.download" if final else "pdf.preview", job_id=job_id, form_id=job.get("form_id"))
+    name = f"DoctorFill_{job_id[:8]}.pdf" if final else f"DoctorFill_{job_id[:8]}_NON_VALIDE.pdf"
+    return FileResponse(file_path, media_type="application/pdf", filename=name,
+                        headers={"X-DoctorFill-Validation": "final" if final else "preview"})
 
 
 @protected.get("/debug/{job_id}")
