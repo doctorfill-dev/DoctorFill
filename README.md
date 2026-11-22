@@ -143,12 +143,13 @@ pip install -r requirements.txt
 # Générer des documents de test
 python generate_docs.py --count 60 --noise 10
 
-# Lancer l'évaluation
-python run_eval.py --api http://localhost:8080 --api-key <KEY>
+# Lancer l'évaluation (clé d'API dans l'environnement, jamais en argument)
+export DOCTORFILL_API_KEY=...
+python run_eval.py --api http://localhost:8080
 ```
 
 Non-régression sur les 25 dossiers (vérité terrain dérivée des scénarios) :
-`python eval/regression.py --api http://localhost:8080 --api-key <KEY>` — voir [docs/wiki/Tests.md](docs/wiki/Tests.md).
+`python eval/regression.py --api http://localhost:8080` — voir [docs/wiki/Tests.md](docs/wiki/Tests.md).
 
 Dernière mesure connue, avant septembre 2026 : **84.6%** sur Form_AVS (26 champs) — voir [#21](https://github.com/doctorfill-dev/DoctorFill/issues/21) pour le plan d'amélioration.
 

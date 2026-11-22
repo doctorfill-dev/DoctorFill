@@ -7,12 +7,14 @@ l'endpoint /debug, et compare au ground truth.
 Usage:
     python run_eval.py                                  # Évalue avec les docs générés
     python run_eval.py --api http://localhost:8080       # API locale
-    python run_eval.py --api https://api.doctorfill.ch  # API prod
-    python run_eval.py --api-key <KEY>                  # Avec clé API
+
+La clé d'API se lit dans la variable d'environnement DOCTORFILL_API_KEY, jamais
+en argument (un argument se lit dans la liste des processus).
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -295,7 +297,6 @@ def run_evaluation(api_url: str, api_key: str = "", form_id: str = "AI_Readaptat
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Évaluation du pipeline RAG DoctorFill")
     parser.add_argument("--api", default="http://localhost:8080", help="URL de l'API (default: localhost:8080)")
-    parser.add_argument("--api-key", default="", help="Clé API (X-API-Key)")
     parser.add_argument("--form", default="AI_ReadaptationRente", help="Form ID (default: AI_ReadaptationRente)")
     args = parser.parse_args()
-    run_evaluation(api_url=args.api, api_key=args.api_key, form_id=args.form)
+    run_evaluation(api_url=args.api, api_key=os.environ.get("DOCTORFILL_API_KEY", ""), form_id=args.form)

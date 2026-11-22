@@ -4,6 +4,18 @@
     "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "updated": "2026-10-12T19:39:12+00:00"
   },
+  "thresholds": {
+    "_note": "Précision minimale par catégorie de champ (0-1), fixée à la main et reprise par --update-baseline. Proposition initiale, à valider.",
+    "categories": {
+      "patient": 0.98,
+      "medecin": 0.98,
+      "admin": 0.95,
+      "incapacite": 0.95,
+      "accident": 0.95,
+      "diagnostic": 0.9,
+      "travail": 0.9
+    }
+  },
   "global": {
     "forms": 25,
     "completed": 25,

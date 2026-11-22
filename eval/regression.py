@@ -13,14 +13,24 @@ Au-delà de la précision, il compte ce qu'elle ne voit pas : les non-réponses
 valeurs inventées dans les champs que le dossier laisse vides, et les champs du
 PDF livré qui diffèrent de /fields (lecture du PDF par pypdf).
 
+La clé d'API se lit dans la variable d'environnement DOCTORFILL_API_KEY, jamais
+en argument : un argument se lit dans la liste des processus (`ps`).
+
     # Fixer la référence (sur main, après validation) :
-    python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
+    python eval/regression.py --api http://localhost:8080 --update-baseline
 
     # Vérifier une branche avant merge :
-    python eval/regression.py --api http://localhost:8080 --api-key $KEY --report report.md
+    python eval/regression.py --api http://localhost:8080 --report report.md
 
     # Sous-ensemble (un formulaire inclut ses variantes, ex. LCA_IncapaciteTravail__periodes) :
     python eval/regression.py ... --forms LCA_IncapaciteTravail AI_ReadaptationRente
+
+    # Rapport et JSON sans aucune valeur extraite ni attendue (CI, jeu réel) :
+    python eval/regression.py ... --no-values --report report.md --json results.json
+
+Seuils par catégorie (`thresholds.categories` dans baseline.json) : la
+précision d'une catégorie (patient, médecin, dates d'incapacité…) sous son
+seuil est une régression, quelle que soit la référence.
 
 Code de sortie : 0 sans régression, 1 en cas de régression, 2 si un dossier n'a
 pas pu être traité (job en échec, délai dépassé, API injoignable).
@@ -31,6 +41,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -48,6 +59,19 @@ BASELINE_PATH = Path(__file__).resolve().parent / "baseline.json"
 # continu), même à température 0 : un champ d'écart par formulaire est du bruit.
 MAX_FIELD_DROP = 1
 MAX_GLOBAL_DROP = 0.02
+
+API_KEY_ENV = "DOCTORFILL_API_KEY"
+
+# Clés d'un résultat qui portent des valeurs de dossier (attendues, extraites ou
+# écrites dans le PDF). `--no-values` les retire du rapport et du JSON.
+VALUE_DETAIL_KEYS = ("details", "invented_details", "non_answer_details", "pdf_details")
+# Ce qui reste d'un détail sans valeur : de quoi savoir quel champ est en cause.
+_SAFE_DETAIL_KEYS = ("id", "category", "match", "status", "tolerance")
+
+
+def api_key_from_env() -> str:
+    """Clé d'API de l'orchestrateur, lue dans l'environnement (jamais en argument)."""
+    return os.environ.get(API_KEY_ENV, "").strip()
 
 
 def read_acroform(data: bytes) -> dict[str, str | None] | None:
@@ -132,11 +156,53 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def category_scores(results: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Précision par catégorie de champ (patient, médecin, incapacité…), tous dossiers confondus."""
+    totals: dict[str, list[int]] = {}
+    for r in results:
+        if r["status"] != "completed":
+            continue
+        for d in r.get("details", []):
+            correct_total = totals.setdefault(d["category"], [0, 0])
+            correct_total[0] += bool(d["match"])
+            correct_total[1] += 1
+    return {cat: {"correct": c, "total": t, "accuracy": round(c / t, 4) if t else None}
+            for cat, (c, t) in sorted(totals.items())}
+
+
+def category_thresholds(baseline: dict[str, Any] | None) -> dict[str, float]:
+    return dict(((baseline or {}).get("thresholds") or {}).get("categories") or {})
+
+
+def strip_values(result: dict[str, Any]) -> dict[str, Any]:
+    """
+    Copie d'un résultat sans aucune valeur de dossier.
+
+    Restent les scores, les compteurs et l'identifiant de chaque champ en
+    cause. Disparaissent les valeurs attendues, extraites ou lues dans le PDF,
+    et le texte des avertissements (ils peuvent citer un nom de fichier).
+    """
+    out = {k: v for k, v in result.items() if k not in VALUE_DETAIL_KEYS and k != "warnings"}
+    for key in VALUE_DETAIL_KEYS:
+        if key in result:
+            out[key] = [{k: d[k] for k in _SAFE_DETAIL_KEYS if k in d} for d in result[key]]
+    if "warnings" in result:
+        out["warnings_count"] = len(result["warnings"])
+    return out
+
+
 def compare(results: list[dict[str, Any]], baseline: dict[str, Any] | None,
             max_field_drop: int = MAX_FIELD_DROP, max_global_drop: float = MAX_GLOBAL_DROP,
             min_accuracy: float | None = None) -> list[str]:
-    """Régressions par rapport à la référence, en clair."""
+    """Régressions par rapport à la référence et aux seuils par catégorie, en clair."""
     problems: list[str] = []
+    # Seuils absolus : ils valent même sans comparaison possible à la référence.
+    scores = category_scores(results)
+    for category, threshold in sorted(category_thresholds(baseline).items()):
+        score = scores.get(category)
+        if score and score["accuracy"] is not None and score["accuracy"] < threshold:
+            problems.append(f"catégorie {category} : {score['accuracy']:.1%} "
+                            f"({score['correct']}/{score['total']}), sous le seuil {threshold:.0%}")
     reference = (baseline or {}).get("forms", {})
     for r in results:
         form = r["form"]
@@ -177,19 +243,30 @@ def compare(results: list[dict[str, Any]], baseline: dict[str, Any] | None,
     return problems
 
 
-def baseline_from(results: list[dict[str, Any]], meta: dict[str, Any]) -> dict[str, Any]:
-    return {
+def baseline_from(results: list[dict[str, Any]], meta: dict[str, Any],
+                  previous: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Nouvelle référence. Les seuils se fixent à la main : ils sont repris de la précédente."""
+    baseline = {
         "_meta": {**meta, "updated": datetime.now(timezone.utc).isoformat(timespec="seconds")},
         "global": summarize(results),
+        "categories": category_scores(results),
         "forms": {r["form"]: {k: r[k] for k in ("correct", "truth_fields", "accuracy", "fill_rate", "errors",
                                                 "non_answers", "non_answers_erased", "absent_fields", "invented")}
                   for r in results if r["status"] == "completed"},
     }
+    if previous and "thresholds" in previous:
+        baseline["thresholds"] = previous["thresholds"]
+    return baseline
 
 
 def report_markdown(results: list[dict[str, Any]], problems: list[str],
-                    baseline: dict[str, Any] | None) -> str:
-    """Rapport lisible dans le journal ou les artefacts d'un job de CI, ou en commentaire de MR."""
+                    baseline: dict[str, Any] | None, no_values: bool = False) -> str:
+    """
+    Rapport lisible dans le journal ou les artefacts d'un job de CI, ou en commentaire de MR.
+
+    `no_values` : scores et compteurs seulement, aucune valeur attendue ou
+    extraite. C'est le seul mode admis en CI et pour un jeu de vrais dossiers.
+    """
     reference = (baseline or {}).get("forms", {})
     summary = summarize(results)
     lines = ["## Non-régression de l'extraction", ""]
@@ -222,9 +299,24 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
                      f"{r['filled']}/{r['fields']} | {r['invented']}/{r['absent_fields']} | "
                      f"{r['non_answers']} ({r['non_answers_erased']}) | {pdf} | {r['errors']} | "
                      f"{r.get('seconds', 0):.0f} s |")
+    scores = category_scores(results)
+    if scores:
+        thresholds = category_thresholds(baseline)
+        lines += ["", "| Catégorie | Justes | Précision | Seuil |", "|---|---|---|---|"]
+        for category, s in scores.items():
+            threshold = f"{thresholds[category]:.0%}" if category in thresholds else "—"
+            accuracy = f"{s['accuracy']:.1%}" if s["accuracy"] is not None else "—"
+            lines.append(f"| {category} | {s['correct']}/{s['total']} | {accuracy} | {threshold} |")
     wrong = [(r["form"], d) for r in results if r["status"] == "completed"
              for d in r["details"] if not d["match"]]
-    if wrong:
+    if no_values:
+        # Quels champs, jamais quelles valeurs.
+        if wrong:
+            lines += ["", "<details><summary>Champs faux ou manquants (sans valeurs)</summary>", "",
+                      "| Formulaire | Champ | Catégorie | Défaut |", "|---|---|---|---|"]
+            lines += [f"| {form} | {d['id']} | {d['category']} | {d.get('status', 'faux')} |" for form, d in wrong]
+            lines += ["", "</details>"]
+    elif wrong:
         lines += ["", "<details><summary>Champs faux ou manquants</summary>", "",
                   "| Formulaire | Champ | Attendu | Obtenu |", "|---|---|---|---|"]
         for form, d in wrong:
@@ -235,7 +327,7 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
                for d in r.get("invented_details", [])]
     flagged += [(r["form"], d, "non-réponse") for r in results if r["status"] == "completed"
                 for d in r.get("non_answer_details", [])]
-    if flagged:
+    if flagged and not no_values:
         lines += ["", "<details><summary>Valeurs inventées et non-réponses écrites</summary>", "",
                   "| Formulaire | Champ | Valeur | Défaut |", "|---|---|---|---|"]
         for form, d, kind in flagged:
@@ -243,7 +335,7 @@ def report_markdown(results: list[dict[str, Any]], problems: list[str],
             lines.append(f"| {form} | {d['id']} | {got} | {kind} |")
         lines += ["", "</details>"]
     pdf_wrong = [(r["form"], d) for r in results if r["status"] == "completed" for d in r.get("pdf_details", [])]
-    if pdf_wrong:
+    if pdf_wrong and not no_values:
         lines += ["", "<details><summary>PDF différent de /fields</summary>", "",
                   "| Dossier | Champ | /fields | PDF |", "|---|---|---|---|"]
         for form, d in pdf_wrong:
@@ -272,7 +364,6 @@ def main(argv: list[str] | None = None, client: httpx.Client | None = None) -> i
     """Point d'entrée. `client` permet aux tests de viser l'application en mémoire."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--api", default="http://localhost:8080")
-    parser.add_argument("--api-key", default="")
     parser.add_argument("--forms", nargs="*",
                         help="Dossiers ou formulaires (avec leurs variantes) à évaluer (défaut : tous)")
     parser.add_argument("--baseline", type=Path, default=BASELINE_PATH)
@@ -283,15 +374,18 @@ def main(argv: list[str] | None = None, client: httpx.Client | None = None) -> i
     parser.add_argument("--parallel", type=int, default=2, help="Dossiers soumis de front")
     parser.add_argument("--report", type=Path, help="Rapport markdown")
     parser.add_argument("--json", type=Path, help="Résultats détaillés")
+    parser.add_argument("--no-values", action="store_true",
+                        help="Rapport, JSON et sortie sans aucune valeur de dossier (scores seulement)")
     args = parser.parse_args(argv)
 
     forms = [d for d in sorted(load_scenarios())
              if not args.forms or d in args.forms or form_of(d) in args.forms]
-    client = client or httpx.Client(base_url=args.api, headers={"X-API-Key": args.api_key}, timeout=900.0)
+    client = client or httpx.Client(base_url=args.api, headers={"X-API-Key": api_key_from_env()}, timeout=900.0)
     try:
         health = client.get("/health").json()
     except httpx.HTTPError as exc:
-        print(f"API injoignable ({args.api}) : {exc}", file=sys.stderr)
+        # Sans l'adresse : elle finirait dans un journal de CI.
+        print(f"API injoignable : {type(exc).__name__}", file=sys.stderr)
         return 2
     print(f"Backend {health.get('build')} — modèle {health.get('model')} — {len(forms)} dossiers")
 
@@ -307,12 +401,13 @@ def main(argv: list[str] | None = None, client: httpx.Client | None = None) -> i
 
     baseline = json.loads(args.baseline.read_text(encoding="utf-8")) if args.baseline.exists() else None
     problems = compare(results, baseline, args.max_field_drop, args.max_global_drop, args.min_accuracy)
-    report = report_markdown(results, problems, baseline)
+    report = report_markdown(results, problems, baseline, no_values=args.no_values)
     print("\n" + report)
     if args.report:
         args.report.write_text(report, encoding="utf-8")
     if args.json:
-        args.json.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+        published = [strip_values(r) for r in results] if args.no_values else results
+        args.json.write_text(json.dumps(published, ensure_ascii=False, indent=2), encoding="utf-8")
 
     failed = [r for r in results if r["status"] != "completed"]
     if args.update_baseline:
@@ -320,8 +415,8 @@ def main(argv: list[str] | None = None, client: httpx.Client | None = None) -> i
             print("Référence non écrite : des dossiers n'ont pas été traités.", file=sys.stderr)
             return 2
         meta = {"build": health.get("build"), "model": health.get("model")}
-        args.baseline.write_text(json.dumps(baseline_from(results, meta), ensure_ascii=False, indent=2) + "\n",
-                                 encoding="utf-8")
+        args.baseline.write_text(json.dumps(baseline_from(results, meta, baseline), ensure_ascii=False, indent=2)
+                                 + "\n", encoding="utf-8")
         print(f"Référence écrite : {args.baseline}")
         return 0
     if baseline is None:

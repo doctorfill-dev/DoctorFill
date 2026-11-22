@@ -90,41 +90,58 @@ frontend:
     # Pages Function /api/* proxy: header filtering, fixed upstream, streaming.
     - npm run test:functions
 
-# Non-régression de la qualité d'extraction contre le vrai modèle.
+# Non-régression de la qualité d'extraction contre le vrai modèle (issue 39).
 #
-# Les runners partagés de GitLab n'ont pas de GPU : ce job ne tourne que sur un
-# runner enregistré sur le DGX Spark avec le tag `dgx`, et vise le backend
-# déployé sur cette machine. Lancement manuel (« Run job » dans le pipeline de
-# la MR), typiquement sur une MR qui touche aux prompts, au modèle, au
-# découpage ou aux templates. Variables modifiables au lancement : EVAL_API,
-# EVAL_FORMS (formulaires ou dossiers, séparés par des espaces, vide = les 25 dossiers).
+# Règles de sécurité (audit S12) :
+# - jamais dans un pipeline de MR : le code d'une MR ne s'exécute pas sur un
+#   runner privilégié. Seulement sur la branche par défaut et sur un tag
+#   protégé, lancé à la main ;
+# - runner dédié, hors de la machine qui traite les dossiers, avec le tag
+#   `eval-isolated`, qui ne joint que l'API ;
+# - EVAL_API et DOCTORFILL_API_KEY sont des variables protégées (et masquée
+#   pour la clé) du projet. La clé est lue dans l'environnement par le script,
+#   jamais passée en argument (visible dans `ps`) ;
+# - --no-values : rapport et artefacts sans aucune valeur extraite ou
+#   attendue, scores seulement. Rien n'est affiché du rapport après le job.
 #
-# La référence (eval/baseline.json) se met à jour par MR, après validation :
-#   python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
+# Variable modifiable au lancement : EVAL_FORMS (formulaires ou dossiers,
+# séparés par des espaces, vide = les 25 dossiers).
+#
+# La référence (eval/baseline.json) se met à jour par MR, après validation, en
+# local (DOCTORFILL_API_KEY dans l'environnement) :
+#   python eval/regression.py --api <URL> --update-baseline
+# Les seuils par catégorie (thresholds.categories) se règlent à la main.
 eval:
   stage: eval
   tags:
-    - dgx
+    - eval-isolated
   rules:
-    - when: manual
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
       allow_failure: true
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED == "true"
+      when: manual
+      allow_failure: true
+    - when: never
   interruptible: false
   timeout: 3h
   variables:
-    EVAL_API: http://localhost:8080
     EVAL_FORMS: ""
   script:
+    - 'test -n "$EVAL_API" || { echo "Variable EVAL_API absente (variable protégée du projet)."; exit 1; }'
+    - 'test -n "$DOCTORFILL_API_KEY" || { echo "Variable DOCTORFILL_API_KEY absente (variable protégée et masquée)."; exit 1; }'
     # truth.py n'importe que la partie pure de l'orchestrateur (core/fields, core/provenance).
     # pypdf lit le PDF livré ; fpdf2 génère les PDF des variantes de dossiers.
     - python3 -m pip install --user "httpx>=0.27.0,<1.0" "pypdf>=5.0.0,<7.0" "fpdf2>=2.8.0,<3.0"
     - |
-      python3 eval/regression.py --api "$EVAL_API" --api-key "$DOCTORFILL_API_KEY" \
+      python3 eval/regression.py --api "$EVAL_API" --no-values \
         ${EVAL_FORMS:+--forms $EVAL_FORMS} --report report.md --json results.json
-  after_script:
-    - cat report.md || true
   artifacts:
     when: always
     name: eval-report
+    expire_in: 30 days
     paths:
       - report.md
       - results.json

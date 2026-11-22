@@ -5,13 +5,18 @@ Complète run_eval.py : celui-ci mesure l'exactitude contre un ground truth,
 celui-là mesure la traçabilité — quelle part des valeurs produites se retrouve
 dans le texte des documents, et lesquelles sont à relire.
 
-    python check_grounding.py --api-key <clé> --form LCA_IncapaciteTravail \\
-        --docs "~/code/doctorfill/Dossier patient de John Doe"
+    export DOCTORFILL_API_KEY=...        # jamais en argument : visible dans `ps`
+    python check_grounding.py --api http://localhost:8080 --form LCA_IncapaciteTravail \\
+        --docs "~/dossiers-test/Patient Test"
+
+Affiche des valeurs extraites : à n'utiliser que sur des dossiers fictifs ou
+sur une machine autorisée à traiter les dossiers réels (issue 32).
 """
 
 import argparse
 import collections
 import json
+import os
 import pathlib
 import sys
 import time
@@ -28,8 +33,7 @@ ORDER = ["verified", "attested", "not_checkable", "inferred", "unverified"]
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Traçabilité des valeurs extraites")
-    parser.add_argument("--api", default="https://api.doctorfill.ch")
-    parser.add_argument("--api-key", default="")
+    parser.add_argument("--api", default=os.environ.get("DOCTORFILL_API_URL", "http://localhost:8080"))
     parser.add_argument("--form", default="LCA_IncapaciteTravail")
     parser.add_argument("--docs", required=True, help="Dossier de PDF à soumettre")
     parser.add_argument("--out", type=pathlib.Path, help="Écrire les champs bruts en JSON")
@@ -42,7 +46,7 @@ def main() -> int:
         print(f"Aucun PDF dans {src}")
         return 1
 
-    client = httpx.Client(timeout=900.0, headers={"X-API-Key": args.api_key})
+    client = httpx.Client(timeout=900.0, headers={"X-API-Key": os.environ.get("DOCTORFILL_API_KEY", "")})
     files = [("report_files", (p.name, p.read_bytes(), "application/pdf")) for p in pdfs]
 
     started = time.time()

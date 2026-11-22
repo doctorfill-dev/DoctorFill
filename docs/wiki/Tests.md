@@ -84,12 +84,25 @@ technique de la table cantonale (`exaddress#@#…`). C'est au remplissage que la
 table écrasait l'adresse du patient neuchâtelois : `/fields` restait juste.
 
 ```bash
+# La clé d'API se lit dans l'environnement, jamais en argument (visible dans `ps`)
+export DOCTORFILL_API_KEY=...
+
 # Sur main, après validation : fixer la référence (à committer)
-python eval/regression.py --api http://localhost:8080 --api-key $KEY --update-baseline
+python eval/regression.py --api http://localhost:8080 --update-baseline
 
 # Sur une branche : comparer à la référence
-python eval/regression.py --api http://localhost:8080 --api-key $KEY --report report.md
+python eval/regression.py --api http://localhost:8080 --report report.md
+
+# Rapport et JSON sans aucune valeur de dossier (CI, jeu de vrais dossiers)
+python eval/regression.py --api http://localhost:8080 --no-values --report report.md --json results.json
 ```
+
+**Seuils par catégorie.** `eval/baseline.json` porte `thresholds.categories` :
+la précision minimale de chaque catégorie de champ (patient, medecin, admin,
+incapacite, accident, diagnostic, travail). Une catégorie sous son seuil est
+une régression, avec ou sans référence. Les seuils se règlent à la main ;
+`--update-baseline` les reprend tels quels. Le rapport donne la précision par
+catégorie.
 
 Code de sortie : `0` sans régression, `1` en cas de régression, `2` si un
 dossier n'a pas pu être traité. Est une régression : un formulaire qui perd
@@ -107,17 +120,21 @@ Il donne aussi la durée de chaque étape (OCR et embeddings, synthèse,
 extraction, remplissage, attente), que le backend publie dans `/status` : un
 dossier anormalement lent s'explique sans aller lire les journaux du serveur.
 
-### Sur le DGX, depuis GitLab
+### Depuis GitLab
 
-Le job `eval` (bouton *Run job* dans le pipeline d'une MR) lance le même script
-sur un runner portant le tag `dgx`, et garde `report.md` et `results.json` en
-artefacts. Variables modifiables au lancement : `EVAL_API`, `EVAL_FORMS`.
+Le job `eval` lance le même script avec `--no-values`, et garde `report.md` et
+`results.json` en artefacts (30 jours) : des scores, aucune valeur de dossier.
+Il n'existe que sur la branche par défaut et sur un tag protégé, lancé à la
+main (*Run job*). **Jamais dans un pipeline de MR** : le code d'une MR ne doit
+pas s'exécuter sur un runner qui joint le backend. Variable modifiable au
+lancement : `EVAL_FORMS`.
+
 Prérequis, une fois :
 
-1. enregistrer un runner GitLab sur le DGX (*Settings → CI/CD → Runners →
-   New project runner*), avec le tag `dgx` ;
-2. créer la variable `DOCTORFILL_API_KEY`, masquée (*Settings → CI/CD →
-   Variables*).
+1. un runner dédié, **hors de la machine qui traite les dossiers**, avec le tag
+   `eval-isolated`, qui ne peut joindre que l'API ;
+2. les variables `EVAL_API` (protégée) et `DOCTORFILL_API_KEY` (protégée et
+   masquée) dans *Settings → CI/CD → Variables*.
 
-Le job est manuel : un runner auto-hébergé ne doit pas exécuter le code de
-n'importe quelle MR automatiquement.
+Les vrais dossiers anonymisés ne passent jamais par GitLab : ni dans le dépôt,
+ni dans les artefacts. Ils s'évaluent en local, avec `--no-values` (issue 32).
