@@ -1,0 +1,20 @@
+# En-têtes de sécurité des pages servies par Cloudflare Pages (issue 33, audit S5).
+#
+# La politique de contenu (CSP) empêche une page piégée d'envoyer des données
+# ailleurs : images, scripts et connexions restent sur la même origine.
+# - blob: dans img-src et connect-src : la liseuse pdf.js charge le PDF rempli
+#   depuis une URL blob: ;
+# - formspree.io dans connect-src : formulaire de contact de la page d'accueil,
+#   à retirer quand il sera remplacé (audit S25) ;
+# - 'unsafe-inline' dans style-src : styles posés par les composants Radix.
+#
+# Même politique dans frontend/src-tauri/tauri.conf.json, vérifiée par
+# test/unit/security-headers.test.mjs. Les réponses de /api/* (Pages Function)
+# ne passent pas par ce fichier.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self' data:; connect-src 'self' blob: https://formspree.io; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000

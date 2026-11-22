@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PdfViewer } from "@/components/PdfViewer";
+import { SAFE_MARKDOWN_OPTIONS } from "@/lib/safeMarkdown";
 import {
   Loader2, FolderArchive, FileCheck, FileText, Trash2,
   ChevronRight, Server, Send, Bot, User, ClipboardList, MessageSquare, Copy, Check,
@@ -1090,7 +1091,8 @@ export default function App() {
                               prose-p:my-1 prose-ul:my-1 prose-li:my-0.5
                               prose-strong:text-zinc-900 prose-code:bg-zinc-100
                               prose-code:px-1 prose-code:rounded prose-code:text-xs">
-                              <ReactMarkdown>{msg.content}</ReactMarkdown>
+                              {/* Ni image ni lien : voir lib/safeMarkdown.ts (audit S5). */}
+                              <ReactMarkdown {...SAFE_MARKDOWN_OPTIONS}>{msg.content}</ReactMarkdown>
                             </div>
                           ) : (
                             msg.content

@@ -109,7 +109,9 @@ services:
         APP_BUILT_AT: ${APP_BUILT_AT:-}
     image: doctorfill/orchestrator:latest
     ports:
-      - "8080:8080"
+      # Boucle locale seulement : l'API n'est jamais joignable directement depuis
+      # le réseau. Elle passe par le relais ou le reverse proxy de la machine.
+      - "127.0.0.1:8080:8080"
     env_file:
       - .env
     volumes:

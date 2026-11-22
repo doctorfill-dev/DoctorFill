@@ -31,3 +31,5 @@ dist-ssr
 
 # Pages Function compiled for its tests (npm run test:functions)
 .functions-test
+# src/lib compiled for the unit tests (npm run test:unit)
+.unit-test

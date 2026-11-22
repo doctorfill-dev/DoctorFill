@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && tsc -p ../functions && vite build",
     "test:functions": "tsc -p ../functions --noEmit false --outDir .functions-test && node --test test/pages-proxy.test.mjs",
+    "test:unit": "tsc -p tsconfig.unit.json && node --test test/unit/*.test.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },
