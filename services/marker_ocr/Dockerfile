@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # --- 5) Copie des scripts de l'API
-COPY app.py textlayer.py ./
+COPY app.py textlayer.py ocr_cache.py ./
 
 # --- 6) Ouverture du port interne 8082
 EXPOSE 8082

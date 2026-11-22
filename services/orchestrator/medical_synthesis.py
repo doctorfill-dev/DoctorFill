@@ -84,7 +84,10 @@ def _extract_json_from_response(text: str) -> dict[str, Any]:
     start = text.find("{")
     end = text.rfind("}")
     if start == -1 or end == -1 or end <= start:
-        raise ValueError(f"Aucun JSON trouvé dans la réponse : {text[:200]}")
+        # La réponse du modèle contient des données patient (nom, date de
+        # naissance, diagnostics) et cette erreur finit dans les journaux :
+        # sa longueur seulement, jamais son texte.
+        raise ValueError(f"Aucun JSON trouvé dans la réponse ({len(text)} caractères)")
     json_str = text[start : end + 1]
     data = json.loads(json_str)
     if not isinstance(data, dict):
@@ -122,7 +125,8 @@ async def _call_llm(
             async with httpx.AsyncClient(timeout=httpx.Timeout(timeout, connect=15.0)) as client:
                 resp = await client.post(f"{vllm_url}/chat/completions", json=payload)
             if resp.status_code == 400:
-                raise _Unrecoverable(f"requête refusée : {resp.text[:200]}")
+                # Le corps de l'erreur peut reprendre le prompt, donc le dossier.
+                raise _Unrecoverable(f"requête refusée (HTTP 400, {len(resp.text)} caractères)")
             resp.raise_for_status()
             choice = resp.json()["choices"][0]
             if choice.get("finish_reason") == "length":
@@ -265,17 +269,21 @@ async def _synthesize_hierarchical(
     parts = [part for name, text in docs for part in _split_document(name, text)]
     sem = asyncio.Semaphore(3)  # 3 docs en parallèle max
 
-    async def _summarize_with_sem(name: str, text: str) -> dict[str, Any] | None:
+    async def _summarize_with_sem(index: int, name: str, text: str) -> dict[str, Any] | None:
         async with sem:
             try:
                 summary = await _summarize_single_doc(text, name, vllm_url, model_name)
                 summary.setdefault("document", name)
                 return summary
             except Exception as exc:
-                logger.warning("Échec résumé doc '%s' : %s", name, exc)
+                # Le rang de l'extrait, pas le nom du fichier : il contient souvent
+                # celui du patient.
+                logger.warning("Échec résumé de l'extrait %d/%d : %s", index + 1, len(parts),
+                               type(exc).__name__)
                 return None
 
-    results = await asyncio.gather(*[_summarize_with_sem(name, text) for name, text in parts])
+    results = await asyncio.gather(*[_summarize_with_sem(i, name, text)
+                                     for i, (name, text) in enumerate(parts)])
     summaries = [r for r in results if r is not None]
 
     if not summaries:

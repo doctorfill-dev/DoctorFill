@@ -1,4 +1,13 @@
 # services/docker-compose.yml
+
+# Journaux des conteneurs bornés en taille. Sans ces options, Docker les garde
+# sans limite, et ils peuvent contenir des traces d'un dossier (#32).
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   vllm:
     container_name: df-services-vllm
@@ -42,6 +51,7 @@ services:
       retries: 5
       start_period: 600s  # vLLM met du temps à charger le modèle
     restart: unless-stopped
+    logging: *default-logging
 
   marker_ocr:
     container_name: df-services-marker_ocr
@@ -51,8 +61,13 @@ services:
     # [SEC-13] Port interne uniquement (pas exposé sur l'hôte)
     expose:
       - "8082"
+    environment:
+      # Le cache OCR (texte intégral des documents) vit en mémoire et expire
+      # avec les jobs : même durée que la rétention de l'orchestrateur (#32).
+      OCR_CACHE_TTL_SECONDS: ${JOB_RETENTION_SECONDS:-3600}
     volumes:
-      # Persister le cache des modèles Marker (~3 GB) entre les rebuilds
+      # Persister le cache des modèles Marker (~3 GB) entre les rebuilds.
+      # Plus aucun texte de dossier n'y est écrit (voir marker_ocr/ocr_cache.py).
       - ~/.cache/datalab:/root/.cache/datalab
     deploy:
       resources:
@@ -70,6 +85,7 @@ services:
       retries: 5
       start_period: 600s  # Chargement des modèles vision en VRAM
     restart: unless-stopped
+    logging: *default-logging
 
   tei:
     container_name: df-services-tei
@@ -96,6 +112,7 @@ services:
       retries: 5
       start_period: 500s  # Chargement embedding + reranker
     restart: unless-stopped
+    logging: *default-logging
 
   orchestrator:
     container_name: df-services-orchestrator
@@ -130,6 +147,7 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+    logging: *default-logging
 
 volumes:
   doctorfill-stats:
