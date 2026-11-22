@@ -60,18 +60,68 @@ orchestrator:
     - cd services/orchestrator
     - pip install --quiet -r requirements-dev.txt
     # Sans GPU ni service : OCR, TEI et vLLM sont simulés. Couvre les 21
-    # formulaires du catalogue et les 25 dossiers de eval/dossiers/.
-    - python -m pytest tests -q --cov=. --cov-report=term:skip-covered --cov-fail-under=70
+    # formulaires du catalogue, les 25 dossiers de eval/dossiers/, les routes
+    # HTTP (clé API, jetons, upload) et les reprises sur panne des services.
+    - >
+      python -m pytest tests -q --cov=. --cov-report=term:skip-covered
+      --cov-report=xml:coverage.xml --junitxml=report.xml --cov-fail-under=70
   coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%/'
+  artifacts:
+    when: always
+    expire_in: 2 weeks
+    reports:
+      # Lignes couvertes affichées dans le diff de la MR, tests en échec dans son onglet Tests.
+      coverage_report:
+        coverage_format: cobertura
+        path: services/orchestrator/coverage.xml
+      junit: services/orchestrator/report.xml
 
 marker-ocr:
   stage: test
   image: python:3.12
   script:
     - cd services/marker_ocr
-    # textlayer.py seul : marker et ses modèles ne sont pas nécessaires.
-    - pip install --quiet "pypdfium2>=4.30.0,<6.0" "pikepdf>=9.0.0,<11.0" "pytest>=8.0,<10.0"
-    - python -m pytest tests -q
+    # Ni marker ni ses modèles : app.py est testé avec un marker simulé
+    # (tests/test_app.py), textlayer.py avec de vrais PDF construits par pikepdf.
+    - >
+      pip install --quiet "pypdfium2>=4.30.0,<6.0" "pikepdf>=9.0.0,<11.0"
+      "fastapi>=0.115.0,<1.0" "python-multipart>=0.0.18,<1.0" "httpx>=0.27.0,<1.0"
+      "pytest>=8.0,<10.0" "pytest-cov>=5.0,<8.0"
+    - >
+      python -m pytest tests -q --cov=. --cov-report=term
+      --cov-report=xml:coverage.xml --junitxml=report.xml
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%/'
+  artifacts:
+    when: always
+    expire_in: 2 weeks
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: services/marker_ocr/coverage.xml
+      junit: services/marker_ocr/report.xml
+
+tei:
+  stage: test
+  image: python:3.12
+  script:
+    - cd services/tei
+    # torch et sentence-transformers sont simulés (tests/test_app.py) : pas de
+    # GPU, pas de téléchargement de modèle.
+    - >
+      pip install --quiet "fastapi>=0.115.0,<1.0" "httpx>=0.27.0,<1.0"
+      "pytest>=8.0,<10.0" "pytest-cov>=5.0,<8.0"
+    - >
+      python -m pytest tests -q --cov=. --cov-report=term
+      --cov-report=xml:coverage.xml --junitxml=report.xml
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%/'
+  artifacts:
+    when: always
+    expire_in: 2 weeks
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: services/tei/coverage.xml
+      junit: services/tei/report.xml
 
 frontend:
   stage: test

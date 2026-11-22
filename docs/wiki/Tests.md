@@ -11,7 +11,9 @@ Deux questions différentes, deux dispositifs :
 
 ```bash
 cd services/orchestrator && pip install -r requirements-dev.txt && python -m pytest tests
-cd services/marker_ocr   && python -m pytest tests          # pypdfium2 + pikepdf suffisent
+cd services/marker_ocr   && python -m pytest tests  # pypdfium2, pikepdf, fastapi, python-multipart, httpx
+cd services/tei          && python -m pytest tests  # fastapi, httpx ; torch et sentence-transformers simulés
+cd frontend              && npm run test:functions  # proxy Pages /api/*
 ```
 
 | Fichier | Ce qui est garanti |
@@ -23,7 +25,19 @@ cd services/marker_ocr   && python -m pytest tests          # pypdfium2 + pikepd
 | `test_extraction.py` | Appel LLM : contexte trop long, réponse tronquée, IDs absents, réponse vide, schéma refusé, erreurs 4xx/5xx |
 | `test_fields.py` | Préparation des champs et normalisation des valeurs |
 | `test_fill.py` | Écriture AcroForm/XFA sur un PDF minimal |
+| `test_api.py` | Routes HTTP : clé API sur chaque route sauf `/health`, jeton de job (`/fields`, `/download`, `/debug`, `/synthesis`, `/rerun`, `/chat`), upload (formulaire inconnu, non-PDF, taille, nombre, saturation, nom de fichier hors du dossier du job), ce que `/status` ne divulgue pas. Deux bugs connus y sont marqués `xfail` strict (voir le fichier) |
+| `test_service_calls.py` | Reprises proportionnées de l'OCR et de TEI (4xx, 5xx, délai, service injoignable), cache des embeddings de questions, rerank en panne, file d'attente, purge des fichiers de jobs |
+| `test_provenance.py` | Verdicts de confiance (`verified`, `attested`, `inferred`, `unverified`, `not_checkable`) : citation recomposée, valeur courte, mot coupé par la couche texte, synthèse jamais suffisante |
+| `test_pdf_io.py` | Détection du type de formulaire, packets XFA, injection, cases à cocher, entités XML refusées, replis de `_fill_pdf` |
+| `test_synthesis_and_stats.py` | Synthèse directe → hiérarchique → fusion déterministe, reprises du LLM ; durées enregistrées sans donnée de dossier |
 | `marker_ocr/tests/test_textlayer.py` | Aiguillage couche texte native / OCR |
+| `marker_ocr/tests/test_app.py` | Service OCR avec marker simulé : couche texte ou OCR, cache mémoire et disque, fichier temporaire supprimé, erreur générique |
+| `tei/tests/test_app.py` | Embeddings et rerank avec modèles simulés : ordre, format, validation |
+| `frontend/test/pages-proxy.test.mjs` | Proxy Pages `/api/*` : clé côté serveur, en-têtes filtrés, flux, hôtes et méthodes refusés, redirections non suivies, jamais de cache |
+
+Les jobs `orchestrator`, `marker-ocr` et `tei` publient leur couverture
+(rapport Cobertura, affiché dans le diff de la MR) et leurs résultats de tests
+(JUnit, onglet *Tests* de la MR).
 
 Chaque garde-fou a été vérifié par mutation : réintroduire l'ancien bug (case
 « On » écrite « 0 », destinataire cantonal appliqué par nom, cases vierges
@@ -38,7 +52,7 @@ Sans ces réglages, GitLab autorise la fusion d'une MR rouge.
 - **Settings → Repository → Protected branches** : `main` protégée, *Allowed
   to push* : personne ; les changements passent par une MR.
 - **Settings → Merge requests** : cocher *Pipelines must succeed*. Les jobs
-  `lint`, `orchestrator`, `marker-ocr` et `frontend` doivent alors passer ;
+  `lint`, `orchestrator`, `marker-ocr`, `tei` et `frontend` doivent alors passer ;
   `eval`, manuel, ne bloque pas.
 - Même page, *Merge method* : *Merge commit with semi-linear history* ou
   *Fast-forward merge* : la branche doit être à jour avec `main`, donc la CI a

@@ -112,6 +112,65 @@ test("refuses other hosts, methods and a missing secret without calling upstream
   assert.equal(calls.length, 0);
 });
 
+test("GET and HEAD are relayed without a body", async () => {
+  fakeUpstream(() => new Response(null, { status: 200 }));
+  await call("https://doctorfill.ch/api/health", { method: "HEAD" });
+  await call("https://doctorfill.ch/api/forms");
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].init.method, "HEAD");
+  assert.equal(calls[0].init.body, null);
+  assert.equal(calls[1].init.method, "GET");
+  assert.equal(calls[1].init.body, null);
+});
+
+test("upstream redirects are handed back, never followed", async () => {
+  fakeUpstream(() => new Response(null, { status: 302, headers: { location: "https://exemple.invalid/ailleurs" } }));
+  const res = await call("https://doctorfill.ch/api/forms");
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get("location"), "https://exemple.invalid/ailleurs");
+  assert.equal(calls.length, 1);
+});
+
+test("upstream errors keep their status and type, and are never cached", async () => {
+  fakeUpstream(
+    () =>
+      new Response('{"detail":"Job introuvable ou expiré."}', {
+        status: 404,
+        statusText: "Not Found",
+        headers: { "content-type": "application/json", "cache-control": "public, max-age=3600" },
+      }),
+  );
+  const res = await call("https://doctorfill.ch/api/status/inconnu");
+  assert.equal(res.status, 404);
+  assert.equal(res.statusText, "Not Found");
+  assert.equal(res.headers.get("content-type"), "application/json");
+  assert.equal(res.headers.get("cache-control"), "no-store");
+  assert.deepEqual(await res.json(), { detail: "Job introuvable ou expiré." });
+});
+
+test("only paths under /api/ and allowed methods reach the upstream", async () => {
+  fakeUpstream(() => assert.fail("upstream must not be called"));
+  assert.equal((await call("https://doctorfill.ch/apix/forms")).status, 404);
+  assert.equal((await call("https://doctorfill.ch/")).status, 404);
+  assert.equal((await call("https://doctorfill.ch/api/forms", { method: "OPTIONS" })).status, 405);
+  assert.equal((await call("https://doctorfill.ch/api/forms", { method: "PATCH", body: "x" })).status, 405);
+  assert.equal(calls.length, 0);
+});
+
+test("local error responses are JSON, uncached and do not echo the key", async () => {
+  fakeUpstream(() => assert.fail("upstream must not be called"));
+  for (const res of [
+    await call("https://doctorfill.pages.dev/api/forms"),
+    await call("https://doctorfill.ch/api/forms", { method: "PUT", body: "x" }),
+  ]) {
+    assert.equal(res.headers.get("content-type"), "application/json");
+    assert.equal(res.headers.get("cache-control"), "no-store");
+    const body = await res.text();
+    assert.ok(!body.includes(KEY));
+    assert.equal(typeof JSON.parse(body).detail, "string");
+  }
+});
+
 test("an unreachable upstream gives a 502 without details", async () => {
   fakeUpstream(() => {
     throw new TypeError(`connect failed with key ${KEY}`);
