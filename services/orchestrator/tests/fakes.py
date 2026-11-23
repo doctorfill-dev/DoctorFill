@@ -59,10 +59,16 @@ def is_synthesis(request: httpx.Request) -> bool:
 
 
 def install(monkeypatch, handler: Handler) -> None:
-    """Route tout httpx.AsyncClient vers `handler` et neutralise les attentes de reprise."""
-    real_client = httpx.AsyncClient
+    """Route tout httpx.AsyncClient vers `handler` et neutralise les attentes de reprise.
+
+    Appelable plusieurs fois dans un même test : on dérive toujours du vrai
+    client, sinon le handler installé en premier écraserait le suivant.
+    """
+    real_client = getattr(httpx.AsyncClient, "_real_client", httpx.AsyncClient)
 
     class MockedClient(real_client):
+        _real_client = real_client
+
         def __init__(self, *args, **kwargs):
             kwargs.pop("limits", None)
             kwargs["transport"] = httpx.MockTransport(handler)
