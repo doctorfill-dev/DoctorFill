@@ -76,6 +76,19 @@ def _has_valid_api_key(request: Request) -> bool:
     return secrets.compare_digest(supplied, API_KEY.encode("utf-8"))
 
 
+def _job_token_matches(supplied: str, expected: str) -> bool:
+    """
+    Compare le jeton de job envoyé par le client à celui du job, en temps constant.
+
+    Comparé en octets, comme la clé API : compare_digest lève TypeError sur une
+    chaîne non ASCII, ce qui donnait une erreur 500 au lieu du 403 d'un mauvais
+    jeton. « surrogatepass » : un caractère isolé venu d'un corps JSON
+    (« \\ud800 ») s'encode aussi, au lieu de lever UnicodeEncodeError.
+    """
+    return secrets.compare_digest(supplied.encode("utf-8", "surrogatepass"),
+                                  expected.encode("utf-8", "surrogatepass"))
+
+
 @app.middleware("http")
 async def verify_api_key(request: Request, call_next):
     # Bypass : health check, CORS preflight, docs. /health checks the key
@@ -1199,7 +1212,7 @@ async def get_fields(job_id: str, token: str = ""):
     if job_id not in JOBS or JOBS[job_id].get("status") != "completed":
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
     expected_token = JOBS[job_id].get("token", "")
-    if expected_token and not secrets.compare_digest(token, expected_token):
+    if expected_token and not _job_token_matches(token, expected_token):
         raise HTTPException(status_code=403, detail="Token invalide.")
 
     template_fields = JOBS[job_id].get("_template_fields", [])
@@ -1233,6 +1246,10 @@ async def get_fields(job_id: str, token: str = ""):
 # ---------------------------------------------------------------
 # --- CHAT INTERACTIF ---
 
+# [SEC-10] Seul texte d'erreur envoyé au navigateur quand le LLM échoue en cours de chat.
+CHAT_ERROR_MESSAGE = "La réponse n'a pas pu être générée. Veuillez réessayer."
+
+
 class ChatRequest(BaseModel):
     job_id: str
     message: str
@@ -1255,7 +1272,7 @@ async def chat_endpoint(request: ChatRequest):
     # Le chat lit le dossier patient : même contrôle que /fields et /download,
     # qui l'exigeaient déjà alors que celui-ci s'en passait.
     expected_token = job.get("token", "")
-    if expected_token and not secrets.compare_digest(request.token, expected_token):
+    if expected_token and not _job_token_matches(request.token, expected_token):
         raise HTTPException(status_code=403, detail="Token invalide.")
 
     synthesis = job.get("_debug_synthesis")
@@ -1326,8 +1343,17 @@ async def chat_endpoint(request: ChatRequest):
                         if line.startswith("data: "):
                             yield line + "\n\n"
         except Exception as e:
-            logger.error(f"[chat/{request.job_id[:8]}] Erreur streaming vLLM: {e}")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            # [SEC-10] Détail côté serveur, message générique côté client : le
+            # texte d'une erreur httpx contient l'URL interne du LLM.
+            # Journal sans donnée personnelle : ni la question, ni l'historique,
+            # ni la réponse ; seulement le type d'erreur, et pour une erreur
+            # httpx son texte (URL et code HTTP, jamais le corps échangé).
+            if isinstance(e, httpx.HTTPError):
+                detail = f"{type(e).__name__}: {e}"
+            else:
+                detail = type(e).__name__
+            logger.error(f"[chat/{request.job_id[:8]}] Erreur streaming LLM : {detail}")
+            yield f"data: {json.dumps({'error': CHAT_ERROR_MESSAGE}, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
         _stream(),
@@ -1358,7 +1384,7 @@ def _validate_job_token(job_id: str, token: str) -> Dict:
     if not job or job.get("status") not in ("completed", "processing"):
         raise HTTPException(status_code=404, detail="Session introuvable ou traitement non terminé.")
     expected = job.get("token", "")
-    if expected and not secrets.compare_digest(token, expected):
+    if expected and not _job_token_matches(token, expected):
         raise HTTPException(status_code=403, detail="Token invalide.")
     return job
 
@@ -1531,7 +1557,7 @@ async def download_result(job_id: str, token: str = ""):
 
     # --- [SEC-07] Vérification du token de téléchargement
     expected_token = JOBS[job_id].get("token", "")
-    if not token or not secrets.compare_digest(token, expected_token):
+    if not token or not _job_token_matches(token, expected_token):
         raise HTTPException(status_code=403, detail="Token invalide.")
 
     file_path = JOBS[job_id].get("file_path")
@@ -1548,7 +1574,7 @@ async def debug_results(job_id: str, token: str = ""):
         raise HTTPException(status_code=404, detail="Job introuvable.")
 
     expected_token = JOBS[job_id].get("token", "")
-    if not token or not secrets.compare_digest(token, expected_token):
+    if not token or not _job_token_matches(token, expected_token):
         raise HTTPException(status_code=403, detail="Token invalide.")
 
     debug_results = JOBS[job_id].get("_debug_results", [])
