@@ -1,0 +1,46 @@
+# Verrouillage Python PROVISOIRE - service orchestrator (issue #34)
+#
+# Écrit à la main, sans pip : ce n'est PAS encore un vrai fichier de
+# verrouillage. Il fixe les dépendances directes de requirements.txt et de
+# requirements-dev.txt. Les transitives (chromadb en tire beaucoup) ne sont
+# pas listées. Il n'est pas encore utilisé par le Dockerfile ni par la CI.
+#
+# Légende des commentaires :
+#   [H] version fixée comme borne basse par le commit 4919a76 (SEC-17,
+#       10.03.2026), avant l'assouplissement du commit cdc4f17. Elle existait
+#       à cette date. Rien ne prouve que c'est celle de l'image en service.
+#   [?] non confirmée.
+#
+# Pour le régénérer proprement (sur l'hôte aarch64, voir aussi la MR) :
+#   a) Photo de ce qui tourne :
+#        docker run --rm doctorfill/orchestrator:latest pip freeze > constraints.txt
+#   b) Résolution reproductible, dans l'image de base :
+#        uv pip compile requirements-dev.txt --python-version 3.12 -o constraints.txt
+#      ou : pip-compile --strip-extras -o constraints.txt requirements-dev.txt
+#      (requirements-dev.txt inclut requirements.txt.) Ne pas laisser
+#      remplacer les paquets fournis par l'image NVIDIA.
+#
+# Utilisation, une fois régénéré :
+#   pip install -c constraints.txt -r requirements.txt
+
+# --- Dépendances de l'image (requirements.txt)
+fastapi==0.128.0          # [H]
+uvicorn==0.40.0           # [H]
+httpx==0.28.1             # [H]
+chromadb==1.5.5           # [H]
+python-multipart==0.0.22  # [H]
+pypdf==6.8.0              # [H]
+pikepdf==10.5.0           # [H]
+defusedxml==0.7.1         # [H]
+# lxml : version INCONNUE, volontairement non fixée. SEC-17 demandait
+# >=6.0.2 ; le commit cdc4f17 dit que le build aarch64 échouait avec cette
+# version et a ouvert la contrainte à >=4.9.0. À relever dans l'image.
+# lxml==?
+
+# --- Tests seulement (requirements-dev.txt, hors image)
+pytest==8.3.5             # [?] jamais fixée dans l'historique
+pytest-cov==6.0.0         # [?] jamais fixée dans l'historique
+fpdf2==2.8.1              # [?] jamais fixée dans l'historique
+
+# --- Remarque : app.py importe pydantic directement ; il n'est pas déclaré
+# dans requirements.txt (il vient avec fastapi).

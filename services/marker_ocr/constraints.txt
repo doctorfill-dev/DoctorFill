@@ -1,0 +1,41 @@
+# Verrouillage Python PROVISOIRE - service marker_ocr (issue #34)
+#
+# Écrit à la main, sans pip : ce n'est PAS encore un vrai fichier de
+# verrouillage. Il fixe les dépendances directes de requirements.txt et
+# quelques transitives connues. Les autres transitives ne sont pas listées.
+# Il n'est pas encore utilisé par le Dockerfile.
+#
+# Légende des commentaires :
+#   [H] version fixée comme borne basse par le commit 4919a76 (SEC-17,
+#       10.03.2026), avant l'assouplissement du commit cdc4f17. Elle existait
+#       à cette date. Rien ne prouve que c'est celle de l'image en service.
+#   [A] version relevée sur PyPI le 22.11.2026 lors de l'audit des licences.
+#   [?] non confirmée.
+#
+# Pour le régénérer proprement (sur l'hôte aarch64, voir aussi la MR) :
+#   a) Photo de ce qui tourne :
+#        docker run --rm df-image-marker pip freeze > constraints.txt
+#   b) Résolution reproductible, dans l'image de base :
+#        uv pip compile requirements.txt --python-version 3.12 -o constraints.txt
+#      ou : pip-compile --strip-extras -o constraints.txt requirements.txt
+#      Les paquets fournis par l'image NVIDIA (torch, etc.) ne doivent pas
+#      être remplacés par ceux de PyPI : uv --no-emit-package torch, ou
+#      contrainte de l'image (PIP_CONSTRAINT, à vérifier dans l'image).
+#
+# Utilisation, une fois régénéré :
+#   pip install -c constraints.txt -r requirements.txt
+
+# --- Dépendances directes (requirements.txt)
+marker-pdf==1.10.2        # [H][A] dernière 1.x selon l'audit (31.01.2026)
+pypdfium2==4.30.0         # [A] surya-ocr 0.17 impose ==4.30.0
+fastapi==0.128.0          # [H]
+uvicorn==0.40.0           # [H] requirements.txt demande l'extra [standard]
+python-multipart==0.0.22  # [H]
+
+# --- Transitives connues (tirées par marker-pdf)
+surya-ocr==0.17.1         # [A] marker 1.10.2 demande >=0.17.1,<0.18 ; dernière 0.17.x [?]
+pdftext==0.6.3            # [A] marker demande >=0.6.3,<0.7 ; dernière 0.6.x [?]
+
+# --- Non listées ici : torch, transformers, Pillow, opencv, pydantic,
+# starlette, etc. Elles viennent de l'image nvcr.io/nvidia/pytorch:25.11-py3
+# ou de la résolution de pip. À compléter par la régénération.

@@ -1,0 +1,33 @@
+# Verrouillage Python PROVISOIRE - service tei (issue #34)
+#
+# Écrit à la main, sans pip : ce n'est PAS encore un vrai fichier de
+# verrouillage. Il fixe les dépendances directes de requirements.txt. Les
+# transitives ne sont pas listées. Il n'est pas encore utilisé par le
+# Dockerfile.
+#
+# Légende des commentaires :
+#   [H] version fixée comme borne basse par le commit 4919a76 (SEC-17,
+#       10.03.2026), avant l'assouplissement du commit cdc4f17. Elle existait
+#       à cette date. Rien ne prouve que c'est celle de l'image en service.
+#   [?] non confirmée.
+#
+# Pour le régénérer proprement (sur l'hôte aarch64, voir aussi la MR) :
+#   a) Photo de ce qui tourne :
+#        docker run --rm doctorfill/tei-service:latest pip freeze > constraints.txt
+#   b) Résolution reproductible, dans l'image de base :
+#        uv pip compile requirements.txt --python-version 3.12 -o constraints.txt
+#      ou : pip-compile -o constraints.txt requirements.txt
+#      Ne pas laisser remplacer torch et les paquets de l'image NVIDIA.
+#
+# Utilisation, une fois régénéré :
+#   pip install -c constraints.txt -r requirements.txt
+
+fastapi==0.128.0              # [H]
+uvicorn==0.40.0               # [H]
+sentence-transformers==5.2.2  # [H][?] le commit cdc4f17 a ouvert la contrainte
+                              # à >=3.0.0 pour le build aarch64 : la version
+                              # installée peut être différente.
+
+# --- Non listées ici : torch (image nvcr.io/nvidia/pytorch:25.11-py3),
+# transformers, huggingface-hub, pydantic (importé directement par app.py),
+# etc. À compléter par la régénération.

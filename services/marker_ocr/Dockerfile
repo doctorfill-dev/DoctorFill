@@ -11,7 +11,6 @@ RUN apt-get update && apt-get install -y \
     git \
     libgl1 \
     libglib2.0-0 \
-    ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
 # --- 4) Copie du fichier des dépendances Python et installation
